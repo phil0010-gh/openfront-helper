@@ -28,7 +28,19 @@
 
       <form id="filtersForm" class="popup-layout" autocomplete="off">
         <section class="filter-group filter-group-helpers">
-          <p class="section-title">Helpers</p>
+          <div class="helpers-panel-header">
+            <p class="section-title">Helpers</p>
+            <button
+              id="helpersPopoutButton"
+              class="helpers-popout-button"
+              type="button"
+              aria-label="Show floating helpers panel on OpenFront"
+              title="Show floating helpers panel on OpenFront"
+            >
+              <span aria-hidden="true">⛶</span>
+              <span>Float</span>
+            </button>
+          </div>
           <div class="helper-category">
             <button
               class="helper-category-toggle"

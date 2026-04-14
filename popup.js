@@ -36,6 +36,7 @@ const DEFAULT_SETTINGS = {
   showEconomyHeatmap: false,
   economyHeatmapIntensity: 1,
   showExportPartnerHeatmap: false,
+  showFloatingHelpersPanel: false,
   collapsedHelperCategories: {
     game: false,
     economic: false,
@@ -75,6 +76,7 @@ const statusText = document.getElementById("statusText");
 const searchTimer = document.getElementById("searchTimer");
 const searchTimerValue = document.getElementById("searchTimerValue");
 const filtersForm = document.getElementById("filtersForm");
+const helpersPopoutButton = document.getElementById("helpersPopoutButton");
 const mapFiltersContainer = document.getElementById("mapFilters");
 const mapSearchInput = document.getElementById("mapSearchInput");
 const clearMapFiltersButton = document.getElementById("clearMapFiltersButton");
@@ -330,6 +332,16 @@ function render() {
   powerButton.querySelector(".power-label").textContent = enabled
     ? "Auto-Join ON"
     : "Auto-Join OFF";
+  if (helpersPopoutButton instanceof HTMLButtonElement) {
+    helpersPopoutButton.dataset.active = String(settings.showFloatingHelpersPanel);
+    helpersPopoutButton.setAttribute(
+      "aria-pressed",
+      String(settings.showFloatingHelpersPanel),
+    );
+    helpersPopoutButton.title = settings.showFloatingHelpersPanel
+      ? "Hide floating helpers panel on OpenFront"
+      : "Show floating helpers panel on OpenFront";
+  }
 
   if (enabled) {
     statusText.hidden = false;
@@ -565,6 +577,12 @@ powerButton.addEventListener("click", async () => {
 
   settings.enabled = !settings.enabled;
   settings.searchStartedAt = settings.enabled ? Date.now() : null;
+  await saveSettings();
+  render();
+});
+
+helpersPopoutButton?.addEventListener("click", async () => {
+  settings.showFloatingHelpersPanel = !settings.showFloatingHelpersPanel;
   await saveSettings();
   render();
 });
