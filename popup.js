@@ -34,7 +34,12 @@ const DEFAULT_SETTINGS = {
   fpsSaver: false,
   showAttackAmounts: false,
   showEconomyHeatmap: false,
+  economyHeatmapIntensity: 1,
   showExportPartnerHeatmap: false,
+  collapsedHelperCategories: {
+    game: false,
+    economic: false,
+  },
   includeFilters: {
     ffaLobby: false,
     duosLobby: false,
@@ -82,6 +87,9 @@ const helperInfoTitle = document.getElementById("helperInfoTitle");
 const helperInfoImage = document.getElementById("helperInfoImage");
 const helperInfoCloseButton = document.getElementById("helperInfoCloseButton");
 const versionBadge = document.getElementById("versionBadge");
+const economyHeatmapIntensityValue = document.getElementById(
+  "economyHeatmapIntensityValue",
+);
 
 let settings = normalizeSettings();
 let showInstallNotice = false;
@@ -115,10 +123,15 @@ function normalizeSettings(rawSettings = {}) {
   const mapFilters = rawSettings.mapFilters || rawSettings.maps || {};
   const mapExcludeFilters =
     rawSettings.mapExcludeFilters || rawSettings.mapExcludes || {};
+  const collapsedHelperCategories = rawSettings.collapsedHelperCategories || {};
 
   const normalized = {
     ...DEFAULT_SETTINGS,
     ...rawSettings,
+    collapsedHelperCategories: {
+      ...DEFAULT_SETTINGS.collapsedHelperCategories,
+      ...collapsedHelperCategories,
+    },
     searchStartedAt: normalizeSearchStartedAt(rawSettings),
     includeFilters: {
       ...DEFAULT_SETTINGS.includeFilters,
@@ -135,8 +148,23 @@ function normalizeSettings(rawSettings = {}) {
   if (normalized.showEconomyHeatmap && normalized.showExportPartnerHeatmap) {
     normalized.showExportPartnerHeatmap = false;
   }
+  normalized.economyHeatmapIntensity = normalizeEconomyHeatmapIntensity(
+    normalized.economyHeatmapIntensity,
+  );
 
   return normalized;
+}
+
+function normalizeEconomyHeatmapIntensity(value) {
+  const intensity = Number(value);
+  if (!Number.isFinite(intensity)) {
+    return DEFAULT_SETTINGS.economyHeatmapIntensity;
+  }
+  return Math.max(0, Math.min(2, Math.round(intensity)));
+}
+
+function getEconomyHeatmapIntensityLabel(value) {
+  return ["Low", "Default", "High"][normalizeEconomyHeatmapIntensity(value)];
 }
 
 function formatElapsedTime(startedAt) {
@@ -161,6 +189,24 @@ function renderSearchTimer() {
 
   searchTimer.hidden = false;
   searchTimerValue.textContent = formatElapsedTime(settings.searchStartedAt);
+}
+
+function renderHelperCategoryCollapse() {
+  for (const toggle of filtersForm.querySelectorAll(".helper-category-toggle")) {
+    const category = toggle.dataset.helperCategory;
+    if (!category) {
+      continue;
+    }
+
+    const collapsed = Boolean(settings.collapsedHelperCategories?.[category]);
+    toggle.setAttribute("aria-expanded", String(!collapsed));
+    const content = filtersForm.querySelector(
+      `[data-helper-category-content="${category}"]`,
+    );
+    if (content instanceof HTMLElement) {
+      content.hidden = collapsed;
+    }
+  }
 }
 
 function syncTimerInterval() {
@@ -300,6 +346,7 @@ function render() {
 
   renderSearchTimer();
   syncTimerInterval();
+  renderHelperCategoryCollapse();
 
   clearMapFiltersButton.disabled =
     !hasSelectedMapFilters() && !hasExcludedMapFilters();
@@ -390,6 +437,18 @@ function render() {
   );
   if (showEconomyHeatmapInput instanceof HTMLInputElement) {
     showEconomyHeatmapInput.checked = Boolean(settings.showEconomyHeatmap);
+  }
+
+  const economyHeatmapIntensityInput = filtersForm.elements.namedItem(
+    "economyHeatmapIntensity",
+  );
+  if (economyHeatmapIntensityInput instanceof HTMLInputElement) {
+    economyHeatmapIntensityInput.value = String(settings.economyHeatmapIntensity);
+  }
+  if (economyHeatmapIntensityValue instanceof HTMLElement) {
+    economyHeatmapIntensityValue.textContent = getEconomyHeatmapIntensityLabel(
+      settings.economyHeatmapIntensity,
+    );
   }
 
   const showExportPartnerHeatmapInput = filtersForm.elements.namedItem(
@@ -582,6 +641,15 @@ filtersForm.addEventListener("change", async (event) => {
     return;
   }
 
+  if (target.name === "economyHeatmapIntensity") {
+    settings.economyHeatmapIntensity = normalizeEconomyHeatmapIntensity(
+      target.value,
+    );
+    await saveSettings();
+    render();
+    return;
+  }
+
   if (target.name === "showExportPartnerHeatmap") {
     settings.showExportPartnerHeatmap = target.checked;
     if (target.checked) {
@@ -604,6 +672,46 @@ filtersForm.addEventListener("change", async (event) => {
   }
   await saveSettings();
   render();
+});
+
+filtersForm.addEventListener("input", (event) => {
+  const target = event.target;
+  if (
+    !(target instanceof HTMLInputElement) ||
+    target.name !== "economyHeatmapIntensity" ||
+    !(economyHeatmapIntensityValue instanceof HTMLElement)
+  ) {
+    return;
+  }
+
+  economyHeatmapIntensityValue.textContent = getEconomyHeatmapIntensityLabel(
+    target.value,
+  );
+});
+
+filtersForm.addEventListener("click", async (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) {
+    return;
+  }
+
+  const toggle = target.closest(".helper-category-toggle");
+  if (!(toggle instanceof HTMLButtonElement)) {
+    return;
+  }
+
+  const category = toggle.dataset.helperCategory;
+  if (!category) {
+    return;
+  }
+
+  settings.collapsedHelperCategories = {
+    ...DEFAULT_SETTINGS.collapsedHelperCategories,
+    ...settings.collapsedHelperCategories,
+    [category]: !Boolean(settings.collapsedHelperCategories?.[category]),
+  };
+  await saveSettings();
+  renderHelperCategoryCollapse();
 });
 
 filtersForm.addEventListener("click", async (event) => {
