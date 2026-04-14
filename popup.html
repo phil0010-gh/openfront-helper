@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenFront Auto-Join & Helpers</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main class="panel">
+      <header class="hero">
+        <h1>OpenFront Auto-Join & Helpers</h1>
+        <span id="versionBadge" class="version-badge" aria-label="Version 1.5">v1.5</span>
+      </header>
+
+      <section id="installNotice" class="install-notice" hidden>
+        <div class="install-notice-copy">
+          <p class="install-notice-title">One-time setup</p>
+          <p class="install-notice-text">
+            If <strong>openfront.io</strong> was already open when you installed this extension,
+            reload that tab once. Otherwise the extension will not work on that tab.
+          </p>
+        </div>
+        <button id="dismissInstallNoticeButton" class="install-notice-button" type="button">
+          Got it
+        </button>
+      </section>
+
+      <form id="filtersForm" class="popup-layout" autocomplete="off">
+        <section class="filter-group filter-group-helpers">
+          <p class="section-title">Helpers</p>
+          <div class="helper-category">
+            <p class="helper-category-title">Game helpers</p>
+            <label class="filter-card toggle-card">
+              <span class="filter-main">
+                <input type="checkbox" name="markBotNationsRed">
+                <span class="filter-dot"></span>
+                <span class="filter-copy">
+                  <strong>Mark bot nations red <span class="helper-option-icon helper-option-icon-bot" aria-hidden="true">🤖</span></strong>
+                  <small>Adds a red marker to nation AI names on the map.</small>
+                </span>
+              </span>
+              <button
+                class="helper-info-button"
+                type="button"
+                data-info-title="Mark bot nations red"
+                data-info-image="assets/info-images/mark_bot_nations_red_info.png"
+                aria-label="Show Mark bot nations red preview"
+              >i</button>
+            </label>
+            <label class="filter-card toggle-card">
+              <span class="filter-main">
+                <input type="checkbox" name="markHoveredAlliesGreen">
+                <span class="filter-dot"></span>
+                <span class="filter-copy">
+                  <strong>Alliances <span class="helper-option-icon helper-option-icon-alliance" aria-hidden="true">🤝</span></strong>
+                  <small>Highlights allies with remaining alliance time.</small>
+                </span>
+              </span>
+              <button
+                class="helper-info-button"
+                type="button"
+                data-info-title="Show alliances"
+                data-info-image="assets/info-images/show_alliances_info.png"
+                aria-label="Show alliances preview"
+              >i</button>
+            </label>
+            <label class="filter-card toggle-card">
+              <span class="filter-main">
+                <input type="checkbox" name="fpsSaver">
+                <span class="filter-dot"></span>
+                <span class="filter-copy">
+                  <strong>FPS Saver <span class="helper-option-icon helper-option-icon-fps" aria-hidden="true">💥</span></strong>
+                  <small>Disables nuke explosion animations to reduce lag.</small>
+                </span>
+              </span>
+            </label>
+            <label class="filter-card toggle-card">
+              <span class="filter-main">
+                <input type="checkbox" name="showAttackAmounts">
+                <span class="filter-dot"></span>
+                <span class="filter-copy">
+                  <strong>Attack amounts <span class="helper-option-icon helper-option-icon-attack" aria-hidden="true">⚔️</span></strong>
+                  <small>Shows how many troops a player attacks with.</small>
+                </span>
+              </span>
+            </label>
+          </div>
+
+          <div class="helper-category">
+            <p class="helper-category-title">Economic helpers</p>
+            <label class="filter-card toggle-card">
+              <span class="filter-main">
+                <input type="checkbox" name="showGoldPerMinute">
+                <span class="filter-dot"></span>
+                <span class="filter-copy">
+                  <strong>Gold per minute <span class="helper-option-icon helper-option-icon-gold" aria-hidden="true">🪙</span></strong>
+                  <small>Adds GPM to the player hover panel.</small>
+                </span>
+              </span>
+              <button
+                class="helper-info-button"
+                type="button"
+                data-info-title="Show gold per minute"
+                data-info-image="assets/info-images/show_gold_per_minute_info.png"
+                aria-label="Show gold per minute preview"
+              >i</button>
+            </label>
+            <label class="filter-card toggle-card">
+              <span class="filter-main">
+                <input type="checkbox" name="showTeamGoldPerMinute">
+                <span class="filter-dot"></span>
+                <span class="filter-copy">
+                  <strong>Team gold per minute <span class="helper-option-icon helper-option-icon-team" aria-hidden="true">🛡️</span></strong>
+                  <small>Lists each team's total GPM in team games.</small>
+                </span>
+              </span>
+              <button
+                class="helper-info-button"
+                type="button"
+                data-info-title="Show team gold per minute"
+                data-info-image="assets/info-images/show_team_gold_per_minute_info.png"
+                aria-label="Show team gold per minute preview"
+              >i</button>
+            </label>
+            <label class="filter-card toggle-card">
+              <span class="filter-main">
+                <input type="checkbox" name="showTopGoldPerMinute">
+                <span class="filter-dot"></span>
+                <span class="filter-copy">
+                  <strong>Top 10 gold per minute <span class="helper-beta-badge">Beta</span></strong>
+                  <small>Lists the highest tracked player GPM.</small>
+                </span>
+              </span>
+            </label>
+            <label class="filter-card toggle-card">
+              <span class="filter-main">
+                <input type="checkbox" name="showTradeBalances">
+                <span class="filter-dot"></span>
+                <span class="filter-copy">
+                  <strong>Trade balances <span class="helper-option-icon helper-option-icon-trade" aria-hidden="true">🚂</span></strong>
+                  <small>Shows observed ship and train trade imports and exports.</small>
+                </span>
+              </span>
+              <button
+                class="helper-info-button"
+                type="button"
+                data-info-title="Show trade balances"
+                data-info-image="assets/info-images/trade_balance_info.png"
+                aria-label="Show trade balances preview"
+              >i</button>
+            </label>
+            <div class="helper-subpanel helper-subpanel-heatmaps">
+              <p class="helper-subpanel-title">Heatmaps</p>
+              <label class="filter-card toggle-card">
+                <span class="filter-main">
+                  <input type="checkbox" name="showEconomyHeatmap">
+                  <span class="filter-dot"></span>
+                  <span class="filter-copy">
+                    <strong>Economic heatmap <span class="helper-option-icon helper-option-icon-heatmap" aria-hidden="true">🔥</span><span class="helper-beta-badge">Beta</span></strong>
+                    <small>Highlights the strongest economy areas on the map.</small>
+                  </span>
+                </span>
+                <button
+                  class="helper-info-button"
+                  type="button"
+                  data-info-title="Economic heatmap"
+                  data-info-image="assets/info-images/economic_heatmap_info.png"
+                  aria-label="Show Economic heatmap preview"
+                >i</button>
+              </label>
+              <label class="filter-card toggle-card">
+                <span class="filter-main">
+                  <input type="checkbox" name="showExportPartnerHeatmap">
+                  <span class="filter-dot"></span>
+                  <span class="filter-copy">
+                    <strong>Export partner heatmap <span class="helper-beta-badge">Beta</span></strong>
+                    <small>Hover a player to highlight the partner industry that fuels their exports.</small>
+                  </span>
+                </span>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <div class="options-panel">
+          <p class="section-title autojoin-panel-title">Auto-Join</p>
+          <button id="powerButton" class="power-button" type="button" aria-pressed="false">
+            <span class="power-label">Auto-Join OFF</span>
+            <span class="power-indicator"></span>
+          </button>
+
+          <p id="statusText" class="status-text"></p>
+          <div id="searchTimer" class="search-timer" aria-live="polite" hidden>
+            <span class="search-radar" aria-hidden="true"></span>
+            <span class="search-timer-copy">
+              <span class="search-timer-label">Searching for</span>
+              <span id="searchTimerValue" class="search-timer-value">00:00</span>
+            </span>
+          </div>
+          <p class="mode-hint">Checked = Include, `Exclude` = block, empty = ignore. Selected maps match any selected map.</p>
+
+          <div id="filtersFormSections" class="filters">
+            <section class="filter-group">
+              <p class="section-title">Lobby Type</p>
+              <label class="filter-card">
+                <span class="filter-main">
+                  <input type="checkbox" name="ffaLobby">
+                  <span class="filter-dot"></span>
+                  <span class="filter-copy">
+                    <strong>FFA</strong>
+                  </span>
+                </span>
+                <button class="exclude-button" type="button" data-filter="ffaLobby">Exclude</button>
+              </label>
+
+              <label class="filter-card">
+                <span class="filter-main">
+                  <input type="checkbox" name="duosLobby">
+                  <span class="filter-dot"></span>
+                  <span class="filter-copy">
+                    <strong>Duos</strong>
+                  </span>
+                </span>
+                <button class="exclude-button" type="button" data-filter="duosLobby">Exclude</button>
+              </label>
+
+              <label class="filter-card">
+                <span class="filter-main">
+                  <input type="checkbox" name="triosLobby">
+                  <span class="filter-dot"></span>
+                  <span class="filter-copy">
+                    <strong>Trios</strong>
+                  </span>
+                </span>
+                <button class="exclude-button" type="button" data-filter="triosLobby">Exclude</button>
+              </label>
+
+              <label class="filter-card">
+                <span class="filter-main">
+                  <input type="checkbox" name="quadsLobby">
+                  <span class="filter-dot"></span>
+                  <span class="filter-copy">
+                    <strong>Quads</strong>
+                  </span>
+                </span>
+                <button class="exclude-button" type="button" data-filter="quadsLobby">Exclude</button>
+              </label>
+
+              <label class="filter-card">
+                <span class="filter-main">
+                  <input type="checkbox" name="teamsLargerThanTriosLobby">
+                  <span class="filter-dot"></span>
+                  <span class="filter-copy">
+                    <strong>Teams larger than Quads</strong>
+                    <small>Matches team lobbies with more than 4 players per team.</small>
+                  </span>
+                </span>
+                <button class="exclude-button" type="button" data-filter="teamsLargerThanTriosLobby">Exclude</button>
+              </label>
+            </section>
+
+            <section class="filter-group">
+              <p class="section-title">Modifier</p>
+              <label class="filter-card">
+                <span class="filter-main">
+                  <input type="checkbox" name="randomSpawn">
+                  <span class="filter-dot"></span>
+                  <span class="filter-copy">
+                    <strong>Random spawn</strong>
+                  </span>
+                </span>
+                <button class="exclude-button" type="button" data-filter="randomSpawn">Exclude</button>
+              </label>
+
+              <label class="filter-card">
+                <span class="filter-main">
+                  <input type="checkbox" name="alliancesDisabled">
+                  <span class="filter-dot"></span>
+                  <span class="filter-copy">
+                    <strong>Alliances disabled</strong>
+                  </span>
+                </span>
+                <button class="exclude-button" type="button" data-filter="alliancesDisabled">Exclude</button>
+              </label>
+
+              <label class="filter-card">
+                <span class="filter-main">
+                  <input type="checkbox" name="goldMultiplier2x">
+                  <span class="filter-dot"></span>
+                  <span class="filter-copy">
+                    <strong>2x gold</strong>
+                  </span>
+                </span>
+                <button class="exclude-button" type="button" data-filter="goldMultiplier2x">Exclude</button>
+              </label>
+            </section>
+
+            <section class="filter-group filter-group-start-gold">
+              <p class="section-title">Start Gold</p>
+              <p class="section-note">
+                You can turn on all three at the same time. Only one of them has to match.
+              </p>
+              <label class="filter-card">
+                <span class="filter-main">
+                  <input type="checkbox" name="startingGold0M">
+                  <span class="filter-dot"></span>
+                  <span class="filter-copy">
+                    <strong>0M starting gold</strong>
+                    <small>Default case with no explicit starting gold.</small>
+                  </span>
+                </span>
+                <button class="exclude-button" type="button" data-filter="startingGold0M">Exclude</button>
+              </label>
+
+              <label class="filter-card">
+                <span class="filter-main">
+                  <input type="checkbox" name="startingGold5M">
+                  <span class="filter-dot"></span>
+                  <span class="filter-copy">
+                    <strong>5M starting gold</strong>
+                  </span>
+                </span>
+                <button class="exclude-button" type="button" data-filter="startingGold5M">Exclude</button>
+              </label>
+
+              <label class="filter-card">
+                <span class="filter-main">
+                  <input type="checkbox" name="startingGold25M">
+                  <span class="filter-dot"></span>
+                  <span class="filter-copy">
+                    <strong>25M starting gold</strong>
+                  </span>
+                </span>
+                <button class="exclude-button" type="button" data-filter="startingGold25M">Exclude</button>
+              </label>
+            </section>
+
+            <aside class="map-filter-panel" aria-labelledby="mapFilterTitle">
+              <div class="map-filter-head">
+                <div>
+                  <p id="mapFilterTitle" class="section-title">Maps</p>
+                </div>
+                <button id="clearMapFiltersButton" class="clear-map-button" type="button">Clear</button>
+              </div>
+              <label class="map-search-label" for="mapSearchInput">Search maps</label>
+              <input id="mapSearchInput" class="map-search-input" type="search" placeholder="Search maps" autocomplete="off">
+              <div id="mapFilters" class="map-filters" aria-label="Map filters"></div>
+            </aside>
+          </div>
+
+          <footer class="footer-note">
+            Include requires a match. Exclude blocks an option. For starting gold, any included value is enough, while excluded values are always rejected.
+          </footer>
+        </div>
+      </form>
+
+      <div id="helperInfoPopup" class="helper-info-popup" aria-hidden="true">
+        <div class="helper-info-card" role="dialog" aria-modal="false" aria-labelledby="helperInfoTitle">
+          <div class="helper-info-head">
+            <p id="helperInfoTitle" class="helper-info-title"></p>
+            <button id="helperInfoCloseButton" class="helper-info-close" type="button" aria-label="Close helper preview">Close</button>
+          </div>
+          <img id="helperInfoImage" class="helper-info-image" alt="">
+        </div>
+      </div>
+      <div class="location-footer" aria-label="Cologne, Germany and European Union">
+        <span>Cologne</span>
+        <span class="title-flags" aria-hidden="true">
+          <span class="title-cathedral" title="Cologne Cathedral">
+            <span class="title-cathedral-tower"></span>
+            <span class="title-cathedral-body"></span>
+            <span class="title-cathedral-tower"></span>
+          </span>
+          <span class="title-flag title-flag-de" title="Germany"></span>
+          <span class="title-flag title-flag-eu" title="European Union"></span>
+        </span>
+      </div>
+    </main>
+
+    <script src="map-data.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>
