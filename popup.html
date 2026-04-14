@@ -30,7 +30,16 @@
         <section class="filter-group filter-group-helpers">
           <p class="section-title">Helpers</p>
           <div class="helper-category">
-            <p class="helper-category-title">Game helpers</p>
+            <button
+              class="helper-category-toggle"
+              type="button"
+              data-helper-category="game"
+              aria-expanded="true"
+            >
+              <span class="helper-category-title">Game helpers</span>
+              <span class="helper-category-chevron" aria-hidden="true"></span>
+            </button>
+            <div class="helper-category-content" data-helper-category-content="game">
             <label class="filter-card toggle-card">
               <span class="filter-main">
                 <input type="checkbox" name="markBotNationsRed">
@@ -85,10 +94,20 @@
                 </span>
               </span>
             </label>
+            </div>
           </div>
 
           <div class="helper-category">
-            <p class="helper-category-title">Economic helpers</p>
+            <button
+              class="helper-category-toggle"
+              type="button"
+              data-helper-category="economic"
+              aria-expanded="true"
+            >
+              <span class="helper-category-title">Economic helpers</span>
+              <span class="helper-category-chevron" aria-hidden="true"></span>
+            </button>
+            <div class="helper-category-content" data-helper-category-content="economic">
             <label class="filter-card toggle-card">
               <span class="filter-main">
                 <input type="checkbox" name="showGoldPerMinute">
@@ -128,7 +147,7 @@
                 <input type="checkbox" name="showTopGoldPerMinute">
                 <span class="filter-dot"></span>
                 <span class="filter-copy">
-                  <strong>Top 10 gold per minute <span class="helper-beta-badge">Beta</span></strong>
+                  <strong>Top 10 gold per minute</strong>
                   <small>Lists the highest tracked player GPM.</small>
                 </span>
               </span>
@@ -152,15 +171,15 @@
             </label>
             <div class="helper-subpanel helper-subpanel-heatmaps">
               <p class="helper-subpanel-title">Heatmaps</p>
-              <label class="filter-card toggle-card">
-                <span class="filter-main">
+              <div class="filter-card toggle-card helper-heatmap-card">
+                <label class="filter-main">
                   <input type="checkbox" name="showEconomyHeatmap">
                   <span class="filter-dot"></span>
                   <span class="filter-copy">
-                    <strong>Economic heatmap <span class="helper-option-icon helper-option-icon-heatmap" aria-hidden="true">🔥</span><span class="helper-beta-badge">Beta</span></strong>
-                    <small>Highlights the strongest economy areas on the map.</small>
+                    <strong>Economic heatmap <span class="helper-option-icon helper-option-icon-heatmap" aria-hidden="true">🔥</span></strong>
+                    <small>Highlights structures with observed trade revenue.</small>
                   </span>
-                </span>
+                </label>
                 <button
                   class="helper-info-button"
                   type="button"
@@ -168,17 +187,38 @@
                   data-info-image="assets/info-images/economic_heatmap_info.png"
                   aria-label="Show Economic heatmap preview"
                 >i</button>
-              </label>
+                <label class="helper-slider-card" for="economyHeatmapIntensity">
+                  <span class="helper-slider-header">
+                    <strong>Intensity</strong>
+                    <span class="helper-slider-value" id="economyHeatmapIntensityValue">Default</span>
+                  </span>
+                  <input
+                    id="economyHeatmapIntensity"
+                    name="economyHeatmapIntensity"
+                    type="range"
+                    min="0"
+                    max="2"
+                    step="1"
+                    value="1"
+                  >
+                  <span class="helper-slider-labels" aria-hidden="true">
+                    <span>Low</span>
+                    <span>Default</span>
+                    <span>High</span>
+                  </span>
+                </label>
+              </div>
               <label class="filter-card toggle-card">
                 <span class="filter-main">
                   <input type="checkbox" name="showExportPartnerHeatmap">
                   <span class="filter-dot"></span>
                   <span class="filter-copy">
-                    <strong>Export partner heatmap <span class="helper-beta-badge">Beta</span></strong>
+                    <strong>Export partner heatmap</strong>
                     <small>Hover a player to highlight the partner industry that fuels their exports.</small>
                   </span>
                 </span>
               </label>
+            </div>
             </div>
           </div>
         </section>

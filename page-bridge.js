@@ -32,6 +32,7 @@
   const ECONOMY_HEATMAP_DRAW_MS = 66;
   const ECONOMY_HEATMAP_DATA_REFRESH_MS = 1000;
   const ECONOMY_HEATMAP_VIEWPORT_PADDING = 120;
+  const ECONOMY_HEATMAP_REVENUE_WINDOW_MS = 180000;
   const HEATMAP_REFERENCE_ZOOM = 1.8;
   const TEAM_COLORS = {
     Red: "#ef4444",
@@ -74,6 +75,7 @@
   let lastEconomyHeatmapDataAt = 0;
   let economyHeatmapDataGame = null;
   let economyHeatmapSources = [];
+  let economyHeatmapIntensity = 1;
   let exportPartnerHeatmapEnabled = false;
   let exportPartnerHeatmapAnimationFrame = null;
   let lastExportPartnerHeatmapDrawAt = 0;
@@ -82,9 +84,11 @@
   const incomingGoldTransfers = new Map();
   const tradeBalanceTrackers = new Map();
   const exportPartnerSourceTrackers = new Map();
+  const economyRevenueSourceTrackers = new Map();
   const factoryPortSpendTrackers = new Map();
   const factoryPortUnitTrackers = new Map();
   const trainTradeTrackers = new Map();
+  const tradeShipSourceTrackers = new Map();
   const attackAmountPositions = new Map();
   const attackAmountBorderTiles = new Map();
   const attackAmountBorderTileRequests = new Set();
@@ -456,23 +460,6 @@
     return { canvas, pixelRatio };
   }
 
-  function getPlayerEconomicRate(game, player) {
-    try {
-      const rate = Number(game?.config?.().goldAdditionRate?.(player));
-      if (Number.isFinite(rate) && rate > 0) {
-        return rate;
-      }
-    } catch (_error) {
-      // Fall through to a terrain-size estimate when the exact config method is unavailable.
-    }
-
-    const tiles = Number(player?.numTilesOwned?.());
-    if (Number.isFinite(tiles) && tiles > 0) {
-      return Math.pow(tiles, 0.6) * 1000;
-    }
-    return 0;
-  }
-
   function toFiniteNumber(value, fallback = 0) {
     const numberValue = typeof value === "bigint" ? Number(value) : Number(value);
     return Number.isFinite(numberValue) ? numberValue : fallback;
@@ -480,46 +467,6 @@
 
   function getUnitLevel(unit) {
     return Math.max(1, toFiniteNumber(unit?.level?.(), 1));
-  }
-
-  function getUnitEconomicWeight(unit) {
-    const type = String(unit?.type?.() ?? "");
-    const level = getUnitLevel(unit);
-    if (type === "Factory") {
-      return 8 + level * 2;
-    }
-    if (type === "Port") {
-      return 6 + level * 2;
-    }
-    if (type === "City") {
-      return 5 + level;
-    }
-    return 0;
-  }
-
-  function getEconomicUnits(player) {
-    try {
-      return Array.from(player?.units?.("City", "Port", "Factory") || []);
-    } catch (_error) {
-      return [];
-    }
-  }
-
-  function getObservedPlayerGoldPerMinute(player, fallbackIndex) {
-    const playerId = getPlayerMarkerId(player, fallbackIndex);
-    const tracker = goldTrackers.get(playerId);
-    if (!tracker || tracker.samples.length < 2) {
-      return null;
-    }
-
-    const first = tracker.samples[0];
-    const last = tracker.samples[tracker.samples.length - 1];
-    const elapsedMs = last.time - first.time;
-    if (elapsedMs <= 0) {
-      return null;
-    }
-
-    return ((last.earnedTotal - first.earnedTotal) / elapsedMs) * 60000;
   }
 
   function canStationTradeWith(player, otherPlayer) {
@@ -530,112 +477,6 @@
       return true;
     }
     return canPlayersTrade(player, otherPlayer);
-  }
-
-  function getPotentialPortTradeProfit(game, port, allPorts) {
-    if (String(port?.type?.() ?? "") !== "Port") {
-      return 0;
-    }
-
-    const owner = port.owner?.();
-    const tile = port.tile?.();
-    if (!owner || tile == null) {
-      return 0;
-    }
-
-    const routeValues = [];
-    for (const otherPort of allPorts) {
-      if (otherPort === port || !otherPort?.isActive?.()) {
-        continue;
-      }
-
-      const otherOwner = otherPort.owner?.();
-      const otherTile = otherPort.tile?.();
-      if (!otherOwner || otherTile == null || !canPlayersTrade(owner, otherOwner)) {
-        continue;
-      }
-
-      const distance = toFiniteNumber(game?.manhattanDist?.(tile, otherTile));
-      if (distance <= 0) {
-        continue;
-      }
-
-      const gold = toFiniteNumber(game?.config?.().tradeShipGold?.(distance));
-      if (gold > 0) {
-        routeValues.push(gold);
-      }
-    }
-
-    routeValues.sort((a, b) => b - a);
-    const bestRoutes = routeValues.slice(0, 4).reduce((total, value) => total + value, 0);
-    return (bestRoutes / 2800) * (1 + (getUnitLevel(port) - 1) * 0.18);
-  }
-
-  function getPotentialTrainStationProfit(game, unit, allStations) {
-    if (!unit?.hasTrainStation?.()) {
-      return 0;
-    }
-
-    const owner = unit.owner?.();
-    const tile = unit.tile?.();
-    if (!owner || tile == null) {
-      return 0;
-    }
-
-    const maxRange = Math.max(
-      1,
-      toFiniteNumber(game?.config?.().trainStationMaxRange?.(), 100),
-    );
-    const stationValues = [];
-    for (const otherStation of allStations) {
-      if (otherStation === unit || !otherStation?.isActive?.()) {
-        continue;
-      }
-
-      const otherType = String(otherStation?.type?.() ?? "");
-      if (otherType !== "City" && otherType !== "Port") {
-        continue;
-      }
-
-      const otherOwner = otherStation.owner?.();
-      const otherTile = otherStation.tile?.();
-      if (!otherOwner || otherTile == null || !canStationTradeWith(owner, otherOwner)) {
-        continue;
-      }
-
-      const distance = toFiniteNumber(game?.manhattanDist?.(tile, otherTile));
-      if (distance <= 0 || distance > maxRange) {
-        continue;
-      }
-
-      const relation = getTrainRelation(owner, otherOwner);
-      const gold = toFiniteNumber(
-        game?.config?.().trainGold?.(relation, stationValues.length),
-      );
-      if (gold > 0) {
-        const proximity = 1 + (maxRange - distance) / maxRange;
-        stationValues.push(gold * proximity);
-      }
-    }
-
-    stationValues.sort((a, b) => b - a);
-    const bestStations = stationValues.slice(0, 8).reduce((total, value) => total + value, 0);
-    const type = String(unit?.type?.() ?? "");
-    if (type === "Factory") {
-      return (bestStations / 2600) * 1.55;
-    }
-    return bestStations / 3800;
-  }
-
-  function getStructureProfitWeight(game, unit, context) {
-    const portProfit = getPotentialPortTradeProfit(game, unit, context.allPorts);
-    const trainProfit = getPotentialTrainStationProfit(game, unit, context.allStations);
-    const directProfit = portProfit + trainProfit;
-    if (directProfit <= 0) {
-      return 0;
-    }
-
-    return directProfit * (1 + Math.max(0, getUnitLevel(unit) - 1) * 0.18);
   }
 
   function getHeatmapTypePriority(type) {
@@ -671,6 +512,117 @@
       weight,
       type,
     });
+  }
+
+  function getRevenueUnitKey(unit) {
+    const unitId = toFiniteNumber(unit?.id?.(), NaN);
+    if (Number.isFinite(unitId)) {
+      return `unit:${unitId}`;
+    }
+
+    const tile = unit?.tile?.();
+    const type = String(unit?.type?.() ?? "Industry");
+    return tile == null ? null : `tile:${type}:${tile}`;
+  }
+
+  function isEconomyRevenueType(type) {
+    return type === "City" || type === "Port" || type === "Factory";
+  }
+
+  function addEconomyRevenueSource(unit, goldAmount) {
+    const amount = toFiniteNumber(goldAmount);
+    if (!unit || !Number.isFinite(amount) || amount <= 0) {
+      return;
+    }
+
+    const type = String(unit?.type?.() ?? "Industry");
+    if (!isEconomyRevenueType(type)) {
+      return;
+    }
+
+    const tile = unit?.tile?.();
+    if (tile == null) {
+      return;
+    }
+
+    const key = getRevenueUnitKey(unit);
+    if (!key) {
+      return;
+    }
+
+    const unitId = toFiniteNumber(unit?.id?.(), NaN);
+    const owner = unit?.owner?.();
+    const entry = economyRevenueSourceTrackers.get(key) ?? {
+      unitId: Number.isFinite(unitId) ? unitId : null,
+      ownerId: owner ? getPlayerSmallId(owner) : null,
+      tile,
+      type,
+      total: 0,
+      events: [],
+    };
+    entry.unitId = Number.isFinite(unitId) ? unitId : entry.unitId;
+    entry.ownerId = owner ? getPlayerSmallId(owner) : entry.ownerId;
+    entry.tile = tile;
+    entry.type = type;
+    entry.events.push({
+      amount,
+      at: Date.now(),
+    });
+    entry.total += amount;
+    economyRevenueSourceTrackers.set(key, entry);
+  }
+
+  function getActiveRevenueUnit(game, entry) {
+    const unitId = Number(entry?.unitId);
+    if (Number.isFinite(unitId)) {
+      try {
+        const unit = game?.unit?.(unitId);
+        if (
+          unit?.isActive?.() &&
+          String(unit?.type?.() ?? "") === String(entry.type ?? "")
+        ) {
+          return unit;
+        }
+      } catch (_error) {
+        // Fall back to a tile lookup below.
+      }
+    }
+
+    try {
+      return (
+        Array.from(game?.units?.(entry.type) || []).find(
+          (unit) => unit?.isActive?.() && unit?.tile?.() === entry.tile,
+        ) ?? null
+      );
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  function pruneEconomyRevenueSources(game) {
+    const cutoff = Date.now() - ECONOMY_HEATMAP_REVENUE_WINDOW_MS;
+    for (const [key, entry] of economyRevenueSourceTrackers.entries()) {
+      const unit = getActiveRevenueUnit(game, entry);
+      if (!unit) {
+        economyRevenueSourceTrackers.delete(key);
+        continue;
+      }
+
+      entry.tile = unit.tile?.() ?? entry.tile;
+      entry.type = String(unit?.type?.() ?? entry.type);
+      entry.events = entry.events.filter(
+        (event) =>
+          Number.isFinite(event?.amount) &&
+          event.amount > 0 &&
+          Number.isFinite(event?.at) &&
+          event.at >= cutoff,
+      );
+      entry.total = entry.events.reduce((total, event) => total + event.amount, 0);
+
+      if (entry.total <= 0) {
+        economyRevenueSourceTrackers.delete(key);
+      }
+    }
   }
 
   function getHeatmapZoomScale(transform) {
@@ -724,30 +676,19 @@
 
   function collectEconomyHeatmapSources(game) {
     const sources = [];
-    const players = Array.from(game?.playerViews?.() || []);
-    const allPorts = Array.from(game?.units?.("Port") || []);
-    const allStations = Array.from(game?.units?.("City", "Port", "Factory") || []).filter(
-      (unit) => unit?.hasTrainStation?.(),
-    );
+    pruneEconomyRevenueSources(game);
 
-    for (const player of players) {
-      if (!player?.isAlive?.()) {
+    for (const entry of economyRevenueSourceTrackers.values()) {
+      if (
+        entry.tile == null ||
+        !Number.isFinite(entry.total) ||
+        entry.total <= 0 ||
+        !isEconomyRevenueType(String(entry.type ?? ""))
+      ) {
         continue;
       }
 
-      const units = getEconomicUnits(player).filter((unit) => !unit?.isUnderConstruction?.());
-      for (const unit of units) {
-        const profitWeight = getStructureProfitWeight(game, unit, {
-          allPorts,
-          allStations,
-        });
-        addEconomicSource(
-          sources,
-          unit.tile?.(),
-          profitWeight,
-          String(unit?.type?.() ?? "Industry"),
-        );
-      }
+      addEconomicSource(sources, entry.tile, entry.total, entry.type);
     }
 
     return sources;
@@ -768,14 +709,43 @@
     return economyHeatmapSources;
   }
 
+  function normalizeEconomyHeatmapIntensity(value) {
+    const intensity = Number(value);
+    if (!Number.isFinite(intensity)) {
+      return 1;
+    }
+    return Math.max(0, Math.min(2, Math.round(intensity)));
+  }
+
+  function getEconomyHeatmapIntensitySettings() {
+    return [
+      { alpha: 0.7, radius: 0.88 },
+      { alpha: 1, radius: 1 },
+      { alpha: 1.35, radius: 1.18 },
+    ][normalizeEconomyHeatmapIntensity(economyHeatmapIntensity)];
+  }
+
   function drawEconomyHeatmapPoint(ctx, point, maxWeight, pixelRatio) {
-    const intensity = Math.max(0.28, Math.min(1, point.weight / maxWeight));
+    const baseIntensity = Math.max(0.28, Math.min(1, point.weight / maxWeight));
+    const intensitySettings = getEconomyHeatmapIntensitySettings();
+    const intensity = Math.max(
+      0.14,
+      Math.min(1, baseIntensity * intensitySettings.alpha),
+    );
+    const radiusIntensity = Math.max(
+      0.22,
+      Math.min(1, baseIntensity * intensitySettings.radius),
+    );
     const x = point.x * pixelRatio;
     const y = point.y * pixelRatio;
     const typeScale =
       point.type === "Factory" ? 1.25 : point.type === "Port" ? 1.05 : 0.9;
+    const zoomRadiusScale =
+      point.zoomScale < 1
+        ? Math.min(1.35, Math.max(0.68, point.zoomScale * 1.8))
+        : point.zoomScale;
     const radius =
-      (18 + intensity * 52) * typeScale * point.zoomScale * pixelRatio;
+      (18 + radiusIntensity * 52) * typeScale * zoomRadiusScale * pixelRatio;
     const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
     gradient.addColorStop(0, `rgba(239, 68, 68, ${0.9 * intensity})`);
     gradient.addColorStop(0.3, `rgba(250, 204, 21, ${0.68 * intensity})`);
@@ -817,6 +787,7 @@
     }
 
     sampleGoldPerMinuteIfDue();
+    processTradeBalanceUpdates(context.game);
     let points = [];
     try {
       const sources = getEconomyHeatmapSources(context.game);
@@ -831,7 +802,7 @@
       return;
     }
     if (points.length === 0) {
-      canvas.parentElement?.setAttribute("data-status", "Economic heatmap: no profitable structures found");
+      canvas.parentElement?.setAttribute("data-status", "Economic heatmap: waiting for observed trade revenue");
       economyHeatmapAnimationFrame = requestAnimationFrame(drawEconomyHeatmap);
       return;
     }
@@ -859,8 +830,12 @@
           : point.type === "Port"
             ? 1.05
             : 0.95;
+    const zoomRadiusScale =
+      point.zoomScale < 1
+        ? Math.min(1.15, Math.max(0.58, point.zoomScale * 1.55))
+        : point.zoomScale;
     const radius =
-      (20 + intensity * 64) * typeScale * point.zoomScale * pixelRatio;
+      (20 + intensity * 64) * typeScale * zoomRadiusScale * pixelRatio;
     const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
     gradient.addColorStop(0, `rgba(20, 184, 166, ${0.94 * intensity})`);
     gradient.addColorStop(0.34, `rgba(250, 204, 21, ${0.66 * intensity})`);
@@ -2428,6 +2403,121 @@
     return Number(value);
   }
 
+  function findOwnedStructureAtTile(game, tile, allowedTypes, owner = null, radius = 2) {
+    if (tile == null) {
+      return null;
+    }
+
+    function matches(unit) {
+      try {
+        return (
+          unit?.isActive?.() &&
+          allowedTypes.includes(unit?.type?.()) &&
+          (owner === null ||
+            getPlayerSmallId(unit?.owner?.()) === getPlayerSmallId(owner))
+        );
+      } catch (_error) {
+        return false;
+      }
+    }
+
+    try {
+      const exact = Array.from(game?.units?.(...allowedTypes) || []).find(
+        (unit) => matches(unit) && unit.tile?.() === tile,
+      );
+      if (exact) {
+        return exact;
+      }
+    } catch (_error) {
+      // Try nearbyUnits below.
+    }
+
+    try {
+      const nearby = game?.nearbyUnits?.(tile, radius, allowedTypes);
+      return nearby?.find((entry) => matches(entry?.unit))?.unit ?? null;
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  function getTradeShipSourceUnit(game, shipId) {
+    const tracker = tradeShipSourceTrackers.get(String(shipId));
+    if (!tracker) {
+      return null;
+    }
+
+    const sourceUnitId = Number(tracker.sourceUnitId);
+    if (Number.isFinite(sourceUnitId)) {
+      try {
+        const unit = game?.unit?.(sourceUnitId);
+        if (unit?.isActive?.() && String(unit?.type?.() ?? "") === "Port") {
+          return unit;
+        }
+      } catch (_error) {
+        // Fall back to sourceTile.
+      }
+    }
+
+    return findOwnedStructureAtTile(
+      game,
+      tracker.sourceTile,
+      ["Port"],
+      tracker.sourceOwner,
+    );
+  }
+
+  function refreshTradeShipSourceTrackers(game) {
+    const now = Date.now();
+    const activeShipIds = new Set();
+    for (const ship of game?.units?.("Trade Ship") || []) {
+      const shipId = ship?.id?.();
+      if (!Number.isFinite(shipId) || !ship?.isActive?.()) {
+        continue;
+      }
+      activeShipIds.add(String(shipId));
+
+      let tracker = tradeShipSourceTrackers.get(String(shipId));
+      if (!tracker) {
+        tracker = {
+          sourceUnitId: null,
+          sourceTile: null,
+          sourceOwner: ship?.owner?.() ?? null,
+          targetUnitId: toFiniteNumber(ship?.targetUnitId?.(), NaN),
+          lastSeenAt: now,
+        };
+      }
+      tracker.lastSeenAt = now;
+
+      if (!Number.isFinite(Number(tracker.sourceUnitId))) {
+        const sourcePort = findOwnedStructureAtTile(
+          game,
+          ship?.tile?.(),
+          ["Port"],
+          ship?.owner?.(),
+        );
+        if (sourcePort) {
+          const sourceUnitId = toFiniteNumber(sourcePort?.id?.(), NaN);
+          tracker.sourceUnitId = Number.isFinite(sourceUnitId)
+            ? sourceUnitId
+            : tracker.sourceUnitId;
+          tracker.sourceTile = sourcePort?.tile?.() ?? tracker.sourceTile;
+          tracker.sourceOwner = sourcePort?.owner?.() ?? tracker.sourceOwner;
+        }
+      }
+
+      tradeShipSourceTrackers.set(String(shipId), tracker);
+    }
+
+    for (const shipId of tradeShipSourceTrackers.keys()) {
+      if (!activeShipIds.has(shipId)) {
+        const tracker = tradeShipSourceTrackers.get(shipId);
+        if (!Number.isFinite(tracker?.lastSeenAt) || now - tracker.lastSeenAt > 30000) {
+          tradeShipSourceTrackers.delete(shipId);
+        }
+      }
+    }
+  }
+
   function getTradeDirection(receiverId, partnerId, boatRoutes) {
     const route = getTradeRoute(receiverId, partnerId, boatRoutes);
     if (!route) {
@@ -2461,8 +2551,10 @@
         }
 
         routes.push({
+          shipId: String(event.id),
           sourceId,
           destinationId,
+          sourceUnit: getTradeShipSourceUnit(game, event.id),
           destinationUnit: targetUnit,
         });
       }
@@ -2490,29 +2582,127 @@
     return boatRoutes.splice(routeIndex, 1)[0];
   }
 
-  function isTradeStationUnit(unit) {
+  function isTrainStationUnit(unit, allowedTypes = ["City", "Port"], owner = null) {
     try {
       const type = unit?.type?.();
-      return (type === "City" || type === "Port") && unit?.hasTrainStation?.();
+      if (!allowedTypes.includes(type) || !unit?.hasTrainStation?.()) {
+        return false;
+      }
+      if (!owner) {
+        return true;
+      }
+      return getPlayerSmallId(unit?.owner?.()) === getPlayerSmallId(owner);
     } catch (_error) {
       return false;
     }
   }
 
-  function findTrainStationAtTile(game, tile) {
+  function findTrainStationAtTile(game, tile, allowedTypes = ["City", "Port"], owner = null) {
     if (tile == null) {
       return null;
     }
 
-    const exact = Array.from(game?.units?.("City", "Port") || []).find(
-      (unit) => isTradeStationUnit(unit) && unit.tile?.() === tile,
+    const exact = Array.from(game?.units?.(...allowedTypes) || []).find(
+      (unit) => isTrainStationUnit(unit, allowedTypes, owner) && unit.tile?.() === tile,
     );
     if (exact) {
       return exact;
     }
 
-    const nearby = game?.nearbyUnits?.(tile, 2, ["City", "Port"]);
-    return nearby?.find((entry) => isTradeStationUnit(entry?.unit))?.unit ?? null;
+    const nearby = game?.nearbyUnits?.(tile, 2, allowedTypes);
+    return (
+      nearby?.find((entry) => isTrainStationUnit(entry?.unit, allowedTypes, owner))?.unit ??
+      null
+    );
+  }
+
+  function findNearestOwnedFactory(game, tile, owner) {
+    if (tile == null || !owner) {
+      return null;
+    }
+
+    let bestFactory = null;
+    let bestDistance = Number.POSITIVE_INFINITY;
+    try {
+      for (const factory of owner?.units?.("Factory") || []) {
+        if (!factory?.isActive?.() || !factory?.hasTrainStation?.()) {
+          continue;
+        }
+
+        const factoryTile = factory.tile?.();
+        if (factoryTile == null) {
+          continue;
+        }
+
+        const distance = toFiniteNumber(game?.manhattanDist?.(tile, factoryTile), NaN);
+        if (Number.isFinite(distance) && distance < bestDistance) {
+          bestDistance = distance;
+          bestFactory = factory;
+        }
+      }
+    } catch (_error) {
+      return null;
+    }
+
+    const maxRange = Math.max(
+      1,
+      toFiniteNumber(game?.config?.().trainStationMaxRange?.(), 100),
+    );
+    return bestDistance <= maxRange ? bestFactory : null;
+  }
+
+  function getTrackedTrainSourceFactory(game, tracker, trainOwner) {
+    const sourceUnitId = Number(tracker?.sourceUnitId);
+    if (Number.isFinite(sourceUnitId)) {
+      try {
+        const unit = game?.unit?.(sourceUnitId);
+        if (
+          unit?.isActive?.() &&
+          String(unit?.type?.() ?? "") === "Factory" &&
+          getPlayerSmallId(unit?.owner?.()) === getPlayerSmallId(trainOwner)
+        ) {
+          return unit;
+        }
+      } catch (_error) {
+        // Try to rediscover the source from the stored source tile below.
+      }
+    }
+
+    return findNearestOwnedFactory(game, tracker?.sourceTile, trainOwner);
+  }
+
+  function rememberTrainSourceFactory(tracker, factory) {
+    if (!tracker || !factory) {
+      return;
+    }
+
+    const unitId = toFiniteNumber(factory?.id?.(), NaN);
+    tracker.sourceUnitId = Number.isFinite(unitId) ? unitId : tracker.sourceUnitId;
+    tracker.sourceTile = factory?.tile?.() ?? tracker.sourceTile;
+  }
+
+  function findTrainSourceFactory(game, engine, tracker = null) {
+    const trainOwner = engine?.owner?.();
+    if (!trainOwner) {
+      return null;
+    }
+
+    const trackedFactory = getTrackedTrainSourceFactory(game, tracker, trainOwner);
+    if (trackedFactory) {
+      return trackedFactory;
+    }
+
+    const sourceAtCurrentTile = findTrainStationAtTile(
+      game,
+      engine?.tile?.(),
+      ["Factory"],
+      trainOwner,
+    );
+    if (sourceAtCurrentTile) {
+      return sourceAtCurrentTile;
+    }
+
+    return findNearestOwnedFactory(game, tracker?.firstTile ?? engine?.tile?.(), trainOwner);
   }
 
   function getTrainRelation(trainOwner, stationOwner) {
@@ -2555,13 +2745,19 @@
       const station = findTrainStationAtTile(game, engine.tile?.());
       let tracker = trainTradeTrackers.get(engineId);
       if (!tracker) {
+        const sourceFactory = findTrainSourceFactory(game, engine);
         tracker = {
+          firstTile: engine.tile?.(),
           lastStationKey: station ? String(station.id?.() ?? station.tile?.()) : null,
           stopsVisited: 0,
+          sourceUnitId: null,
+          sourceTile: null,
         };
+        rememberTrainSourceFactory(tracker, sourceFactory);
         trainTradeTrackers.set(engineId, tracker);
         continue;
       }
+      rememberTrainSourceFactory(tracker, findTrainSourceFactory(game, engine, tracker));
 
       if (!station) {
         tracker.lastStationKey = null;
@@ -2576,7 +2772,7 @@
 
       const trainOwner = engine.owner?.();
       const stationOwner = station.owner?.();
-      if (!trainOwner || !stationOwner || !canPlayersTrade(trainOwner, stationOwner)) {
+      if (!trainOwner || !stationOwner || !canStationTradeWith(trainOwner, stationOwner)) {
         continue;
       }
 
@@ -2584,6 +2780,13 @@
       const goldAmount = Number(game?.config?.().trainGold?.(relation, tracker.stopsVisited));
       tracker.stopsVisited += 1;
       if (!Number.isFinite(goldAmount) || goldAmount <= 0) {
+        continue;
+      }
+
+      addEconomyRevenueSource(station, goldAmount);
+      addEconomyRevenueSource(findTrainSourceFactory(game, engine, tracker), goldAmount);
+
+      if (!canPlayersTrade(trainOwner, stationOwner)) {
         continue;
       }
 
@@ -2619,6 +2822,7 @@
     }
     lastProcessedTradeBalanceTick = currentTick;
 
+    refreshTradeShipSourceTrackers(game);
     processTrainTradeStops(game);
 
     const updates = game?.updatesSinceLastTick?.();
@@ -2655,6 +2859,10 @@
             ? takeTradeRoute(receiverId, numericPartnerId, boatRoutes)
             : matchedRoute;
         const sourceUnit = direction === "export" ? route?.destinationUnit : null;
+        if (direction === "export" && route) {
+          addEconomyRevenueSource(route.sourceUnit, goldAmount);
+          addEconomyRevenueSource(route.destinationUnit, goldAmount);
+        }
         addTradeBalance(receiverId, partnerId, partnerName, goldAmount, direction, sourceUnit);
       }
     }
@@ -3608,12 +3816,13 @@
       }
       tradeBalanceAnimationFrame = null;
       lastProcessedTradeBalanceTick = null;
-      if (!exportPartnerHeatmapEnabled) {
+      if (!exportPartnerHeatmapEnabled && !economyHeatmapEnabled) {
         tradeBalanceTrackers.clear();
         exportPartnerSourceTrackers.clear();
         factoryPortSpendTrackers.clear();
         factoryPortUnitTrackers.clear();
         trainTradeTrackers.clear();
+        tradeShipSourceTrackers.clear();
       }
       const badge = document.getElementById(TRADE_BALANCE_BADGE_ID);
       if (badge) {
@@ -3744,6 +3953,10 @@
     }
   }
 
+  function setEconomyHeatmapIntensity(value) {
+    economyHeatmapIntensity = normalizeEconomyHeatmapIntensity(value);
+  }
+
   function setEconomyHeatmapEnabled(enabled) {
     economyHeatmapEnabled = Boolean(enabled);
     if (!economyHeatmapEnabled) {
@@ -3755,6 +3968,12 @@
       lastEconomyHeatmapDataAt = 0;
       economyHeatmapDataGame = null;
       economyHeatmapSources = [];
+      economyRevenueSourceTrackers.clear();
+      if (!tradeBalancesEnabled && !exportPartnerHeatmapEnabled) {
+        trainTradeTrackers.clear();
+        tradeShipSourceTrackers.clear();
+        lastProcessedTradeBalanceTick = null;
+      }
       if (!goldPerMinuteEnabled && !teamGoldPerMinuteEnabled && !topGoldPerMinuteEnabled) {
         goldTrackers.clear();
         incomingGoldTransfers.clear();
@@ -3779,12 +3998,13 @@
       exportPartnerHeatmapAnimationFrame = null;
       lastExportPartnerHeatmapDrawAt = 0;
       document.getElementById(EXPORT_PARTNER_HEATMAP_CONTAINER_ID)?.remove();
-      if (!tradeBalancesEnabled) {
+      if (!tradeBalancesEnabled && !economyHeatmapEnabled) {
         tradeBalanceTrackers.clear();
         exportPartnerSourceTrackers.clear();
         factoryPortSpendTrackers.clear();
         factoryPortUnitTrackers.clear();
         trainTradeTrackers.clear();
+        tradeShipSourceTrackers.clear();
       }
       return;
     }
@@ -3852,6 +4072,7 @@
     }
 
     if (data.type === "SHOW_ECONOMY_HEATMAP") {
+      setEconomyHeatmapIntensity(data.payload?.intensity);
       setEconomyHeatmapEnabled(data.payload?.enabled);
     }
 

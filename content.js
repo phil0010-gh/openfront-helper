@@ -50,6 +50,7 @@ const DEFAULT_SETTINGS = {
   fpsSaver: false,
   showAttackAmounts: false,
   showEconomyHeatmap: false,
+  economyHeatmapIntensity: 1,
   showExportPartnerHeatmap: false,
   includeFilters: {
     ffaLobby: false,
@@ -114,8 +115,19 @@ function normalizeSettings(rawSettings = {}) {
   if (normalized.showEconomyHeatmap && normalized.showExportPartnerHeatmap) {
     normalized.showExportPartnerHeatmap = false;
   }
+  normalized.economyHeatmapIntensity = normalizeEconomyHeatmapIntensity(
+    normalized.economyHeatmapIntensity,
+  );
 
   return normalized;
+}
+
+function normalizeEconomyHeatmapIntensity(value) {
+  const intensity = Number(value);
+  if (!Number.isFinite(intensity)) {
+    return DEFAULT_SETTINGS.economyHeatmapIntensity;
+  }
+  return Math.max(0, Math.min(2, Math.round(intensity)));
 }
 
 function normalizeMapFilters(rawMapFilters = {}) {
@@ -237,6 +249,7 @@ function syncEconomyHeatmapHelper() {
       type: "SHOW_ECONOMY_HEATMAP",
       payload: {
         enabled: Boolean(settings.showEconomyHeatmap),
+        intensity: settings.economyHeatmapIntensity,
       },
     },
     "*",
