@@ -33,7 +33,10 @@
       ],
       "js": [
         "map-data.js",
-        "content.js"
+        "shared/settings.js",
+        "content/core.js",
+        "content/floating-helpers.js",
+        "content/auto-join.js"
       ],
       "run_at": "document_start"
     }
@@ -41,7 +44,16 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "page-bridge.js",
+        "page-bridge/runtime.js",
+        "page-bridge/shared-utils.js",
+        "page-bridge/selective-trade-policy.js",
+        "page-bridge/alliances.js",
+        "page-bridge/bot-markers.js",
+        "page-bridge/gold-per-minute.js",
+        "page-bridge/trade-balances.js",
+        "page-bridge/attack-amounts.js",
+        "page-bridge/heatmaps.js",
+        "page-bridge/bootstrap.js",
         "assets/autojoin.wav"
       ],
       "matches": [
