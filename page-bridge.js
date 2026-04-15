@@ -83,6 +83,7 @@
   let selectiveTradePolicyNeedsEmbargoSync = false;
   let selectiveTradePolicyMyPlayerId = null;
   let lastSelectiveTradePolicyRequestAt = null;
+  let lastReportedSelectiveTradePolicyAvailability = null;
   let lastOpenFrontGameContext = null;
   const goldTrackers = new Map();
   const incomingGoldTransfers = new Map();
@@ -1594,6 +1595,28 @@
     }
   }
 
+  function isSelectiveTradePolicyAvailable(game) {
+    const myPlayer = game?.myPlayer?.();
+    return Boolean(
+      game &&
+      isTeamGame(game) &&
+      myPlayer?.isPlayer?.() &&
+      isHumanPlayer(myPlayer)
+    );
+  }
+
+  function reportSelectiveTradePolicyAvailability(game = null) {
+    const available = isSelectiveTradePolicyAvailable(game);
+    if (available === lastReportedSelectiveTradePolicyAvailability) {
+      return;
+    }
+
+    lastReportedSelectiveTradePolicyAvailability = available;
+    postToExtension("SELECTIVE_TRADE_POLICY_AVAILABILITY", {
+      available,
+    });
+  }
+
   function isAllowedTradePartnerForMyPlayer(myPlayer, otherPlayer, game) {
     if (!myPlayer || !otherPlayer) {
       return false;
@@ -1788,15 +1811,21 @@
   }
 
   function applySelectiveTradePolicy(gameOverride = null) {
-    selectiveTradePolicyEnabled = true;
-    selectiveTradePolicyNeedsEmbargoSync = true;
-
     const context = gameOverride ? { game: gameOverride } : getOpenFrontGameContext();
     const game = context?.game ?? gameOverride;
-    const myPlayer = game?.myPlayer?.();
-    if (!game || !myPlayer?.isPlayer?.() || !isHumanPlayer(myPlayer)) {
+    if (!isSelectiveTradePolicyAvailable(game)) {
+      selectiveTradePolicyEnabled = false;
+      selectiveTradePolicyNeedsEmbargoSync = false;
+      selectiveTradePolicyAllowedPartnerIds.clear();
+      selectiveTradePolicyMyPlayerId = null;
+      reportSelectiveTradePolicyAvailability(game);
       return;
     }
+
+    selectiveTradePolicyEnabled = true;
+    selectiveTradePolicyNeedsEmbargoSync = true;
+    const myPlayer = game?.myPlayer?.();
+    reportSelectiveTradePolicyAvailability(game);
 
     rebuildSelectiveTradePolicyCache(game, myPlayer);
     syncSelectiveTradePolicyPatches(game);
@@ -1818,6 +1847,46 @@
     }
 
     selectiveTradePolicyNeedsEmbargoSync = false;
+  }
+
+  function clearSelectiveTradePolicy(gameOverride = null) {
+    const context = gameOverride ? { game: gameOverride } : getOpenFrontGameContext();
+    const game = context?.game ?? gameOverride;
+    const myPlayer = game?.myPlayer?.();
+
+    selectiveTradePolicyEnabled = false;
+    selectiveTradePolicyNeedsEmbargoSync = false;
+    selectiveTradePolicyAllowedPartnerIds.clear();
+    selectiveTradePolicyMyPlayerId = null;
+    reportSelectiveTradePolicyAvailability(game);
+
+    if (!game || !myPlayer?.isPlayer?.() || !isHumanPlayer(myPlayer)) {
+      return;
+    }
+
+    for (const player of Array.from(game?.playerViews?.() || [])) {
+      if (!player?.isAlive?.() || !isHumanPlayer(player)) {
+        continue;
+      }
+
+      const playerId = getPlayerSmallId(player);
+      const myId = getPlayerSmallId(myPlayer);
+      if (!Number.isFinite(playerId) || !Number.isFinite(myId) || playerId === myId) {
+        continue;
+      }
+
+      trySetEmbargo(myPlayer, player, false, game);
+      trySetEmbargo(player, myPlayer, false, game);
+    }
+  }
+
+  function setSelectiveTradePolicyEnabled(enabled, gameOverride = null) {
+    if (enabled) {
+      applySelectiveTradePolicy(gameOverride);
+      return;
+    }
+
+    clearSelectiveTradePolicy(gameOverride);
   }
 
   function getOpenFrontGameContext() {
@@ -1879,6 +1948,11 @@
     }
 
     return null;
+  }
+
+  function refreshSelectiveTradePolicyAvailability() {
+    const context = getOpenFrontGameContext();
+    reportSelectiveTradePolicyAvailability(context?.game ?? null);
   }
 
   function isNationBotPlayer(player) {
@@ -4355,7 +4429,14 @@
         applySelectiveTradePolicy();
       }
     }
+
+    if (data.type === "SET_SELECTIVE_TRADE_POLICY") {
+      setSelectiveTradePolicyEnabled(Boolean(data.payload?.enabled));
+    }
   });
+
+  window.setInterval(refreshSelectiveTradePolicyAvailability, 1000);
+  refreshSelectiveTradePolicyAvailability();
 
   window.__openfrontAutoJoinBridgeReady = true;
 })();
