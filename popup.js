@@ -31,6 +31,8 @@ const DEFAULT_SETTINGS = {
   showTopGoldPerMinute: false,
   markHoveredAlliesGreen: false,
   showTradeBalances: false,
+  selectiveTradePolicyEnabled: false,
+  autoCancelDeniedTradesAvailable: false,
   fpsSaver: false,
   showAttackAmounts: false,
   showEconomyHeatmap: false,
@@ -89,6 +91,9 @@ const helperInfoTitle = document.getElementById("helperInfoTitle");
 const helperInfoImage = document.getElementById("helperInfoImage");
 const helperInfoCloseButton = document.getElementById("helperInfoCloseButton");
 const versionBadge = document.getElementById("versionBadge");
+const applySelectiveTradePolicyButton = document.getElementById(
+  "applySelectiveTradePolicyButton",
+);
 const economyHeatmapIntensityValue = document.getElementById(
   "economyHeatmapIntensityValue",
 );
@@ -97,6 +102,10 @@ let settings = normalizeSettings();
 let showInstallNotice = false;
 let activeHelperInfoButton = null;
 let timerInterval = null;
+
+for (const legacyCard of Array.from(document.querySelectorAll(".helper-action-card[hidden]"))) {
+  legacyCard.remove();
+}
 
 function normalizeSearchText(value) {
   return String(value ?? "")
@@ -432,6 +441,30 @@ function render() {
     showTradeBalancesInput.checked = Boolean(settings.showTradeBalances);
   }
 
+  if (applySelectiveTradePolicyButton instanceof HTMLButtonElement) {
+    applySelectiveTradePolicyButton.disabled = !settings.autoCancelDeniedTradesAvailable;
+    applySelectiveTradePolicyButton.dataset.active = String(
+      Boolean(settings.selectiveTradePolicyEnabled),
+    );
+    applySelectiveTradePolicyButton.setAttribute(
+      "aria-pressed",
+      String(Boolean(settings.selectiveTradePolicyEnabled)),
+    );
+    applySelectiveTradePolicyButton.textContent = settings.selectiveTradePolicyEnabled
+      ? "On"
+      : "Off";
+    applySelectiveTradePolicyButton.title = settings.autoCancelDeniedTradesAvailable
+      ? "Blocks trades with players who are not on your team."
+      : "Available only during an active team game.";
+    const actionCard = applySelectiveTradePolicyButton.closest(".helper-action-card");
+    if (actionCard instanceof HTMLElement) {
+      actionCard.dataset.disabled = String(
+        !settings.autoCancelDeniedTradesAvailable,
+      );
+      actionCard.title = applySelectiveTradePolicyButton.title;
+    }
+  }
+
   const fpsSaverInput = filtersForm.elements.namedItem("fpsSaver");
   if (fpsSaverInput instanceof HTMLInputElement) {
     fpsSaverInput.checked = Boolean(settings.fpsSaver);
@@ -583,6 +616,17 @@ powerButton.addEventListener("click", async () => {
 
 helpersPopoutButton?.addEventListener("click", async () => {
   settings.showFloatingHelpersPanel = !settings.showFloatingHelpersPanel;
+  await saveSettings();
+  render();
+});
+
+applySelectiveTradePolicyButton?.addEventListener("click", async () => {
+  if (!settings.autoCancelDeniedTradesAvailable) {
+    render();
+    return;
+  }
+
+  settings.selectiveTradePolicyEnabled = !settings.selectiveTradePolicyEnabled;
   await saveSettings();
   render();
 });

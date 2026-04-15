@@ -49,11 +49,14 @@ const DEFAULT_SETTINGS = {
   showTopGoldPerMinute: false,
   markHoveredAlliesGreen: false,
   showTradeBalances: false,
+  selectiveTradePolicyEnabled: false,
+  autoCancelDeniedTradesAvailable: false,
   fpsSaver: false,
   showAttackAmounts: false,
   showEconomyHeatmap: false,
   economyHeatmapIntensity: 1,
   showExportPartnerHeatmap: false,
+  applySelectiveTradePolicyRequestAt: null,
   showFloatingHelpersPanel: false,
   floatingHelpersPanelPosition: {
     left: null,
@@ -95,6 +98,8 @@ let settings = normalizeSettings();
 let latestLobbySnapshot = null;
 let pendingJoin = null;
 let joinAlertAudio = null;
+let lastProcessedSelectiveTradePolicyRequestAt = null;
+let selectiveTradePolicyAvailable = false;
 
 function normalizeSettings(rawSettings = {}) {
   rawSettings = rawSettings || {};
@@ -129,6 +134,9 @@ function normalizeSettings(rawSettings = {}) {
   normalized.economyHeatmapIntensity = normalizeEconomyHeatmapIntensity(
     normalized.economyHeatmapIntensity,
   );
+  normalized.applySelectiveTradePolicyRequestAt = normalizeActionRequestTimestamp(
+    normalized.applySelectiveTradePolicyRequestAt,
+  );
 
   return normalized;
 }
@@ -148,6 +156,11 @@ function normalizeFloatingHelpersPanelPosition(value = {}) {
     left: value.left == null || value.left === "" || !Number.isFinite(left) ? null : left,
     top: value.top == null || value.top === "" || !Number.isFinite(top) ? null : top,
   };
+}
+
+function normalizeActionRequestTimestamp(value) {
+  const timestamp = Number(value);
+  return Number.isFinite(timestamp) && timestamp > 0 ? timestamp : null;
 }
 
 function normalizeMapFilters(rawMapFilters = {}) {
@@ -289,6 +302,41 @@ function syncExportPartnerHeatmapHelper() {
   );
 }
 
+function syncSelectiveTradePolicyToggle() {
+  window.postMessage(
+    {
+      source: BRIDGE_SOURCE_EXTENSION,
+      type: "SET_SELECTIVE_TRADE_POLICY",
+      payload: {
+        enabled: Boolean(settings.selectiveTradePolicyEnabled),
+      },
+    },
+    "*",
+  );
+}
+
+function updateAutoCancelDeniedTradesAvailability(available) {
+  const nextAvailable = Boolean(available);
+  const availabilityChanged =
+    nextAvailable !== selectiveTradePolicyAvailable ||
+    nextAvailable !== Boolean(settings.autoCancelDeniedTradesAvailable);
+
+  selectiveTradePolicyAvailable = nextAvailable;
+
+  if (availabilityChanged) {
+    saveSettings({
+      ...settings,
+      autoCancelDeniedTradesAvailable: nextAvailable,
+      selectiveTradePolicyEnabled:
+        settings.selectiveTradePolicyEnabled && nextAvailable,
+    }).catch((error) => {
+      console.error("Failed to sync denied trade cancellation availability:", error);
+    });
+  }
+
+  syncFloatingHelpersPanel();
+}
+
 function syncHelpers() {
   syncBotNationMarkers();
   syncGoldPerMinuteHelper();
@@ -296,6 +344,7 @@ function syncHelpers() {
   syncTopGoldPerMinuteHelper();
   syncHoveredAlliesHelper();
   syncTradeBalancesHelper();
+  syncSelectiveTradePolicyToggle();
   syncFpsSaverHelper();
   syncAttackAmountsHelper();
   syncEconomyHeatmapHelper();
@@ -305,6 +354,9 @@ function syncHelpers() {
 async function loadSettings() {
   const stored = await chrome.storage.local.get(STORAGE_KEY);
   settings = normalizeSettings(stored[STORAGE_KEY]);
+  selectiveTradePolicyAvailable = Boolean(settings.autoCancelDeniedTradesAvailable);
+  lastProcessedSelectiveTradePolicyRequestAt =
+    settings.applySelectiveTradePolicyRequestAt;
   syncHelpers();
   syncFloatingHelpersPanel();
 }
@@ -425,6 +477,11 @@ function ensureFloatingHelpersStyles() {
       accent-color: #22c55e;
     }
 
+    #${FLOATING_HELPERS_PANEL_ID} .openfront-helper-floating-row[data-disabled="true"] {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
     #${FLOATING_HELPERS_PANEL_ID} .openfront-helper-floating-copy {
       min-width: 0;
       display: grid;
@@ -478,6 +535,90 @@ function ensureFloatingHelpersStyles() {
       width: 100%;
       accent-color: #f59e0b;
     }
+
+    #${FLOATING_HELPERS_PANEL_ID} .openfront-helper-floating-action {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      min-height: 40px;
+      padding: 9px;
+      border: 1px solid rgba(151, 181, 214, 0.16);
+      border-radius: 8px;
+      background: rgba(8, 31, 28, 0.76);
+      transition:
+        transform 120ms ease,
+        border-color 120ms ease,
+        background 120ms ease,
+        box-shadow 120ms ease,
+        opacity 120ms ease;
+    }
+
+    #${FLOATING_HELPERS_PANEL_ID} .openfront-helper-floating-action button {
+      min-width: 68px;
+      border: 1px solid rgba(151, 181, 214, 0.24);
+      border-radius: 999px;
+      background: rgba(10, 22, 36, 0.74);
+      color: #cbd5e1;
+      padding: 8px 12px;
+      font: inherit;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition:
+        transform 120ms ease,
+        border-color 120ms ease,
+        background 120ms ease,
+        box-shadow 120ms ease,
+        opacity 120ms ease;
+    }
+
+    #${FLOATING_HELPERS_PANEL_ID} .openfront-helper-floating-action button:hover:not(:disabled) {
+      transform: translateY(-1px);
+      border-color: rgba(74, 222, 128, 0.38);
+      background: rgba(12, 43, 35, 0.88);
+      color: #f3f4f6;
+      box-shadow: 0 8px 18px rgba(34, 197, 94, 0.1);
+    }
+
+    #${FLOATING_HELPERS_PANEL_ID} .openfront-helper-floating-action button[data-active="true"] {
+      border-color: rgba(74, 222, 128, 0.58);
+      background:
+        radial-gradient(circle at 35% 28%, rgba(220, 252, 231, 0.3), transparent 34%),
+        linear-gradient(135deg, rgba(74, 222, 128, 0.9), rgba(22, 163, 74, 0.92));
+      color: #052e16;
+      box-shadow:
+        0 0 0 3px rgba(74, 222, 128, 0.12),
+        0 0 14px rgba(34, 197, 94, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.28);
+    }
+
+    #${FLOATING_HELPERS_PANEL_ID} .openfront-helper-floating-action button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    #${FLOATING_HELPERS_PANEL_ID} .openfront-helper-floating-action button:disabled:hover {
+      transform: none;
+      border-color: rgba(151, 181, 214, 0.24);
+      background: rgba(10, 22, 36, 0.74);
+      color: #cbd5e1;
+    }
+
+    #${FLOATING_HELPERS_PANEL_ID} .openfront-helper-floating-action[data-disabled="true"] {
+      opacity: 0.55;
+    }
+
+    #${FLOATING_HELPERS_PANEL_ID} .openfront-helper-floating-action:not([data-disabled="true"]):hover {
+      transform: translateY(-1px);
+      border-color: rgba(74, 222, 128, 0.44);
+      background: rgba(12, 43, 35, 0.88);
+      box-shadow: 0 8px 18px rgba(34, 197, 94, 0.1);
+    }
+
   `;
   (document.head || document.documentElement).appendChild(style);
 }
@@ -495,6 +636,22 @@ function createFloatingHelperRow(key, title, description) {
   label.querySelector("strong").textContent = title;
   label.querySelector("small").textContent = description;
   return label;
+}
+
+function createFloatingHelperActionButton(action, title, description, buttonLabel) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "openfront-helper-floating-action";
+  wrapper.innerHTML = `
+    <span class="openfront-helper-floating-copy">
+      <strong></strong>
+      <small></small>
+    </span>
+    <button type="button" data-helper-action="${action}"></button>
+  `;
+  wrapper.querySelector("strong").textContent = title;
+  wrapper.querySelector("small").textContent = description;
+  wrapper.querySelector("button").textContent = buttonLabel;
+  return wrapper;
 }
 
 function createFloatingHelpersPanel() {
@@ -519,6 +676,12 @@ function createFloatingHelpersPanel() {
     createFloatingHelperRow("markHoveredAlliesGreen", "Alliances", "Highlights allies with remaining alliance time."),
     createFloatingHelperRow("fpsSaver", "FPS Saver", "Disables nuke explosion animations."),
     createFloatingHelperRow("showAttackAmounts", "Attack amounts", "Shows how many troops a player attacks with."),
+    createFloatingHelperActionButton(
+      "toggleSelectiveTradePolicy",
+      "Block non-team trades",
+      "Team games only: blocks trades with players who are not on your team.",
+      "Off",
+    ),
   );
 
   const economyCategory = document.createElement("section");
@@ -600,6 +763,31 @@ function createFloatingHelpersPanel() {
         value.textContent = getEconomyHeatmapIntensityLabel(target.value);
       }
     }
+  });
+
+  panel.addEventListener("click", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+
+    const actionButton = target.closest("[data-helper-action]");
+    if (!(actionButton instanceof HTMLButtonElement)) {
+      return;
+    }
+    if (actionButton.disabled) {
+      return;
+    }
+    if (actionButton.dataset.helperAction !== "toggleSelectiveTradePolicy") {
+      return;
+    }
+
+    saveSettings({
+      ...settings,
+      selectiveTradePolicyEnabled: !settings.selectiveTradePolicyEnabled,
+    }).catch((error) => {
+      console.error("Failed to toggle non-team trade block:", error);
+    });
   });
 
   installFloatingHelpersDrag(panel);
@@ -695,6 +883,28 @@ function updateFloatingHelpersPanel(panel) {
     }
 
     input.checked = Boolean(settings[key]);
+
+  }
+
+  const actionButton = panel.querySelector(
+    'button[data-helper-action="toggleSelectiveTradePolicy"]',
+  );
+  if (actionButton instanceof HTMLButtonElement) {
+    actionButton.disabled = !selectiveTradePolicyAvailable;
+    actionButton.dataset.active = String(Boolean(settings.selectiveTradePolicyEnabled));
+    actionButton.setAttribute(
+      "aria-pressed",
+      String(Boolean(settings.selectiveTradePolicyEnabled)),
+    );
+    actionButton.textContent = settings.selectiveTradePolicyEnabled ? "On" : "Off";
+    actionButton.title = selectiveTradePolicyAvailable
+      ? "Blocks trades with players who are not on your team."
+      : "Available only during an active team game.";
+    const actionCard = actionButton.closest(".openfront-helper-floating-action");
+    if (actionCard instanceof HTMLElement) {
+      actionCard.dataset.disabled = String(!selectiveTradePolicyAvailable);
+      actionCard.title = actionButton.title;
+    }
   }
 }
 
@@ -1222,6 +1432,11 @@ function handleBridgeMessage(event) {
   if (data.type === "PUBLIC_LOBBIES_UPDATE") {
     latestLobbySnapshot = data.payload;
     tryAutoJoin();
+    return;
+  }
+
+  if (data.type === "SELECTIVE_TRADE_POLICY_AVAILABILITY") {
+    updateAutoCancelDeniedTradesAvailability(data.payload?.available);
   }
 }
 
@@ -1231,6 +1446,7 @@ function handleStorageChange(changes, areaName) {
   }
 
   settings = normalizeSettings(changes[STORAGE_KEY].newValue);
+  selectiveTradePolicyAvailable = Boolean(settings.autoCancelDeniedTradesAvailable);
   syncHelpers();
   syncFloatingHelpersPanel();
   if (!settings.enabled) {
