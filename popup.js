@@ -89,6 +89,7 @@ const helperInfoTitle = document.getElementById("helperInfoTitle");
 const helperInfoImage = document.getElementById("helperInfoImage");
 const helperInfoCloseButton = document.getElementById("helperInfoCloseButton");
 const versionBadge = document.getElementById("versionBadge");
+const restrictTradeButton = document.getElementById("restrictTradeButton");
 const economyHeatmapIntensityValue = document.getElementById(
   "economyHeatmapIntensityValue",
 );
@@ -585,6 +586,11 @@ helpersPopoutButton?.addEventListener("click", async () => {
   settings.showFloatingHelpersPanel = !settings.showFloatingHelpersPanel;
   await saveSettings();
   render();
+});
+
+restrictTradeButton?.addEventListener("click", async () => {
+  settings.applySelectiveTradePolicyRequestAt = Date.now();
+  await saveSettings();
 });
 
 filtersForm.addEventListener("change", async (event) => {

@@ -1176,6 +1176,71 @@ body {
   cursor: pointer;
 }
 
+.helper-action-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid rgba(45, 212, 191, 0.26);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at top left, rgba(45, 212, 191, 0.1), transparent 34%),
+    rgba(5, 28, 32, 0.84);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+}
+
+.helper-action-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.helper-action-copy strong {
+  color: #d5fbf5;
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.helper-action-copy small {
+  color: rgba(204, 251, 241, 0.74);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.helper-action-button {
+  border: 1px solid rgba(45, 212, 191, 0.34);
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(20, 184, 166, 0.26), rgba(15, 118, 110, 0.38)),
+    rgba(6, 24, 28, 0.92);
+  color: #e6fffb;
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    background 120ms ease;
+}
+
+.helper-action-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(94, 234, 212, 0.58);
+  background:
+    linear-gradient(180deg, rgba(45, 212, 191, 0.34), rgba(13, 148, 136, 0.48)),
+    rgba(6, 24, 28, 0.96);
+  box-shadow: 0 10px 20px rgba(13, 148, 136, 0.16);
+}
+
+.helper-action-button:focus-visible {
+  outline: none;
+  border-color: rgba(153, 246, 228, 0.74);
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.16);
+}
+
 .helper-heatmap-card .helper-slider-card {
   grid-column: 1 / -1;
   padding: 4px 0 0 30px;

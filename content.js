@@ -54,6 +54,7 @@ const DEFAULT_SETTINGS = {
   showEconomyHeatmap: false,
   economyHeatmapIntensity: 1,
   showExportPartnerHeatmap: false,
+  applySelectiveTradePolicyRequestAt: null,
   showFloatingHelpersPanel: false,
   floatingHelpersPanelPosition: {
     left: null,
@@ -95,6 +96,7 @@ let settings = normalizeSettings();
 let latestLobbySnapshot = null;
 let pendingJoin = null;
 let joinAlertAudio = null;
+let lastProcessedSelectiveTradePolicyRequestAt = null;
 
 function normalizeSettings(rawSettings = {}) {
   rawSettings = rawSettings || {};
@@ -129,6 +131,9 @@ function normalizeSettings(rawSettings = {}) {
   normalized.economyHeatmapIntensity = normalizeEconomyHeatmapIntensity(
     normalized.economyHeatmapIntensity,
   );
+  normalized.applySelectiveTradePolicyRequestAt = normalizeActionRequestTimestamp(
+    normalized.applySelectiveTradePolicyRequestAt,
+  );
 
   return normalized;
 }
@@ -148,6 +153,11 @@ function normalizeFloatingHelpersPanelPosition(value = {}) {
     left: value.left == null || value.left === "" || !Number.isFinite(left) ? null : left,
     top: value.top == null || value.top === "" || !Number.isFinite(top) ? null : top,
   };
+}
+
+function normalizeActionRequestTimestamp(value) {
+  const timestamp = Number(value);
+  return Number.isFinite(timestamp) && timestamp > 0 ? timestamp : null;
 }
 
 function normalizeMapFilters(rawMapFilters = {}) {
@@ -289,6 +299,27 @@ function syncExportPartnerHeatmapHelper() {
   );
 }
 
+function requestSelectiveTradePolicyApplication() {
+  const requestedAt = normalizeActionRequestTimestamp(
+    settings.applySelectiveTradePolicyRequestAt,
+  );
+  if (!requestedAt || requestedAt === lastProcessedSelectiveTradePolicyRequestAt) {
+    return;
+  }
+
+  lastProcessedSelectiveTradePolicyRequestAt = requestedAt;
+  window.postMessage(
+    {
+      source: BRIDGE_SOURCE_EXTENSION,
+      type: "APPLY_SELECTIVE_TRADE_POLICY",
+      payload: {
+        requestedAt,
+      },
+    },
+    "*",
+  );
+}
+
 function syncHelpers() {
   syncBotNationMarkers();
   syncGoldPerMinuteHelper();
@@ -305,6 +336,8 @@ function syncHelpers() {
 async function loadSettings() {
   const stored = await chrome.storage.local.get(STORAGE_KEY);
   settings = normalizeSettings(stored[STORAGE_KEY]);
+  lastProcessedSelectiveTradePolicyRequestAt =
+    settings.applySelectiveTradePolicyRequestAt;
   syncHelpers();
   syncFloatingHelpersPanel();
 }
@@ -478,6 +511,47 @@ function ensureFloatingHelpersStyles() {
       width: 100%;
       accent-color: #f59e0b;
     }
+
+    #${FLOATING_HELPERS_PANEL_ID} .openfront-helper-floating-action {
+      display: grid;
+      gap: 8px;
+      padding: 10px 11px;
+      border: 1px solid rgba(45, 212, 191, 0.24);
+      border-radius: 10px;
+      background:
+        radial-gradient(circle at top left, rgba(45, 212, 191, 0.12), transparent 36%),
+        rgba(6, 24, 28, 0.9);
+    }
+
+    #${FLOATING_HELPERS_PANEL_ID} .openfront-helper-floating-action button {
+      border: 1px solid rgba(45, 212, 191, 0.34);
+      border-radius: 999px;
+      background:
+        linear-gradient(180deg, rgba(20, 184, 166, 0.24), rgba(15, 118, 110, 0.38)),
+        rgba(6, 24, 28, 0.94);
+      color: #e6fffb;
+      padding: 8px 10px;
+      font: inherit;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition:
+        transform 120ms ease,
+        border-color 120ms ease,
+        background 120ms ease,
+        box-shadow 120ms ease;
+    }
+
+    #${FLOATING_HELPERS_PANEL_ID} .openfront-helper-floating-action button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(94, 234, 212, 0.54);
+      background:
+        linear-gradient(180deg, rgba(45, 212, 191, 0.34), rgba(13, 148, 136, 0.5)),
+        rgba(6, 24, 28, 0.98);
+      box-shadow: 0 10px 18px rgba(13, 148, 136, 0.18);
+    }
   `;
   (document.head || document.documentElement).appendChild(style);
 }
@@ -495,6 +569,22 @@ function createFloatingHelperRow(key, title, description) {
   label.querySelector("strong").textContent = title;
   label.querySelector("small").textContent = description;
   return label;
+}
+
+function createFloatingHelperActionButton(action, title, description, buttonLabel) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "openfront-helper-floating-action";
+  wrapper.innerHTML = `
+    <span class="openfront-helper-floating-copy">
+      <strong></strong>
+      <small></small>
+    </span>
+    <button type="button" data-helper-action="${action}"></button>
+  `;
+  wrapper.querySelector("strong").textContent = title;
+  wrapper.querySelector("small").textContent = description;
+  wrapper.querySelector("button").textContent = buttonLabel;
+  return wrapper;
 }
 
 function createFloatingHelpersPanel() {
@@ -529,6 +619,12 @@ function createFloatingHelpersPanel() {
     createFloatingHelperRow("showTeamGoldPerMinute", "Team gold per minute", "Lists each team's total GPM."),
     createFloatingHelperRow("showTopGoldPerMinute", "Top 10 gold per minute", "Lists the highest tracked player GPM."),
     createFloatingHelperRow("showTradeBalances", "Trade balances", "Shows observed trade imports and exports."),
+    createFloatingHelperActionButton(
+      "applySelectiveTradePolicy",
+      "Trade nur mit erlaubten Spielern",
+      "Erlaubt in Teams nur Teampartner und in Solo nur aktive Allianzen.",
+      "Trade-Block anwenden",
+    ),
   );
 
   const heatmapPanel = document.createElement("div");
@@ -600,6 +696,29 @@ function createFloatingHelpersPanel() {
         value.textContent = getEconomyHeatmapIntensityLabel(target.value);
       }
     }
+  });
+
+  panel.addEventListener("click", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+
+    const actionButton = target.closest("[data-helper-action]");
+    if (!(actionButton instanceof HTMLButtonElement)) {
+      return;
+    }
+
+    if (actionButton.dataset.helperAction !== "applySelectiveTradePolicy") {
+      return;
+    }
+
+    saveSettings({
+      ...settings,
+      applySelectiveTradePolicyRequestAt: Date.now(),
+    }).catch((error) => {
+      console.error("Failed to apply selective trade policy:", error);
+    });
   });
 
   installFloatingHelpersDrag(panel);
@@ -1232,6 +1351,7 @@ function handleStorageChange(changes, areaName) {
 
   settings = normalizeSettings(changes[STORAGE_KEY].newValue);
   syncHelpers();
+  requestSelectiveTradePolicyApplication();
   syncFloatingHelpersPanel();
   if (!settings.enabled) {
     pendingJoin = null;
