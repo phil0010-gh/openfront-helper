@@ -53,6 +53,7 @@
     autoCancelDeniedTradesAvailable: false,
     fpsSaver: false,
     showAttackAmounts: false,
+    showNukeLandingZones: false,
     showEconomyHeatmap: false,
     economyHeatmapIntensity: 1,
     showExportPartnerHeatmap: false,

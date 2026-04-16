@@ -138,6 +138,19 @@ function syncAttackAmountsHelper() {
   );
 }
 
+function syncNukeLandingZonesHelper() {
+  window.postMessage(
+    {
+      source: BRIDGE_SOURCE_EXTENSION,
+      type: "SHOW_NUKE_LANDING_ZONES",
+      payload: {
+        enabled: Boolean(settings.showNukeLandingZones),
+      },
+    },
+    "*",
+  );
+}
+
 function syncEconomyHeatmapHelper() {
   window.postMessage(
     {
@@ -210,6 +223,7 @@ function syncHelpers() {
   syncSelectiveTradePolicyToggle();
   syncFpsSaverHelper();
   syncAttackAmountsHelper();
+  syncNukeLandingZonesHelper();
   syncEconomyHeatmapHelper();
   syncExportPartnerHeatmapHelper();
 }
