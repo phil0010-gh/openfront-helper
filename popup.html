@@ -103,6 +103,12 @@
               >
             </div>
           </div>
+          <div class="whats-new-feature">
+            <p class="whats-new-feature-title">Nuke target zones</p>
+            <p class="whats-new-text">
+              Hover an enemy player to see the best uncovered nuke target zones based on structures and SAM coverage.
+            </p>
+          </div>
         </div>
         <button id="dismissWhatsNewNoticeButton" class="whats-new-button" type="button">
           Got it
@@ -205,6 +211,16 @@
                 data-info-image="assets/info-images/nuke_landing_zones.png"
                 aria-label="Show Nuke landing zones preview"
               >i</button>
+            </label>
+            <label class="filter-card toggle-card">
+              <span class="filter-main">
+                <input type="checkbox" name="showNukeTargetHeatmap">
+                <span class="filter-dot"></span>
+                <span class="filter-copy">
+                  <strong>Nuke target zones</strong>
+                  <small>Hover an enemy player to show the best high-damage nuke zones.</small>
+                </span>
+              </span>
             </label>
             <label class="filter-card toggle-card helper-action-card">
               <span class="filter-main">
@@ -349,16 +365,6 @@
                   <span class="filter-copy">
                     <strong>Export partner heatmap</strong>
                     <small>Hover a player to highlight the partner industry that fuels their exports.</small>
-                  </span>
-                </span>
-              </label>
-              <label class="filter-card toggle-card">
-                <span class="filter-main">
-                  <input type="checkbox" name="showNukeTargetHeatmap">
-                  <span class="filter-dot"></span>
-                  <span class="filter-copy">
-                    <strong>Nuke target heatmap</strong>
-                    <small>Hover an enemy player to see the highest-damage nuke zones based on structures and SAM coverage.</small>
                   </span>
                 </span>
               </label>

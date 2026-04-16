@@ -917,7 +917,7 @@
   }
 
   function drawNukeTargetHeatmapPoint(ctx, point, maxWeight, pixelRatio) {
-    const intensity = Math.max(0.24, Math.min(0.66, point.weight / maxWeight));
+    const intensity = Math.max(0.32, Math.min(0.82, point.weight / maxWeight));
     const x = point.x * pixelRatio;
     const y = point.y * pixelRatio;
     const typeScale =
@@ -933,18 +933,18 @@
         ? Math.min(1.12, Math.max(0.72, point.zoomScale * 1.3))
         : point.zoomScale;
     const radius =
-      (22 + intensity * 42) * typeScale * zoomRadiusScale * pixelRatio;
+      (22 + intensity * 42) * 0.85 * typeScale * zoomRadiusScale * pixelRatio;
     const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
-    gradient.addColorStop(0, `rgba(255, 205, 120, ${0.2 + intensity * 0.18})`);
-    gradient.addColorStop(0.55, `rgba(249, 115, 22, ${0.14 + intensity * 0.16})`);
-    gradient.addColorStop(1, "rgba(249, 115, 22, 0)");
+    gradient.addColorStop(0, `rgba(251, 207, 232, ${0.27 + intensity * 0.24})`);
+    gradient.addColorStop(0.55, `rgba(236, 72, 153, ${0.19 + intensity * 0.22})`);
+    gradient.addColorStop(1, "rgba(236, 72, 153, 0)");
 
     ctx.fillStyle = gradient;
     ctx.beginPath();
     ctx.arc(x, y, radius, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.strokeStyle = `rgba(251, 146, 60, ${0.22 + intensity * 0.18})`;
+    ctx.strokeStyle = `rgba(244, 114, 182, ${0.3 + intensity * 0.22})`;
     ctx.lineWidth = Math.max(1, 1.25 * pixelRatio);
     ctx.beginPath();
     ctx.arc(x, y, Math.max(radius - 3 * pixelRatio, 1), 0, Math.PI * 2);
@@ -987,8 +987,8 @@
       canvas.parentElement?.setAttribute(
         "data-status",
         selectedNukeType
-          ? "Nuke target heatmap: hover an enemy once to lock a target"
-          : "Nuke target heatmap: hover an enemy player",
+          ? "Nuke target zones: hover an enemy once to lock a target"
+          : "Nuke target zones: hover an enemy player",
       );
       nukeTargetHeatmapAnimationFrame = requestAnimationFrame(drawNukeTargetHeatmap);
       return;
@@ -997,7 +997,7 @@
     if (isFriendlyPlayer(myPlayer, hoveredPlayer)) {
       canvas.parentElement?.setAttribute(
         "data-status",
-        "Nuke target heatmap: hover an enemy player",
+        "Nuke target zones: hover an enemy player",
       );
       nukeTargetHeatmapAnimationFrame = requestAnimationFrame(drawNukeTargetHeatmap);
       return;
@@ -1013,7 +1013,7 @@
     if (points.length === 0) {
       canvas.parentElement?.setAttribute(
         "data-status",
-        "Nuke target heatmap: no valuable target cluster found",
+        "Nuke target zones: no valuable target cluster found",
       );
       nukeTargetHeatmapAnimationFrame = requestAnimationFrame(drawNukeTargetHeatmap);
       return;
