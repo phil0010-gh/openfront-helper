@@ -60,12 +60,48 @@
             <p class="whats-new-text">
               Team games only: block trades from players who are not on your team.
             </p>
+            <button
+              class="whats-new-image-button"
+              type="button"
+              aria-expanded="false"
+              data-whats-new-image-button
+            >
+              Show image
+            </button>
+            <div class="whats-new-image-wrap" hidden>
+              <img
+                class="whats-new-image"
+                src="assets/info-images/block_non_team_trades_info.png"
+                alt="Block non-team trades preview"
+              >
+            </div>
           </div>
           <div class="whats-new-feature">
             <p class="whats-new-feature-title">Resizable floating helpers</p>
             <p class="whats-new-text">
               Drag the bottom edge of the floating helpers window to change its height.
             </p>
+          </div>
+          <div class="whats-new-feature">
+            <p class="whats-new-feature-title">Nuke landing zones</p>
+            <p class="whats-new-text">
+              Show enemy nuke landing points and their explosion radius on the map.
+            </p>
+            <button
+              class="whats-new-image-button"
+              type="button"
+              aria-expanded="false"
+              data-whats-new-image-button
+            >
+              Show image
+            </button>
+            <div class="whats-new-image-wrap" hidden>
+              <img
+                class="whats-new-image"
+                src="assets/info-images/nuke_landing_zones.png"
+                alt="Nuke landing zones preview"
+              >
+            </div>
           </div>
         </div>
         <button id="dismissWhatsNewNoticeButton" class="whats-new-button" type="button">
@@ -153,18 +189,44 @@
                 </span>
               </span>
             </label>
-            <div class="helper-action-card">
-              <div class="helper-action-copy">
-                <strong>Block non-team trades</strong>
-                <small>Team games only: blocks trades with players who are not on your team.</small>
-              </div>
+            <label class="filter-card toggle-card">
+              <span class="filter-main">
+                <input type="checkbox" name="showNukeLandingZones">
+                <span class="filter-dot"></span>
+                <span class="filter-copy">
+                  <strong>Nuke landing zones <span class="helper-option-icon helper-option-icon-nuke" aria-hidden="true">!</span></strong>
+                  <small>Shows enemy nuke landing points and explosion radius.</small>
+                </span>
+              </span>
               <button
-                id="applySelectiveTradePolicyButton"
-                class="helper-action-button"
+                class="helper-info-button"
                 type="button"
-                aria-pressed="false"
-              >Off</button>
-            </div>
+                data-info-title="Nuke landing zones"
+                data-info-image="assets/info-images/nuke_landing_zones.png"
+                aria-label="Show Nuke landing zones preview"
+              >i</button>
+            </label>
+            <label class="filter-card toggle-card helper-action-card">
+              <span class="filter-main">
+                <input
+                  id="applySelectiveTradePolicyInput"
+                  type="checkbox"
+                  name="selectiveTradePolicyEnabled"
+                >
+                <span class="filter-dot"></span>
+                <span class="filter-copy">
+                  <strong>Block non-team trades <span class="helper-option-icon helper-option-icon-trade-block" aria-hidden="true">!</span></strong>
+                  <small>Team games only: blocks trades with players who are not on your team.</small>
+                </span>
+              </span>
+              <button
+                class="helper-info-button"
+                type="button"
+                data-info-title="Block non-team trades"
+                data-info-image="assets/info-images/block_non_team_trades_info.png"
+                aria-label="Show Block non-team trades preview"
+              >i</button>
+            </label>
             </div>
           </div>
 

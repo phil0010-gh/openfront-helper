@@ -331,6 +331,7 @@ function createFloatingHelpersPanel() {
     createFloatingHelperRow("markHoveredAlliesGreen", "Alliances", "Highlights allies with remaining alliance time."),
     createFloatingHelperRow("fpsSaver", "FPS Saver", "Disables nuke explosion animations."),
     createFloatingHelperRow("showAttackAmounts", "Attack amounts", "Shows how many troops a player attacks with."),
+    createFloatingHelperRow("showNukeLandingZones", "Nuke landing zones", "Shows enemy nuke landing points and blast radius."),
     createFloatingHelperActionButton(
       "toggleSelectiveTradePolicy",
       "Block non-team trades",

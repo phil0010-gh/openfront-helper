@@ -56,6 +56,10 @@
       setAttackAmountsEnabled(data.payload?.enabled);
     }
 
+    if (data.type === "SHOW_NUKE_LANDING_ZONES") {
+      setNukeLandingZonesEnabled(data.payload?.enabled);
+    }
+
     if (data.type === "SHOW_ECONOMY_HEATMAP") {
       setEconomyHeatmapIntensity(data.payload?.intensity);
       setEconomyHeatmapEnabled(data.payload?.enabled);

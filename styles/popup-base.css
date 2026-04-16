@@ -402,6 +402,58 @@ body {
   color: #dbeafe;
 }
 
+.whats-new-image-button {
+  margin-top: 10px;
+  padding: 7px 10px;
+  border: 1px solid rgba(125, 211, 252, 0.28);
+  border-radius: 8px;
+  background: rgba(10, 22, 36, 0.74);
+  color: #bae6fd;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    border-color 120ms ease,
+    background 120ms ease,
+    color 120ms ease;
+}
+
+.whats-new-image-button:hover,
+.whats-new-image-button:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(74, 222, 128, 0.38);
+  background: rgba(12, 43, 35, 0.88);
+  color: #f3f4f6;
+}
+
+.whats-new-image-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(125, 211, 252, 0.14);
+}
+
+.whats-new-image-wrap {
+  margin-top: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(151, 181, 214, 0.18);
+  border-radius: 8px;
+  background: rgba(7, 17, 32, 0.58);
+}
+
+.whats-new-image-wrap[hidden] {
+  display: none;
+}
+
+.whats-new-image {
+  display: block;
+  width: 100%;
+  max-height: 240px;
+  object-fit: contain;
+}
+
 .install-notice-button,
 .whats-new-button,
 .helpers-popout-button,

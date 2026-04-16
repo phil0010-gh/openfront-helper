@@ -25,8 +25,8 @@
     helperInfoTitle: document.getElementById("helperInfoTitle"),
     helperInfoImage: document.getElementById("helperInfoImage"),
     helperInfoCloseButton: document.getElementById("helperInfoCloseButton"),
-    applySelectiveTradePolicyButton: document.getElementById(
-      "applySelectiveTradePolicyButton",
+    applySelectiveTradePolicyInput: document.getElementById(
+      "applySelectiveTradePolicyInput",
     ),
     economyHeatmapIntensityValue: document.getElementById(
       "economyHeatmapIntensityValue",

@@ -234,6 +234,7 @@
       "showTradeBalances",
       "fpsSaver",
       "showAttackAmounts",
+      "showNukeLandingZones",
       "showEconomyHeatmap",
       "showExportPartnerHeatmap",
     ]) {
@@ -243,31 +244,25 @@
       }
     }
 
-    if (refs.applySelectiveTradePolicyButton instanceof HTMLButtonElement) {
-      refs.applySelectiveTradePolicyButton.disabled =
+    if (refs.applySelectiveTradePolicyInput instanceof HTMLInputElement) {
+      refs.applySelectiveTradePolicyInput.disabled =
         !state.settings.autoCancelDeniedTradesAvailable;
-      refs.applySelectiveTradePolicyButton.dataset.active = String(
-        Boolean(state.settings.selectiveTradePolicyEnabled),
+      refs.applySelectiveTradePolicyInput.checked = Boolean(
+        state.settings.selectiveTradePolicyEnabled,
       );
-      refs.applySelectiveTradePolicyButton.setAttribute(
-        "aria-pressed",
-        String(Boolean(state.settings.selectiveTradePolicyEnabled)),
-      );
-      refs.applySelectiveTradePolicyButton.textContent =
-        state.settings.selectiveTradePolicyEnabled ? "On" : "Off";
-      refs.applySelectiveTradePolicyButton.title =
+      refs.applySelectiveTradePolicyInput.title =
         state.settings.autoCancelDeniedTradesAvailable
           ? "Blocks trades with players who are not on your team."
           : "Available only during an active team game.";
 
-      const actionCard = refs.applySelectiveTradePolicyButton.closest(
+      const actionCard = refs.applySelectiveTradePolicyInput.closest(
         ".helper-action-card",
       );
       if (actionCard instanceof HTMLElement) {
         actionCard.dataset.disabled = String(
           !state.settings.autoCancelDeniedTradesAvailable,
         );
-        actionCard.title = refs.applySelectiveTradePolicyButton.title;
+        actionCard.title = refs.applySelectiveTradePolicyInput.title;
       }
     }
 

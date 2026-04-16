@@ -40,6 +40,29 @@
     popup.render();
   });
 
+  refs.whatsNewNotice.addEventListener("click", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+
+    const button = target.closest("[data-whats-new-image-button]");
+    if (!(button instanceof HTMLButtonElement)) {
+      return;
+    }
+
+    const feature = button.closest(".whats-new-feature");
+    const imageWrap = feature?.querySelector(".whats-new-image-wrap");
+    if (!(imageWrap instanceof HTMLElement)) {
+      return;
+    }
+
+    const showImage = imageWrap.hidden;
+    imageWrap.hidden = !showImage;
+    button.setAttribute("aria-expanded", String(showImage));
+    button.textContent = showImage ? "Hide image" : "Show image";
+  });
+
   refs.powerButton.addEventListener("click", async () => {
     if (refs.powerButton.disabled) {
       return;
@@ -57,21 +80,19 @@
     popup.render();
   });
 
-  refs.applySelectiveTradePolicyButton?.addEventListener("click", async () => {
-    if (!state.settings.autoCancelDeniedTradesAvailable) {
-      popup.render();
-      return;
-    }
-
-    state.settings.selectiveTradePolicyEnabled =
-      !state.settings.selectiveTradePolicyEnabled;
-    await popup.saveSettings();
-    popup.render();
-  });
-
   refs.filtersForm.addEventListener("change", async (event) => {
     const target = event.target;
     if (!(target instanceof HTMLInputElement)) {
+      return;
+    }
+
+    if (target.name === "selectiveTradePolicyEnabled") {
+      if (!state.settings.autoCancelDeniedTradesAvailable) {
+        popup.render();
+        return;
+      }
+
+      await updateBooleanSetting(target.name, target.checked);
       return;
     }
 
@@ -85,6 +106,7 @@
         "showTradeBalances",
         "fpsSaver",
         "showAttackAmounts",
+        "showNukeLandingZones",
       ].includes(target.name)
     ) {
       await updateBooleanSetting(target.name, target.checked);
