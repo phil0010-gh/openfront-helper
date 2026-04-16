@@ -178,6 +178,19 @@ function syncExportPartnerHeatmapHelper() {
   );
 }
 
+function syncNukeTargetHeatmapHelper() {
+  window.postMessage(
+    {
+      source: BRIDGE_SOURCE_EXTENSION,
+      type: "SHOW_NUKE_TARGET_HEATMAP",
+      payload: {
+        enabled: Boolean(settings.showNukeTargetHeatmap),
+      },
+    },
+    "*",
+  );
+}
+
 function syncSelectiveTradePolicyToggle() {
   window.postMessage(
     {
@@ -226,6 +239,7 @@ function syncHelpers() {
   syncNukeLandingZonesHelper();
   syncEconomyHeatmapHelper();
   syncExportPartnerHeatmapHelper();
+  syncNukeTargetHeatmapHelper();
 }
 
 async function loadSettings() {

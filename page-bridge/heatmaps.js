@@ -144,6 +144,103 @@
     return { canvas, pixelRatio };
   }
 
+  function ensureNukeTargetHeatmapStyles() {
+    if (document.getElementById(NUKE_TARGET_HEATMAP_STYLE_ID)) {
+      return;
+    }
+
+    const style = document.createElement("style");
+    style.id = NUKE_TARGET_HEATMAP_STYLE_ID;
+    style.textContent = `
+      #${NUKE_TARGET_HEATMAP_CONTAINER_ID} {
+        position: fixed;
+        inset: 0;
+        z-index: 2147483646;
+        pointer-events: none;
+      }
+
+      #${NUKE_TARGET_HEATMAP_CONTAINER_ID} .${NUKE_TARGET_HEATMAP_CANVAS_CLASS} {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        opacity: 0.88;
+        mix-blend-mode: normal;
+      }
+
+      #${NUKE_TARGET_HEATMAP_CONTAINER_ID}[data-status]::after {
+        content: attr(data-status);
+        position: fixed;
+        left: 18px;
+        bottom: 18px;
+        padding: 7px 10px;
+        border: 1px solid rgba(248, 113, 113, 0.48);
+        border-radius: 8px;
+        background: rgba(40, 8, 8, 0.82);
+        color: rgba(254, 226, 226, 0.96);
+        font: 600 12px/1.2 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24);
+      }
+    `;
+    (document.head || document.documentElement).appendChild(style);
+  }
+
+  function ensureNukeTargetHeatmapCanvas() {
+    ensureNukeTargetHeatmapStyles();
+
+    let container = document.getElementById(NUKE_TARGET_HEATMAP_CONTAINER_ID);
+    if (!container) {
+      container = document.createElement("div");
+      container.id = NUKE_TARGET_HEATMAP_CONTAINER_ID;
+      container.setAttribute("aria-hidden", "true");
+      (document.body || document.documentElement).appendChild(container);
+    }
+
+    let canvas = container.querySelector(`.${NUKE_TARGET_HEATMAP_CANVAS_CLASS}`);
+    if (!canvas) {
+      canvas = document.createElement("canvas");
+      canvas.className = NUKE_TARGET_HEATMAP_CANVAS_CLASS;
+      container.appendChild(canvas);
+    }
+
+    const pixelRatio = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    const width = Math.max(1, Math.floor(window.innerWidth * pixelRatio));
+    const height = Math.max(1, Math.floor(window.innerHeight * pixelRatio));
+    if (canvas.width !== width || canvas.height !== height) {
+      canvas.width = width;
+      canvas.height = height;
+    }
+    canvas.style.width = `${window.innerWidth}px`;
+    canvas.style.height = `${window.innerHeight}px`;
+
+    return { canvas, pixelRatio };
+  }
+
+  let lastNukeTargetHoveredPlayer = null;
+
+  function getOpenFrontUiState() {
+    for (const candidate of [
+      document.querySelector("control-panel"),
+      document.querySelector("unit-display"),
+      document.querySelector("player-panel"),
+      document.querySelector("events-display"),
+      document.querySelector("attacks-display"),
+      document.querySelector("build-menu"),
+    ]) {
+      if (candidate?.uiState) {
+        return candidate.uiState;
+      }
+    }
+    return null;
+  }
+
+  function getSelectedNukeType() {
+    const ghostStructure = getOpenFrontUiState()?.ghostStructure;
+    return ghostStructure === "Atom Bomb" || ghostStructure === "Hydrogen Bomb"
+      ? ghostStructure
+      : null;
+  }
+
   function toFiniteNumber(value, fallback = 0) {
     const numberValue = typeof value === "bigint" ? Number(value) : Number(value);
     return Number.isFinite(numberValue) ? numberValue : fallback;
@@ -580,6 +677,359 @@
     exportPartnerHeatmapAnimationFrame = requestAnimationFrame(drawExportPartnerHeatmap);
   }
 
+  function isFriendlyPlayer(myPlayer, otherPlayer) {
+    if (!myPlayer || !otherPlayer) {
+      return false;
+    }
+    if (getPlayerSmallId(myPlayer) === getPlayerSmallId(otherPlayer)) {
+      return true;
+    }
+
+    try {
+      if (typeof myPlayer.isFriendly === "function") {
+        return Boolean(myPlayer.isFriendly(otherPlayer));
+      }
+    } catch (_error) {
+      // Fall back to team/alliance checks below.
+    }
+
+    try {
+      if (typeof myPlayer.isOnSameTeam === "function" && myPlayer.isOnSameTeam(otherPlayer)) {
+        return true;
+      }
+    } catch (_error) {
+      // Ignore missing team helpers.
+    }
+
+    try {
+      if (typeof myPlayer.isAlliedWith === "function" && myPlayer.isAlliedWith(otherPlayer)) {
+        return true;
+      }
+    } catch (_error) {
+      // Ignore missing alliance helpers.
+    }
+
+    return false;
+  }
+
+  function getNukeHeatmapStructureWeight(unit) {
+    const level = getUnitLevel(unit);
+    switch (String(unit?.type?.() ?? "")) {
+      case "City":
+        return 25000 * level;
+      case "Defense Post":
+        return 5000 * level;
+      case "Missile Silo":
+        return 50000 * level;
+      case "Port":
+        return 15000 * level;
+      case "Factory":
+        return 15000 * level;
+      case "SAM Launcher":
+        return 28000 * level;
+      default:
+        return 0;
+    }
+  }
+
+  function collectPlayerNukeTargetUnits(player) {
+    if (!player) {
+      return [];
+    }
+
+    const units = [];
+    for (const type of [
+      "City",
+      "Factory",
+      "Port",
+      "Missile Silo",
+      "Defense Post",
+      "SAM Launcher",
+    ]) {
+      try {
+        for (const unit of player.units?.(type) || []) {
+          if (unit?.isActive?.() && unit?.tile?.() != null) {
+            units.push(unit);
+          }
+        }
+      } catch (_error) {
+        // Ignore missing unit collections.
+      }
+    }
+
+    return units;
+  }
+
+  function isHostileSamOwner(myPlayer, owner) {
+    if (!myPlayer || !owner?.isPlayer?.()) {
+      return false;
+    }
+    return !isFriendlyPlayer(myPlayer, owner);
+  }
+
+  function getHostileSamsCoveringTile(game, tile, myPlayer) {
+    if (!game || tile == null || !myPlayer) {
+      return [];
+    }
+
+    const cover = [];
+    try {
+      const nearbySams = game.nearbyUnits?.(
+        tile,
+        game.config?.().maxSamRange?.() ?? 0,
+        "SAM Launcher",
+      ) || [];
+      for (const samEntry of nearbySams) {
+        const samUnit = samEntry?.unit ?? samEntry;
+        const owner = samUnit?.owner?.();
+        if (!isHostileSamOwner(myPlayer, owner)) {
+          continue;
+        }
+        const samLevel = getUnitLevel(samUnit);
+        const samRange = game.config?.().samRange?.(samLevel) ?? 0;
+        const distanceSquared =
+          Number.isFinite(samEntry?.distSquared)
+            ? samEntry.distSquared
+            : game.euclideanDistSquared?.(tile, samUnit.tile?.());
+        if (Number.isFinite(distanceSquared) && distanceSquared <= samRange * samRange) {
+          cover.push(samUnit);
+        }
+      }
+    } catch (_error) {
+      return [];
+    }
+
+    return cover;
+  }
+
+  function getTileDistance(game, fromTile, toTile) {
+    if (!game || fromTile == null || toTile == null) {
+      return Infinity;
+    }
+    return Math.sqrt(toFiniteNumber(game.euclideanDistSquared?.(fromTile, toTile), Infinity));
+  }
+
+  function getNukeMagnitude(game, nukeType) {
+    const safeType = nukeType === "Atom Bomb" ? "Atom Bomb" : "Hydrogen Bomb";
+    return game?.config?.().nukeMagnitudes?.(safeType) ?? { inner: 40, outer: 80 };
+  }
+
+  function buildNukeTargetHeatmapSources(game, hoveredPlayer, myPlayer, nukeType) {
+    if (!game || !hoveredPlayer) {
+      return [];
+    }
+
+    const candidateUnits = collectPlayerNukeTargetUnits(hoveredPlayer);
+    if (candidateUnits.length === 0) {
+      return [];
+    }
+
+    const ourSilos = collectPlayerNukeTargetUnits(myPlayer).filter(
+      (unit) => String(unit?.type?.() ?? "") === "Missile Silo",
+    );
+    const magnitude = getNukeMagnitude(game, nukeType);
+    const blastRadius = Math.max(
+      50,
+      toFiniteNumber(magnitude?.outer, toFiniteNumber(magnitude?.inner, 80)),
+    );
+
+    const sources = [];
+    const seenTiles = new Set();
+    for (const unit of candidateUnits) {
+      const tile = unit.tile?.();
+      const key = String(tile);
+      if (tile == null || seenTiles.has(key)) {
+        continue;
+      }
+      seenTiles.add(key);
+
+      let weight = 0;
+      let topType = String(unit?.type?.() ?? "Industry");
+      try {
+        const nearbyTargets = game.nearbyUnits?.(
+          tile,
+          blastRadius,
+          [
+            "City",
+            "Factory",
+            "Port",
+            "Missile Silo",
+            "Defense Post",
+            "SAM Launcher",
+          ],
+        ) || [];
+        for (const targetEntry of nearbyTargets) {
+          const targetUnit = targetEntry?.unit ?? targetEntry;
+          const owner = targetUnit?.owner?.();
+          if (!owner || getPlayerSmallId(owner) !== getPlayerSmallId(hoveredPlayer)) {
+            continue;
+          }
+          const unitWeight = getNukeHeatmapStructureWeight(targetUnit);
+          if (unitWeight <= 0) {
+            continue;
+          }
+          weight += unitWeight;
+          if (
+            getHeatmapTypePriority(String(targetUnit?.type?.() ?? "")) >
+            getHeatmapTypePriority(topType)
+          ) {
+            topType = String(targetUnit?.type?.() ?? topType);
+          }
+        }
+      } catch (_error) {
+        weight += getNukeHeatmapStructureWeight(unit);
+      }
+
+      const coveringSams = getHostileSamsCoveringTile(game, tile, myPlayer);
+      if (coveringSams.length > 0) {
+        continue;
+      }
+
+      if (ourSilos.length > 0) {
+        let closestDistance = Infinity;
+        for (const silo of ourSilos) {
+          try {
+            const siloTile = silo.tile?.();
+            if (siloTile == null) {
+              continue;
+            }
+            const distance = Math.sqrt(
+              toFiniteNumber(game.euclideanDistSquared?.(tile, siloTile), Infinity),
+            );
+            if (Number.isFinite(distance)) {
+              closestDistance = Math.min(closestDistance, distance);
+            }
+          } catch (_error) {
+            // Ignore stale silo references.
+          }
+        }
+        if (Number.isFinite(closestDistance)) {
+          weight = Math.max(weight * 0.2, weight - closestDistance * 30);
+        }
+      }
+
+      if (weight > 0) {
+        addEconomicSource(sources, tile, weight, topType);
+      }
+    }
+
+    return sources;
+  }
+
+  function drawNukeTargetHeatmapPoint(ctx, point, maxWeight, pixelRatio) {
+    const intensity = Math.max(0.32, Math.min(0.82, point.weight / maxWeight));
+    const x = point.x * pixelRatio;
+    const y = point.y * pixelRatio;
+    const typeScale =
+      point.type === "Missile Silo"
+        ? 1.12
+        : point.type === "City"
+          ? 1.06
+          : point.type === "Factory" || point.type === "Port"
+            ? 1.02
+            : 0.94;
+    const zoomRadiusScale =
+      point.zoomScale < 1
+        ? Math.min(1.12, Math.max(0.72, point.zoomScale * 1.3))
+        : point.zoomScale;
+    const radius =
+      (22 + intensity * 42) * 0.85 * typeScale * zoomRadiusScale * pixelRatio;
+    const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
+    gradient.addColorStop(0, `rgba(251, 207, 232, ${0.27 + intensity * 0.24})`);
+    gradient.addColorStop(0.55, `rgba(236, 72, 153, ${0.19 + intensity * 0.22})`);
+    gradient.addColorStop(1, "rgba(236, 72, 153, 0)");
+
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = `rgba(244, 114, 182, ${0.3 + intensity * 0.22})`;
+    ctx.lineWidth = Math.max(1, 1.25 * pixelRatio);
+    ctx.beginPath();
+    ctx.arc(x, y, Math.max(radius - 3 * pixelRatio, 1), 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  function drawNukeTargetHeatmap() {
+    if (!nukeTargetHeatmapEnabled) {
+      nukeTargetHeatmapAnimationFrame = null;
+      return;
+    }
+
+    const now = performance.now();
+    if (now - lastNukeTargetHeatmapDrawAt < ECONOMY_HEATMAP_DRAW_MS) {
+      nukeTargetHeatmapAnimationFrame = requestAnimationFrame(drawNukeTargetHeatmap);
+      return;
+    }
+    lastNukeTargetHeatmapDrawAt = now;
+
+    const { canvas, pixelRatio } = ensureNukeTargetHeatmapCanvas();
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      nukeTargetHeatmapAnimationFrame = requestAnimationFrame(drawNukeTargetHeatmap);
+      return;
+    }
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const overlay = getHoveredPlayerInfoOverlay();
+    const context = getOpenFrontGameContext();
+    const game = overlay?.game ?? context?.game;
+    const transform = overlay?.transform ?? context?.transform;
+    const selectedNukeType = getSelectedNukeType();
+    if (overlay?.player) {
+      lastNukeTargetHoveredPlayer = overlay.player;
+    }
+    const hoveredPlayer = overlay?.player ?? (selectedNukeType ? lastNukeTargetHoveredPlayer : null);
+    const myPlayer = game?.myPlayer?.() ?? null;
+
+    if (!game || !transform || !hoveredPlayer || !myPlayer) {
+      canvas.parentElement?.setAttribute(
+        "data-status",
+        selectedNukeType
+          ? "Nuke target zones: hover an enemy once to lock a target"
+          : "Nuke target zones: hover an enemy player",
+      );
+      nukeTargetHeatmapAnimationFrame = requestAnimationFrame(drawNukeTargetHeatmap);
+      return;
+    }
+
+    if (isFriendlyPlayer(myPlayer, hoveredPlayer)) {
+      canvas.parentElement?.setAttribute(
+        "data-status",
+        "Nuke target zones: hover an enemy player",
+      );
+      nukeTargetHeatmapAnimationFrame = requestAnimationFrame(drawNukeTargetHeatmap);
+      return;
+    }
+
+    const sources = buildNukeTargetHeatmapSources(
+      game,
+      hoveredPlayer,
+      myPlayer,
+      selectedNukeType || "Hydrogen Bomb",
+    );
+    const points = projectEconomyHeatmapPoints(sources, game, transform);
+    if (points.length === 0) {
+      canvas.parentElement?.setAttribute(
+        "data-status",
+        "Nuke target zones: no valuable target cluster found",
+      );
+      nukeTargetHeatmapAnimationFrame = requestAnimationFrame(drawNukeTargetHeatmap);
+      return;
+    }
+
+    canvas.parentElement?.removeAttribute("data-status");
+    const maxWeight = Math.max(1, ...points.map((point) => point.weight));
+    ctx.globalCompositeOperation = "screen";
+    for (const point of points) {
+      drawNukeTargetHeatmapPoint(ctx, point, maxWeight, pixelRatio);
+    }
+    ctx.globalCompositeOperation = "source-over";
+
+    nukeTargetHeatmapAnimationFrame = requestAnimationFrame(drawNukeTargetHeatmap);
+  }
+
   function setEconomyHeatmapIntensity(value) {
     economyHeatmapIntensity = normalizeEconomyHeatmapIntensity(value);
   }
@@ -639,5 +1089,24 @@
     setEconomyHeatmapEnabled(false);
     if (exportPartnerHeatmapAnimationFrame === null) {
       drawExportPartnerHeatmap();
+    }
+  }
+
+  function setNukeTargetHeatmapEnabled(enabled) {
+    nukeTargetHeatmapEnabled = Boolean(enabled);
+    if (!nukeTargetHeatmapEnabled) {
+      if (nukeTargetHeatmapAnimationFrame !== null) {
+        cancelAnimationFrame(nukeTargetHeatmapAnimationFrame);
+      }
+      nukeTargetHeatmapAnimationFrame = null;
+      lastNukeTargetHeatmapDrawAt = 0;
+      document.getElementById(NUKE_TARGET_HEATMAP_CONTAINER_ID)?.remove();
+      return;
+    }
+
+    setEconomyHeatmapEnabled(false);
+    setExportPartnerHeatmapEnabled(false);
+    if (nukeTargetHeatmapAnimationFrame === null) {
+      drawNukeTargetHeatmap();
     }
   }

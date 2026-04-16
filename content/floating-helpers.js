@@ -332,6 +332,7 @@ function createFloatingHelpersPanel() {
     createFloatingHelperRow("fpsSaver", "FPS Saver", "Disables nuke explosion animations."),
     createFloatingHelperRow("showAttackAmounts", "Attack amounts", "Shows how many troops a player attacks with."),
     createFloatingHelperRow("showNukeLandingZones", "Nuke landing zones", "Shows enemy nuke landing points and blast radius."),
+    createFloatingHelperRow("showNukeTargetHeatmap", "Nuke target zones", "Hover an enemy player to show the best high-damage nuke zones."),
     createFloatingHelperActionButton(
       "toggleSelectiveTradePolicy",
       "Block non-team trades",
@@ -395,9 +396,15 @@ function createFloatingHelpersPanel() {
     };
     if (key === "showEconomyHeatmap" && target.checked) {
       nextSettings.showExportPartnerHeatmap = false;
+      nextSettings.showNukeTargetHeatmap = false;
     }
     if (key === "showExportPartnerHeatmap" && target.checked) {
       nextSettings.showEconomyHeatmap = false;
+      nextSettings.showNukeTargetHeatmap = false;
+    }
+    if (key === "showNukeTargetHeatmap" && target.checked) {
+      nextSettings.showEconomyHeatmap = false;
+      nextSettings.showExportPartnerHeatmap = false;
     }
     if (key === "economyHeatmapIntensity") {
       nextSettings.economyHeatmapIntensity = normalizeEconomyHeatmapIntensity(target.value);
