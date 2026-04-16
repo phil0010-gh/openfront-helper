@@ -15,7 +15,11 @@ function ensureFloatingHelpersStyles() {
       top: var(--openfront-helper-top, 92px);
       z-index: 2147483647;
       width: min(340px, calc(100vw - 24px));
+      height: var(--openfront-helper-height, auto);
+      min-height: 220px;
       max-height: calc(100vh - 24px);
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
       overflow: hidden;
       border: 1px solid rgba(134, 239, 172, 0.34);
       border-radius: 8px;
@@ -67,9 +71,30 @@ function ensureFloatingHelpersStyles() {
     #${FLOATING_HELPERS_PANEL_ID} .openfront-helper-floating-body {
       display: grid;
       gap: 10px;
-      max-height: calc(100vh - 82px);
+      min-height: 0;
       overflow: auto;
       padding: 10px;
+    }
+
+    #${FLOATING_HELPERS_PANEL_ID} .openfront-helper-floating-resize {
+      position: relative;
+      height: 12px;
+      border-top: 1px solid rgba(134, 239, 172, 0.14);
+      background: rgba(7, 24, 22, 0.78);
+      cursor: ns-resize;
+      touch-action: none;
+    }
+
+    #${FLOATING_HELPERS_PANEL_ID} .openfront-helper-floating-resize::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 4px;
+      width: 42px;
+      height: 3px;
+      border-radius: 999px;
+      background: rgba(187, 247, 208, 0.48);
+      transform: translateX(-50%);
     }
 
     #${FLOATING_HELPERS_PANEL_ID} .openfront-helper-floating-category {
@@ -294,6 +319,7 @@ function createFloatingHelpersPanel() {
       <button class="openfront-helper-floating-close" type="button" aria-label="Close helpers panel">x</button>
     </div>
     <div class="openfront-helper-floating-body"></div>
+    <div class="openfront-helper-floating-resize" role="separator" aria-orientation="horizontal" aria-label="Resize helpers panel"></div>
   `;
 
   const body = panel.querySelector(".openfront-helper-floating-body");
@@ -420,6 +446,7 @@ function createFloatingHelpersPanel() {
   });
 
   installFloatingHelpersDrag(panel);
+  installFloatingHelpersVerticalResize(panel);
   return panel;
 }
 
@@ -478,9 +505,69 @@ function installFloatingHelpersDrag(panel) {
   header.addEventListener("pointercancel", finishDrag);
 }
 
+function installFloatingHelpersVerticalResize(panel) {
+  const handle = panel.querySelector(".openfront-helper-floating-resize");
+  if (!(handle instanceof HTMLElement)) {
+    return;
+  }
+
+  let resizeState = null;
+  handle.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) {
+      return;
+    }
+
+    resizeState = {
+      pointerId: event.pointerId,
+      startY: event.clientY,
+      startHeight: panel.getBoundingClientRect().height,
+    };
+    handle.setPointerCapture(event.pointerId);
+    event.preventDefault();
+  });
+
+  handle.addEventListener("pointermove", (event) => {
+    if (!resizeState || resizeState.pointerId !== event.pointerId) {
+      return;
+    }
+
+    const nextHeight = resizeState.startHeight + event.clientY - resizeState.startY;
+    setFloatingHelpersHeight(panel, nextHeight);
+  });
+
+  function finishResize(event) {
+    if (!resizeState || resizeState.pointerId !== event.pointerId) {
+      return;
+    }
+
+    resizeState = null;
+    const rect = panel.getBoundingClientRect();
+    saveSettings({
+      ...settings,
+      floatingHelpersPanelHeight: Math.round(rect.height),
+    }).catch((error) => {
+      console.error("Failed to save floating helpers height:", error);
+    });
+  }
+
+  handle.addEventListener("pointerup", finishResize);
+  handle.addEventListener("pointercancel", finishResize);
+}
+
 function setFloatingHelpersPosition(panel, left, top) {
   panel.style.setProperty("--openfront-helper-left", `${Math.round(left)}px`);
   panel.style.setProperty("--openfront-helper-top", `${Math.round(top)}px`);
+}
+
+function getFloatingHelpersMaxHeight(panel) {
+  const rect = panel.getBoundingClientRect();
+  return Math.max(220, window.innerHeight - rect.top - 8);
+}
+
+function setFloatingHelpersHeight(panel, height) {
+  const maxHeight = getFloatingHelpersMaxHeight(panel);
+  const clampedHeight = Math.max(220, Math.min(maxHeight, height));
+  panel.style.setProperty("--openfront-helper-height", `${Math.round(clampedHeight)}px`);
 }
 
 function positionFloatingHelpersPanel(panel) {
@@ -493,6 +580,10 @@ function positionFloatingHelpersPanel(panel) {
     Math.max(8, Math.min(maxLeft, left)),
     Math.max(8, Math.min(maxTop, top)),
   );
+
+  if (settings.floatingHelpersPanelHeight !== null) {
+    setFloatingHelpersHeight(panel, settings.floatingHelpersPanelHeight);
+  }
 }
 
 function updateFloatingHelpersPanel(panel) {

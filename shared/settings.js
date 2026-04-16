@@ -62,6 +62,7 @@
       left: null,
       top: null,
     },
+    floatingHelpersPanelHeight: null,
     collapsedHelperCategories: {
       game: false,
       economic: false,
@@ -101,6 +102,11 @@
           ? null
           : top,
     };
+  }
+
+  function normalizeFloatingHelpersPanelHeight(value) {
+    const height = Number(value);
+    return Number.isFinite(height) && height > 0 ? height : null;
   }
 
   function normalizeActionRequestTimestamp(value) {
@@ -149,6 +155,9 @@
       floatingHelpersPanelPosition: normalizeFloatingHelpersPanelPosition(
         floatingHelpersPanelPosition,
       ),
+      floatingHelpersPanelHeight: normalizeFloatingHelpersPanelHeight(
+        source.floatingHelpersPanelHeight,
+      ),
       collapsedHelperCategories: {
         ...DEFAULT_SETTINGS.collapsedHelperCategories,
         ...collapsedHelperCategories,
@@ -194,6 +203,7 @@
     normalizeMapFilters,
     normalizeEconomyHeatmapIntensity,
     normalizeFloatingHelpersPanelPosition,
+    normalizeFloatingHelpersPanelHeight,
     normalizeActionRequestTimestamp,
     getEconomyHeatmapIntensityLabel,
   };

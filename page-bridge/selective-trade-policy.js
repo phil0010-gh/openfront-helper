@@ -91,6 +91,15 @@
     };
   }
 
+  function setFpsSaverEnabled(enabled) {
+    fpsSaverEnabled = Boolean(enabled);
+    installFpsSaverPatch();
+
+    if (fpsSaverEnabled) {
+      removeTrackedNukeFx();
+    }
+  }
+
   function isUsableOpenFrontGameContext(game, transform) {
     return Boolean(
       game?.playerViews &&
