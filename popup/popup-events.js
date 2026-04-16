@@ -106,7 +106,10 @@
         "showTradeBalances",
         "fpsSaver",
         "showAttackAmounts",
+        "showNukeTargetHeatmap",
         "showNukeLandingZones",
+        "showNukeTargetHeatmap",
+        "showNukeTargetHeatmap",
         "showNukeTargetHeatmap",
       ].includes(target.name)
     ) {
