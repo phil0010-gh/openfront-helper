@@ -18,6 +18,17 @@
   "host_permissions": [
     "https://openfront.io/*"
   ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "openfront-helper@phil0010-gh",
+      "strict_min_version": "121.0",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
+    }
+  },
   "action": {
     "default_title": "OpenFront Auto-Join & Helpers",
     "default_popup": "popup.html",

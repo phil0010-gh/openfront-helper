@@ -1,4 +1,5 @@
 const INSTALL_NOTICE_KEY = "installReloadNoticePending";
+const WHATS_NEW_NOTICE_KEY = "whatsNewNoticePending";
 const STORAGE_KEY = "settings";
 const DEFAULT_ICON = {
   16: "assets/icon-16.png",
@@ -25,13 +26,18 @@ async function syncAutoJoinIcon() {
 }
 
 chrome.runtime.onInstalled.addListener((details) => {
-  if (details.reason !== "install") {
+  if (details.reason === "install") {
+    chrome.storage.local.set({
+      [INSTALL_NOTICE_KEY]: true,
+    });
     return;
   }
 
-  chrome.storage.local.set({
-    [INSTALL_NOTICE_KEY]: true,
-  });
+  if (details.reason === "update") {
+    chrome.storage.local.set({
+      [WHATS_NEW_NOTICE_KEY]: true,
+    });
+  }
 });
 
 chrome.storage.onChanged.addListener((changes, areaName) => {

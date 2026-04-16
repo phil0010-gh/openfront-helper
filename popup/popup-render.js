@@ -149,47 +149,12 @@
     refs.helperInfoPopup.dataset.placement = placeLeft ? "left" : "right";
   };
 
-  popup.playVersionDropEffect = function playVersionDropEffect() {
-    if (!(refs.versionBadge instanceof HTMLElement)) {
-      return;
-    }
-
-    const rect = refs.versionBadge.getBoundingClientRect();
-    const colors = ["#bbf7d0", "#7dd3fc", "#4ade80", "#fde68a"];
-
-    for (let index = 0; index < 14; index += 1) {
-      const particle = document.createElement("span");
-      const x = rect.left + rect.width * (0.16 + Math.random() * 0.68);
-      const y = rect.bottom - 2;
-      const drift = (Math.random() - 0.5) * 54;
-      const fall = 42 + Math.random() * 48;
-      const delay = Math.random() * 120;
-      const duration = 680 + Math.random() * 420;
-      const size = 3 + Math.random() * 4;
-
-      particle.className = "version-drop-particle";
-      particle.style.left = `${x}px`;
-      particle.style.top = `${y}px`;
-      particle.style.width = `${size}px`;
-      particle.style.height = `${size}px`;
-      particle.style.background = colors[index % colors.length];
-      particle.style.setProperty("--drop-x", `${drift}px`);
-      particle.style.setProperty("--drop-y", `${fall}px`);
-      particle.style.animationDelay = `${delay}ms`;
-      particle.style.animationDuration = `${duration}ms`;
-      document.body.append(particle);
-
-      window.setTimeout(() => {
-        particle.remove();
-      }, delay + duration + 80);
-    }
-  };
-
   popup.render = function render() {
     const enabled = state.settings.enabled;
     const hasOptionsSelected = popup.hasSelectedOptions();
 
     refs.installNotice.hidden = !state.showInstallNotice;
+    refs.whatsNewNotice.hidden = !state.showWhatsNewNotice;
     refs.powerButton.dataset.enabled = String(enabled);
     refs.powerButton.disabled = !hasOptionsSelected;
     refs.powerButton.setAttribute("aria-pressed", String(enabled));

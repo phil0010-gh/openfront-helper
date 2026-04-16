@@ -4,6 +4,7 @@
 
   const refs = {
     powerButton: document.getElementById("powerButton"),
+    appTitleButton: document.getElementById("appTitleButton"),
     statusText: document.getElementById("statusText"),
     searchTimer: document.getElementById("searchTimer"),
     searchTimerValue: document.getElementById("searchTimerValue"),
@@ -16,11 +17,14 @@
     dismissInstallNoticeButton: document.getElementById(
       "dismissInstallNoticeButton",
     ),
+    whatsNewNotice: document.getElementById("whatsNewNotice"),
+    dismissWhatsNewNoticeButton: document.getElementById(
+      "dismissWhatsNewNoticeButton",
+    ),
     helperInfoPopup: document.getElementById("helperInfoPopup"),
     helperInfoTitle: document.getElementById("helperInfoTitle"),
     helperInfoImage: document.getElementById("helperInfoImage"),
     helperInfoCloseButton: document.getElementById("helperInfoCloseButton"),
-    versionBadge: document.getElementById("versionBadge"),
     applySelectiveTradePolicyButton: document.getElementById(
       "applySelectiveTradePolicyButton",
     ),
@@ -34,6 +38,7 @@
   popup.state = {
     settings: shared.normalizeSettings({}, { ensureActiveSearchTimestamp: true }),
     showInstallNotice: false,
+    showWhatsNewNotice: false,
     activeHelperInfoButton: null,
     timerInterval: null,
   };
@@ -88,6 +93,7 @@
     const stored = await chrome.storage.local.get([
       shared.STORAGE_KEY,
       shared.INSTALL_NOTICE_KEY,
+      shared.WHATS_NEW_NOTICE_KEY,
     ]);
     const rawSettings = stored[shared.STORAGE_KEY] || {};
 
@@ -100,6 +106,8 @@
     }
 
     popup.state.showInstallNotice = stored[shared.INSTALL_NOTICE_KEY] === true;
+    popup.state.showWhatsNewNotice =
+      stored[shared.WHATS_NEW_NOTICE_KEY] === true;
   };
 
   popup.saveSettings = async function saveSettings() {
