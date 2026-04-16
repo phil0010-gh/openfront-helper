@@ -12,7 +12,16 @@
   <body>
     <main class="panel">
       <header class="hero">
-        <h1>OpenFront Auto-Join & Helpers</h1>
+        <h1>
+          <button
+            id="appTitleButton"
+            class="hero-title-button"
+            type="button"
+            aria-label="Show what's new"
+          >
+            OpenFront Auto-Join & Helpers
+          </button>
+        </h1>
         <a
           class="discord-link"
           href="https://discord.gg/6WFy4NQ9jy"
@@ -36,6 +45,24 @@
           </p>
         </div>
         <button id="dismissInstallNoticeButton" class="install-notice-button" type="button">
+          Got it
+        </button>
+      </section>
+
+      <section id="whatsNewNotice" class="whats-new-notice" hidden>
+        <div class="whats-new-copy">
+          <div class="whats-new-head">
+            <p class="whats-new-title">What's new</p>
+            <span class="whats-new-badge">Update</span>
+          </div>
+          <div class="whats-new-feature">
+            <p class="whats-new-feature-title">Block non-team trades</p>
+            <p class="whats-new-text">
+              Team games only: block trades from players who are not on your team.
+            </p>
+          </div>
+        </div>
+        <button id="dismissWhatsNewNoticeButton" class="whats-new-button" type="button">
           Got it
         </button>
       </section>

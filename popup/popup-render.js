@@ -154,6 +154,7 @@
     const hasOptionsSelected = popup.hasSelectedOptions();
 
     refs.installNotice.hidden = !state.showInstallNotice;
+    refs.whatsNewNotice.hidden = !state.showWhatsNewNotice;
     refs.powerButton.dataset.enabled = String(enabled);
     refs.powerButton.disabled = !hasOptionsSelected;
     refs.powerButton.setAttribute("aria-pressed", String(enabled));

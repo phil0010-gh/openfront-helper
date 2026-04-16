@@ -182,6 +182,7 @@
   globalScope.OpenFrontHelperSettings = {
     STORAGE_KEY: "settings",
     INSTALL_NOTICE_KEY: "installReloadNoticePending",
+    WHATS_NEW_NOTICE_KEY: "whatsNewNoticePending",
     MAPS,
     MAP_IDS,
     FILTER_KEYS,

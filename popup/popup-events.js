@@ -27,6 +27,19 @@
     popup.render();
   });
 
+  refs.dismissWhatsNewNoticeButton.addEventListener("click", async () => {
+    state.showWhatsNewNotice = false;
+    await chrome.storage.local.set({
+      [shared.WHATS_NEW_NOTICE_KEY]: false,
+    });
+    popup.render();
+  });
+
+  refs.appTitleButton.addEventListener("click", () => {
+    state.showWhatsNewNotice = true;
+    popup.render();
+  });
+
   refs.powerButton.addEventListener("click", async () => {
     if (refs.powerButton.disabled) {
       return;
