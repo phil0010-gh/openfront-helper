@@ -110,6 +110,7 @@
         "showNukeTargetHeatmap",
         "showNukeTargetHeatmap",
         "showNukeTargetHeatmap",
+        "showNukeTargetHeatmap",
       ].includes(target.name)
     ) {
       if (target.name === "showNukeTargetHeatmap" && target.checked) {
