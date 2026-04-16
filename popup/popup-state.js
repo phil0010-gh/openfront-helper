@@ -20,7 +20,6 @@
     helperInfoTitle: document.getElementById("helperInfoTitle"),
     helperInfoImage: document.getElementById("helperInfoImage"),
     helperInfoCloseButton: document.getElementById("helperInfoCloseButton"),
-    versionBadge: document.getElementById("versionBadge"),
     applySelectiveTradePolicyButton: document.getElementById(
       "applySelectiveTradePolicyButton",
     ),

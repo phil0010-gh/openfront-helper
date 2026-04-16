@@ -272,10 +272,6 @@
     popup.renderMapSearch();
   });
 
-  refs.versionBadge?.addEventListener("click", () => {
-    popup.playVersionDropEffect();
-  });
-
   refs.helperInfoCloseButton.addEventListener("click", () => {
     popup.closeHelperInfo();
   });
