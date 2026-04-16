@@ -260,3 +260,9 @@
   background: rgba(185, 28, 28, 0.94);
   color: #fff1f2;
 }
+
+.map-exclude-button[data-active="true"]:hover {
+  border-color: rgba(254, 202, 202, 0.72);
+  background: rgba(220, 38, 38, 0.96);
+  color: #fff1f2;
+}
