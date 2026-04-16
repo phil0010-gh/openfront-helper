@@ -236,6 +236,7 @@
       "showAttackAmounts",
       "showEconomyHeatmap",
       "showExportPartnerHeatmap",
+      "showNukeTargetHeatmap",
     ]) {
       const input = refs.filtersForm.elements.namedItem(settingName);
       if (input instanceof HTMLInputElement) {

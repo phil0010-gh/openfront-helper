@@ -364,6 +364,7 @@ function createFloatingHelpersPanel() {
   heatmapPanel.append(
     slider,
     createFloatingHelperRow("showExportPartnerHeatmap", "Export partner heatmap", "Hover a player to highlight export partners."),
+    createFloatingHelperRow("showNukeTargetHeatmap", "Nuke target heatmap", "Hover an enemy player to show the best high-damage nuke zones."),
   );
   economyCategory.append(heatmapPanel);
   body.append(gameCategory, economyCategory);
@@ -394,9 +395,15 @@ function createFloatingHelpersPanel() {
     };
     if (key === "showEconomyHeatmap" && target.checked) {
       nextSettings.showExportPartnerHeatmap = false;
+      nextSettings.showNukeTargetHeatmap = false;
     }
     if (key === "showExportPartnerHeatmap" && target.checked) {
       nextSettings.showEconomyHeatmap = false;
+      nextSettings.showNukeTargetHeatmap = false;
+    }
+    if (key === "showNukeTargetHeatmap" && target.checked) {
+      nextSettings.showEconomyHeatmap = false;
+      nextSettings.showExportPartnerHeatmap = false;
     }
     if (key === "economyHeatmapIntensity") {
       nextSettings.economyHeatmapIntensity = normalizeEconomyHeatmapIntensity(target.value);

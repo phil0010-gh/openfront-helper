@@ -56,6 +56,7 @@
     showEconomyHeatmap: false,
     economyHeatmapIntensity: 1,
     showExportPartnerHeatmap: false,
+    showNukeTargetHeatmap: false,
     applySelectiveTradePolicyRequestAt: null,
     showFloatingHelpersPanel: false,
     floatingHelpersPanelPosition: {
@@ -174,8 +175,11 @@
       mapExcludeFilters: normalizeMapFilters(mapExcludeFilters),
     };
 
-    if (normalized.showEconomyHeatmap && normalized.showExportPartnerHeatmap) {
+    if (normalized.showNukeTargetHeatmap) {
+      normalized.showEconomyHeatmap = false;
       normalized.showExportPartnerHeatmap = false;
+    } else if (normalized.showExportPartnerHeatmap) {
+      normalized.showEconomyHeatmap = false;
     }
 
     normalized.economyHeatmapIntensity = normalizeEconomyHeatmapIntensity(

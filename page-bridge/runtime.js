@@ -15,6 +15,12 @@ const EXPORT_PARTNER_HEATMAP_STYLE_ID =
   "openfront-helper-export-partner-heatmap-styles";
 const EXPORT_PARTNER_HEATMAP_CANVAS_CLASS =
   "openfront-helper-export-partner-heatmap-canvas";
+const NUKE_TARGET_HEATMAP_CONTAINER_ID =
+  "openfront-helper-nuke-target-heatmap-layer";
+const NUKE_TARGET_HEATMAP_STYLE_ID =
+  "openfront-helper-nuke-target-heatmap-styles";
+const NUKE_TARGET_HEATMAP_CANVAS_CLASS =
+  "openfront-helper-nuke-target-heatmap-canvas";
 const HELPER_STATS_CONTAINER_ID = "openfront-helper-stats-container";
 const HELPER_STATS_STYLE_ID = "openfront-helper-stats-container-styles";
 const GOLD_PER_MINUTE_BADGE_ID = "openfront-helper-gpm-badge";
@@ -79,6 +85,9 @@ let economyHeatmapIntensity = 1;
 let exportPartnerHeatmapEnabled = false;
 let exportPartnerHeatmapAnimationFrame = null;
 let lastExportPartnerHeatmapDrawAt = 0;
+let nukeTargetHeatmapEnabled = false;
+let nukeTargetHeatmapAnimationFrame = null;
+let lastNukeTargetHeatmapDrawAt = 0;
 let selectiveTradePolicyEnabled = false;
 let selectiveTradePolicyNeedsEmbargoSync = false;
 let selectiveTradePolicyMyPlayerId = null;
