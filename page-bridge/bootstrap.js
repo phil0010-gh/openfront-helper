@@ -69,6 +69,10 @@
       setExportPartnerHeatmapEnabled(data.payload?.enabled);
     }
 
+    if (data.type === "SHOW_NUKE_TARGET_HEATMAP") {
+      setNukeTargetHeatmapEnabled(data.payload?.enabled);
+    }
+
     if (data.type === "APPLY_SELECTIVE_TRADE_POLICY") {
       const requestedAt = Number(data.payload?.requestedAt);
       if (Number.isFinite(requestedAt) && requestedAt !== lastSelectiveTradePolicyRequestAt) {

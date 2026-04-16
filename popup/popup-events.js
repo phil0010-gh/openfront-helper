@@ -107,8 +107,13 @@
         "fpsSaver",
         "showAttackAmounts",
         "showNukeLandingZones",
+        "showNukeTargetHeatmap",
       ].includes(target.name)
     ) {
+      if (target.name === "showNukeTargetHeatmap" && target.checked) {
+        state.settings.showEconomyHeatmap = false;
+        state.settings.showExportPartnerHeatmap = false;
+      }
       await updateBooleanSetting(target.name, target.checked);
       return;
     }
@@ -117,6 +122,7 @@
       state.settings.showEconomyHeatmap = target.checked;
       if (target.checked) {
         state.settings.showExportPartnerHeatmap = false;
+        state.settings.showNukeTargetHeatmap = false;
       }
       await popup.saveSettings();
       popup.render();
@@ -135,6 +141,7 @@
       state.settings.showExportPartnerHeatmap = target.checked;
       if (target.checked) {
         state.settings.showEconomyHeatmap = false;
+        state.settings.showNukeTargetHeatmap = false;
       }
       await popup.saveSettings();
       popup.render();
