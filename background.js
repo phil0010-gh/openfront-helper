@@ -33,6 +33,7 @@ chrome.runtime.onInstalled.addListener((details) => {
     return;
   }
 
+
   if (details.reason === "update") {
     chrome.storage.local.set({
       [WHATS_NEW_NOTICE_KEY]: true,
