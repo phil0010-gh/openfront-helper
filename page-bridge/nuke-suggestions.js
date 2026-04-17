@@ -52,7 +52,9 @@
   const AUTO_NUKE_FOLLOWUP_REMAINING_BUILDING_RATIO = 0.1;
   const AUTO_NUKE_PROCESS_COMPLETE_HIDE_MS = 3500;
   const AUTO_NUKE_GAME_TICK_MS = 100;
-  const AUTO_NUKE_MAX_SAM_BURN_SHOTS_PER_STACK = 96;
+  const AUTO_NUKE_MAX_SAM_BURN_SHOTS_PER_STACK = 160;
+  const AUTO_NUKE_SAM_STACK_SAFETY_BURN_PER_EXTRA_LEVEL = 1;
+  const AUTO_NUKE_SAM_STACK_SAFETY_BURN_CAP = 4;
   const AUTO_NUKE_SECOND_PASS_POLL_MS = 1000;
   const AUTO_NUKE_SECOND_PASS_MAX_WAIT_MS = 8 * 60 * 1000;
   const AUTO_NUKE_SECOND_PASS_READY_SLOT_FRACTION = 0.6;
@@ -61,6 +63,8 @@
   const AUTO_NUKE_THIRD_PASS_SPREAD_MULTIPLIER = 2.25;
   const AUTO_NUKE_SECOND_PASS_LAUNCH_SLOT_FRACTION = 0.58;
   const AUTO_NUKE_MAX_SAM_CLEAR_WAVES = 6;
+  const AUTO_NUKE_MAX_FOLLOWUP_WAVES = 4;
+  const AUTO_NUKE_FOLLOWUP_SPREAD_MULTIPLIER = 1.5;
   const AUTO_NUKE_MAX_CANDIDATES_PER_SPEC = 28;
   const AUTO_NUKE_MIN_MARGINAL_SCORE = 1;
   const AUTO_NUKE_DESTRUCTION_BUILDING_BONUS = 2500000;
@@ -3281,6 +3285,46 @@
           burnCost: Infinity,
         };
       }
+
+      // Safety overshoot for heavily stacked SAMs: if many SAMs share this tile,
+      // the real-game queue/capacity may exceed what we simulate per unit.
+      // Add a small number of extra burn shots proportional to the stack size.
+      const stackSamCount = simStack.sams?.length || 0;
+      const stackLevelSum = (simStack.sams || []).reduce(
+        (sum, s) => sum + Math.max(1, getUnitLevel(s)),
+        0,
+      );
+      const stackExtraUnits = Math.max(0, stackSamCount - 1);
+      const safetyBurns = Math.min(
+        AUTO_NUKE_SAM_STACK_SAFETY_BURN_CAP,
+        stackExtraUnits *
+          AUTO_NUKE_SAM_STACK_SAFETY_BURN_PER_EXTRA_LEVEL +
+          (stackLevelSum >= 6 ? 1 : 0),
+      );
+      for (let safetyIndex = 0; safetyIndex < safetyBurns; safetyIndex++) {
+        const safetyInterception = findAutoNukeSamStackInterceptionSlot(
+          game,
+          simStack,
+          stackSlots,
+          burnCandidate,
+          shotIndexOffset + shotSamKeys.length,
+          state,
+        );
+        if (!safetyInterception) {
+          break;
+        }
+        stackSlots[safetyInterception.slotIndex] =
+          safetyInterception.shootTick + getSamCooldown(game) + 1;
+        stackSlots = stackSlots.sort((a, b) => a - b);
+        samSlotUpdates.set(stack.key, [...stackSlots]);
+        shotSamKeys.push({
+          key: stack.key,
+          ownedByTarget,
+          candidate: burnCandidate,
+          interceptedAtTick: safetyInterception.shootTick,
+          safety: true,
+        });
+      }
     }
 
     const burnCost = shotSamKeys.reduce((sum, shotSam) => {
@@ -4918,13 +4962,68 @@
     }
 
     if (!isDestructionFlow) {
+      let followupWaveState = plan.followupState;
+      let followupWaveNumber = waveNumber + 1;
+      let followupWavesLaunched = 0;
+      while (followupWavesLaunched < AUTO_NUKE_MAX_FOLLOWUP_WAVES) {
+        if (!canContinueAutoNukeSecondPass(params)) {
+          break;
+        }
+        const followupWavePlan = await waitForAutoNukeWavePlan(
+          params,
+          mode,
+          followupWaveState,
+          {
+            spreadMultiplier: AUTO_NUKE_FOLLOWUP_SPREAD_MULTIPLIER,
+            readySlotFraction: AUTO_NUKE_SECOND_PASS_READY_SLOT_FRACTION,
+            launchSlotFraction: AUTO_NUKE_SECOND_PASS_LAUNCH_SLOT_FRACTION,
+            confirmationShots: 0,
+          },
+          getAutoNukeProcessWaveStatus(
+            params,
+            mode,
+            followupWaveNumber,
+            mode,
+            `Waiting for ${mode} wave ${followupWaveNumber}`,
+          ),
+        );
+        if (!followupWavePlan) {
+          break;
+        }
+        const followupWaveLaunched = await launchAutoNukePlan(
+          params,
+          followupWavePlan,
+          getAutoNukeProcessWaveStatus(
+            params,
+            mode,
+            followupWaveNumber,
+            mode,
+            `Launching ${followupWavePlan.shots.length} nukes`,
+          ),
+        );
+        if (followupWaveLaunched === 0) {
+          break;
+        }
+        latestImpactAtMs = Math.max(
+          latestImpactAtMs,
+          followupWavePlan.estimatedImpactAtMs || 0,
+        );
+        followupWaveState = followupWavePlan.followupState;
+        followupWavesLaunched++;
+        followupWaveNumber++;
+      }
+      const finalWaveNumber = followupWavesLaunched > 0
+        ? followupWaveNumber - 1
+        : waveNumber;
       updateAutoNukeProcessPanel(
         getAutoNukeProcessWaveStatus(
           params,
           mode,
-          waveNumber,
+          finalWaveNumber,
           mode,
-          `Complete: launched ${launchedCount} nukes`,
+          followupWavesLaunched > 0
+            ? `Complete: ${1 + followupWavesLaunched} waves launched`
+            : `Complete: launched ${launchedCount} nukes`,
           { progress: 1 },
         ),
       );
