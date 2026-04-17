@@ -83,15 +83,15 @@
 
 .filter-group-helpers:hover {
   transform: translateY(-3px);
-  border-color: rgba(74, 222, 128, 0.68);
+  border-color: rgba(74, 222, 128, 0.5);
   background:
-    linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(125, 211, 252, 0.06) 48%, transparent 72%),
-    rgba(7, 24, 22, 0.72);
+    linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(125, 211, 252, 0.035) 48%, transparent 72%),
+    rgba(6, 20, 20, 0.68);
   box-shadow:
-    inset 0 1px 0 rgba(187, 247, 208, 0.16),
-    0 0 0 3px rgba(34, 197, 94, 0.1),
-    0 16px 34px rgba(34, 197, 94, 0.16),
-    0 0 30px rgba(125, 211, 252, 0.1);
+    inset 0 1px 0 rgba(187, 247, 208, 0.1),
+    0 0 0 3px rgba(34, 197, 94, 0.06),
+    0 14px 28px rgba(34, 197, 94, 0.08),
+    0 0 22px rgba(125, 211, 252, 0.06);
 }
 
 .filter-group-helpers:hover::before {
@@ -529,6 +529,37 @@
   background: rgba(127, 29, 29, 0.42);
 }
 
+.helper-option-icon-auto-nuke {
+  color: #ecfeff;
+  border-color: rgba(125, 211, 252, 0.44);
+  background:
+    linear-gradient(135deg, rgba(125, 211, 252, 0.36), rgba(74, 222, 128, 0.18) 54%, rgba(250, 204, 21, 0.16)),
+    rgba(8, 47, 73, 0.58);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 0 14px rgba(56, 189, 248, 0.14);
+}
+
+.helper-beta-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 18px;
+  padding: 3px 6px;
+  border: 1px solid rgba(125, 211, 252, 0.4);
+  border-radius: 6px;
+  background:
+    linear-gradient(135deg, rgba(125, 211, 252, 0.22), rgba(74, 222, 128, 0.14) 58%, rgba(250, 204, 21, 0.12)),
+    rgba(8, 47, 73, 0.46);
+  color: #cffafe;
+  font-size: 9px;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 12px rgba(56, 189, 248, 0.1);
+}
+
 .helper-option-icon-gold {
   color: #fde68a;
   border-color: rgba(250, 204, 21, 0.42);
@@ -557,6 +588,81 @@
   border-color: rgba(74, 222, 128, 0.44);
   background: rgba(12, 43, 35, 0.88);
   box-shadow: 0 8px 18px rgba(34, 197, 94, 0.1);
+}
+
+.filter-group-helpers .toggle-card.helper-auto-nuke-card {
+  overflow: hidden;
+  border-radius: 18px;
+  border-color: rgba(125, 211, 252, 0.32);
+  background:
+    linear-gradient(135deg, rgba(56, 189, 248, 0.14), rgba(74, 222, 128, 0.07) 48%, rgba(250, 204, 21, 0.06)),
+    rgba(8, 31, 28, 0.8);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 0 0 1px rgba(14, 165, 233, 0.04);
+}
+
+.filter-group-helpers .toggle-card.helper-auto-nuke-card::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  border-radius: inherit;
+  background:
+    conic-gradient(
+      from 0deg,
+      rgba(125, 211, 252, 0.08),
+      rgba(74, 222, 128, 0.34),
+      rgba(250, 204, 21, 0.22),
+      rgba(129, 140, 248, 0.28),
+      rgba(125, 211, 252, 0.08)
+    );
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+.filter-group-helpers .toggle-card.helper-auto-nuke-card::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  z-index: -1;
+  border-radius: 17px;
+  background:
+    linear-gradient(135deg, rgba(56, 189, 248, 0.14), rgba(74, 222, 128, 0.07) 48%, rgba(250, 204, 21, 0.06)),
+    rgba(8, 31, 28, 0.88);
+  pointer-events: none;
+}
+
+.filter-group-helpers .toggle-card.helper-auto-nuke-card:hover {
+  border-color: transparent;
+  background:
+    linear-gradient(135deg, rgba(56, 189, 248, 0.18), rgba(74, 222, 128, 0.1) 48%, rgba(250, 204, 21, 0.08)),
+    rgba(8, 39, 38, 0.92);
+  box-shadow:
+    0 8px 18px rgba(56, 189, 248, 0.1),
+    0 0 20px rgba(74, 222, 128, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.filter-group-helpers .toggle-card.helper-auto-nuke-card:hover::before {
+  opacity: 0.88;
+  animation: autoNukeBorderFlow 2200ms linear infinite;
+}
+
+.filter-group-helpers .toggle-card.helper-auto-nuke-card:has(input:checked) {
+  border-color: rgba(125, 211, 252, 0.64);
+  background:
+    linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(74, 222, 128, 0.12) 52%, rgba(250, 204, 21, 0.1)),
+    rgba(9, 47, 44, 0.94);
+  box-shadow:
+    0 0 0 3px rgba(56, 189, 248, 0.08),
+    0 0 18px rgba(74, 222, 128, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.filter-group-helpers .toggle-card.helper-auto-nuke-card:has(input:checked):hover {
+  border-color: transparent;
 }
 
 .filter-group-helpers .toggle-card[data-disabled="true"] {
@@ -673,5 +779,11 @@
 
   50% {
     opacity: 1;
+  }
+}
+
+@keyframes autoNukeBorderFlow {
+  to {
+    transform: rotate(360deg);
   }
 }

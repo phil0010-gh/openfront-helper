@@ -54,6 +54,8 @@
     fpsSaver: false,
     showAttackAmounts: false,
     showNukeLandingZones: false,
+    showNukeSuggestions: false,
+    autoNuke: false,
     showEconomyHeatmap: false,
     economyHeatmapIntensity: 1,
     showExportPartnerHeatmap: false,

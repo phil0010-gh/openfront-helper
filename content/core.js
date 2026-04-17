@@ -151,6 +151,32 @@ function syncNukeLandingZonesHelper() {
   );
 }
 
+function syncNukeSuggestionsHelper() {
+  window.postMessage(
+    {
+      source: BRIDGE_SOURCE_EXTENSION,
+      type: "SHOW_NUKE_SUGGESTIONS",
+      payload: {
+        enabled: Boolean(settings.showNukeSuggestions),
+      },
+    },
+    "*",
+  );
+}
+
+function syncAutoNukeHelper() {
+  window.postMessage(
+    {
+      source: BRIDGE_SOURCE_EXTENSION,
+      type: "SET_AUTO_NUKE",
+      payload: {
+        enabled: Boolean(settings.autoNuke),
+      },
+    },
+    "*",
+  );
+}
+
 function syncEconomyHeatmapHelper() {
   window.postMessage(
     {
@@ -237,6 +263,8 @@ function syncHelpers() {
   syncFpsSaverHelper();
   syncAttackAmountsHelper();
   syncNukeLandingZonesHelper();
+  syncNukeSuggestionsHelper();
+  syncAutoNukeHelper();
   syncEconomyHeatmapHelper();
   syncExportPartnerHeatmapHelper();
   syncNukeTargetHeatmapHelper();
@@ -258,4 +286,3 @@ async function saveSettings(nextSettings) {
     [STORAGE_KEY]: settings,
   });
 }
-

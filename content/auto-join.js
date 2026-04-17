@@ -144,6 +144,7 @@ function injectBridge() {
     "page-bridge/trade-balances.js",
     "page-bridge/attack-amounts.js",
     "page-bridge/nuke-landing-zones.js",
+    "page-bridge/nuke-suggestions.js",
     "page-bridge/heatmaps.js",
     "page-bridge/bootstrap.js",
   ];

@@ -103,12 +103,6 @@
               >
             </div>
           </div>
-          <div class="whats-new-feature">
-            <p class="whats-new-feature-title">Nuke target zones</p>
-            <p class="whats-new-text">
-              Hover an enemy player to see the best uncovered nuke target zones based on structures and SAM coverage.
-            </p>
-          </div>
         </div>
         <button id="dismissWhatsNewNoticeButton" class="whats-new-button" type="button">
           Got it
@@ -214,11 +208,25 @@
             </label>
             <label class="filter-card toggle-card">
               <span class="filter-main">
-                <input type="checkbox" name="showNukeTargetHeatmap">
+                <input type="checkbox" name="showNukeSuggestions">
                 <span class="filter-dot"></span>
                 <span class="filter-copy">
-                  <strong>Nuke target zones</strong>
-                  <small>Hover an enemy player to show the best high-damage nuke zones.</small>
+                  <strong>Nuke suggestion <span class="helper-option-icon helper-option-icon-nuke" aria-hidden="true">!</span></strong>
+                  <small>Hover an enemy to show high-damage atom and hydrogen targets.</small>
+                </span>
+              </span>
+            </label>
+            <label class="filter-card toggle-card helper-auto-nuke-card">
+              <span class="filter-main">
+                <input type="checkbox" name="autoNuke">
+                <span class="filter-dot"></span>
+                <span class="filter-copy">
+                  <strong>
+                    Auto nuke
+                    <span class="helper-beta-badge">Beta</span>
+                    <span class="helper-option-icon helper-option-icon-nuke helper-option-icon-auto-nuke" aria-hidden="true">!</span>
+                  </strong>
+                  <small>Adds auto economy and population nuke actions to the player wheel.</small>
                 </span>
               </span>
             </label>

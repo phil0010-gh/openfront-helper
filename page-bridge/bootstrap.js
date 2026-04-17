@@ -60,6 +60,14 @@
       setNukeLandingZonesEnabled(data.payload?.enabled);
     }
 
+    if (data.type === "SHOW_NUKE_SUGGESTIONS") {
+      setNukeSuggestionsEnabled(data.payload?.enabled);
+    }
+
+    if (data.type === "SET_AUTO_NUKE") {
+      setAutoNukeEnabled(data.payload?.enabled);
+    }
+
     if (data.type === "SHOW_ECONOMY_HEATMAP") {
       setEconomyHeatmapIntensity(data.payload?.intensity);
       setEconomyHeatmapEnabled(data.payload?.enabled);

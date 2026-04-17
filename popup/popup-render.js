@@ -235,6 +235,8 @@
       "fpsSaver",
       "showAttackAmounts",
       "showNukeLandingZones",
+      "showNukeSuggestions",
+      "autoNuke",
       "showEconomyHeatmap",
       "showExportPartnerHeatmap",
       "showNukeTargetHeatmap",
