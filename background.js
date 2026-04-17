@@ -20,7 +20,6 @@ function setAutoJoinIcon(settings = {}) {
   });
 }
 
-
 async function syncAutoJoinIcon() {
   const stored = await chrome.storage.local.get(STORAGE_KEY);
   setAutoJoinIcon(stored[STORAGE_KEY]);
