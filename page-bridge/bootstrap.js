@@ -56,8 +56,8 @@
       setAttackAmountsEnabled(data.payload?.enabled);
     }
 
-    if (data.type === "SHOW_NUKE_LANDING_ZONES") {
-      setNukeLandingZonesEnabled(data.payload?.enabled);
+    if (data.type === "SHOW_NUKE_PREDICTION") {
+      setNukePredictionEnabled(data.payload?.enabled);
     }
 
     if (data.type === "SHOW_NUKE_SUGGESTIONS") {

@@ -112,8 +112,13 @@ function getPlayerGoldNumber(player) {
   }
 }
 
+let _cachedInfoOverlayEl = null;
+
 function getHoveredPlayerInfoOverlay() {
-  const overlay = document.querySelector("player-info-overlay");
+  if (!_cachedInfoOverlayEl?.isConnected) {
+    _cachedInfoOverlayEl = document.querySelector("player-info-overlay") ?? null;
+  }
+  const overlay = _cachedInfoOverlayEl;
   if (!overlay?.player) {
     return null;
   }

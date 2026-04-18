@@ -25,6 +25,11 @@
     helperInfoTitle: document.getElementById("helperInfoTitle"),
     helperInfoImage: document.getElementById("helperInfoImage"),
     helperInfoCloseButton: document.getElementById("helperInfoCloseButton"),
+    helperInfoNav: document.getElementById("helperInfoNav"),
+    helperInfoPrevButton: document.getElementById("helperInfoPrevButton"),
+    helperInfoNextButton: document.getElementById("helperInfoNextButton"),
+    helperInfoNavCounter: document.getElementById("helperInfoNavCounter"),
+    joinNotificationToggle: document.getElementById("joinNotificationToggle"),
     applySelectiveTradePolicyInput: document.getElementById(
       "applySelectiveTradePolicyInput",
     ),
@@ -40,6 +45,8 @@
     showInstallNotice: false,
     showWhatsNewNotice: false,
     activeHelperInfoButton: null,
+    helperInfoImages: null,
+    helperInfoImageIndex: 0,
     timerInterval: null,
   };
 

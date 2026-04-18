@@ -98,22 +98,54 @@
 
   popup.openHelperInfo = function openHelperInfo(button) {
     const title = button.dataset.infoTitle || "Helper preview";
-    const image = button.dataset.infoImage;
-    if (!image) {
-      return;
+    let images = null;
+
+    if (button.dataset.infoImages) {
+      try {
+        images = JSON.parse(button.dataset.infoImages);
+      } catch (_) {
+        images = null;
+      }
+    }
+    if (!images || images.length === 0) {
+      const single = button.dataset.infoImage;
+      if (!single) return;
+      images = [single];
     }
 
     state.activeHelperInfoButton = button;
+    state.helperInfoImages = images;
+    state.helperInfoImageIndex = 0;
     refs.helperInfoTitle.textContent = title;
-    refs.helperInfoImage.src = image;
-    refs.helperInfoImage.alt = `${title} preview`;
+    popup.showHelperInfoImage(0);
     refs.helperInfoPopup.dataset.open = "true";
     refs.helperInfoPopup.setAttribute("aria-hidden", "false");
     popup.positionHelperInfo();
   };
 
+  popup.showHelperInfoImage = function showHelperInfoImage(index) {
+    const images = state.helperInfoImages || [];
+    const i = Math.max(0, Math.min(index, images.length - 1));
+    state.helperInfoImageIndex = i;
+    const title = refs.helperInfoTitle.textContent;
+    refs.helperInfoImage.src = images[i];
+    refs.helperInfoImage.alt = `${title} preview`;
+
+    if (images.length > 1) {
+      refs.helperInfoNav.hidden = false;
+      refs.helperInfoNavCounter.textContent = `${i + 1} / ${images.length}`;
+      refs.helperInfoPrevButton.disabled = i === 0;
+      refs.helperInfoNextButton.disabled = i === images.length - 1;
+    } else {
+      refs.helperInfoNav.hidden = true;
+    }
+    popup.positionHelperInfo();
+  };
+
   popup.closeHelperInfo = function closeHelperInfo() {
     state.activeHelperInfoButton = null;
+    state.helperInfoImages = null;
+    state.helperInfoImageIndex = 0;
     refs.helperInfoPopup.dataset.open = "false";
     refs.helperInfoPopup.setAttribute("aria-hidden", "true");
   };
@@ -162,6 +194,10 @@
       ? "Auto-Join ON"
       : "Auto-Join OFF";
 
+    if (refs.joinNotificationToggle instanceof HTMLInputElement) {
+      refs.joinNotificationToggle.checked = Boolean(state.settings.joinNotification);
+    }
+
     if (refs.helpersPopoutButton instanceof HTMLButtonElement) {
       refs.helpersPopoutButton.dataset.active = String(
         state.settings.showFloatingHelpersPanel,
@@ -179,10 +215,6 @@
       refs.statusText.hidden = false;
       refs.statusText.textContent =
         "The extension is watching public lobbies and will join the first match based on your include/exclude rules.";
-    } else if (!hasOptionsSelected) {
-      refs.statusText.hidden = false;
-      refs.statusText.textContent =
-        "Select at least one map, include option, or exclude option to enable auto-join.";
     } else {
       refs.statusText.hidden = true;
       refs.statusText.textContent = "";
@@ -234,7 +266,7 @@
       "showTradeBalances",
       "fpsSaver",
       "showAttackAmounts",
-      "showNukeLandingZones",
+      "showNukePrediction",
       "showNukeSuggestions",
       "autoNuke",
       "showEconomyHeatmap",

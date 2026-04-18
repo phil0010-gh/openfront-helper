@@ -213,6 +213,43 @@
   background: rgba(2, 6, 23, 0.5);
 }
 
+.helper-info-image:has(+ .helper-info-nav:not([hidden])) {
+  border-radius: 0;
+}
+
+.helper-info-nav[hidden] {
+  display: none;
+}
+
+.helper-info-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 6px 12px;
+  border-top: 1px solid rgba(134, 239, 172, 0.18);
+  border-radius: 0 0 7px 7px;
+  background: rgba(2, 6, 23, 0.3);
+}
+
+.helper-info-nav-button {
+  padding: 2px 10px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.helper-info-nav-button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.helper-info-nav-counter {
+  font-size: 11px;
+  color: rgba(134, 239, 172, 0.7);
+  min-width: 36px;
+  text-align: center;
+}
+
 @keyframes helperInfoIn {
   from {
     opacity: 0;
