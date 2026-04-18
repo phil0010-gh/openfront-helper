@@ -185,11 +185,20 @@ body {
   margin-top: 12px;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 8px;
   color: var(--muted);
   font-size: 12px;
   font-weight: 800;
+}
+
+.version-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  opacity: 0.55;
+  letter-spacing: 0.04em;
+  margin-right: auto;
 }
 
 .title-flags {
@@ -199,12 +208,15 @@ body {
   line-height: 1;
 }
 
+.title-cathedral-img {
+  height: 18px;
+  width: auto;
+  object-fit: contain;
+  opacity: 0.85;
+  filter: brightness(0) invert(1);
+}
+
 .title-cathedral {
-  display: inline-flex;
-  align-items: end;
-  gap: 1px;
-  height: 20px;
-  padding: 0 1px;
 }
 
 .title-cathedral-tower,
