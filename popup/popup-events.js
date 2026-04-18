@@ -74,6 +74,19 @@
     popup.render();
   });
 
+  refs.joinNotificationToggle?.addEventListener("change", async () => {
+    const wantsOn = refs.joinNotificationToggle.checked;
+    if (wantsOn) {
+      // chrome.notifications requires the "notifications" manifest permission only —
+      // no user prompt needed. We just enable the setting.
+      state.settings.joinNotification = true;
+    } else {
+      state.settings.joinNotification = false;
+    }
+    await popup.saveSettings();
+    popup.render();
+  });
+
   refs.helpersPopoutButton?.addEventListener("click", async () => {
     state.settings.showFloatingHelpersPanel = !state.settings.showFloatingHelpersPanel;
     await popup.saveSettings();
@@ -106,7 +119,7 @@
         "showTradeBalances",
         "fpsSaver",
         "showAttackAmounts",
-        "showNukeLandingZones",
+        "showNukePrediction",
         "showNukeSuggestions",
         "autoNuke",
       ].includes(target.name)
@@ -311,6 +324,14 @@
 
   refs.helperInfoCloseButton.addEventListener("click", () => {
     popup.closeHelperInfo();
+  });
+
+  refs.helperInfoPrevButton.addEventListener("click", () => {
+    popup.showHelperInfoImage((state.helperInfoImageIndex || 0) - 1);
+  });
+
+  refs.helperInfoNextButton.addEventListener("click", () => {
+    popup.showHelperInfoImage((state.helperInfoImageIndex || 0) + 1);
   });
 
   refs.helperInfoPopup.addEventListener("click", (event) => {

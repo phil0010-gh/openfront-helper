@@ -43,6 +43,7 @@
   const DEFAULT_SETTINGS = {
     enabled: false,
     searchStartedAt: null,
+    joinNotification: false,
     markBotNationsRed: false,
     showGoldPerMinute: false,
     showTeamGoldPerMinute: false,
@@ -53,7 +54,7 @@
     autoCancelDeniedTradesAvailable: false,
     fpsSaver: false,
     showAttackAmounts: false,
-    showNukeLandingZones: false,
+    showNukePrediction: false,
     showNukeSuggestions: false,
     autoNuke: false,
     showEconomyHeatmap: false,

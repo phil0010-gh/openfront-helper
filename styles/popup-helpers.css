@@ -174,49 +174,70 @@
 }
 
 .helper-category-toggle {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid rgba(151, 181, 214, 0.16);
-  border-radius: 16px;
-  background: rgba(8, 31, 28, 0.76);
+  gap: 6px;
+  padding: 4px 10px 4px 10px;
+  border: 1px solid rgba(151, 181, 214, 0.22);
+  border-radius: 999px;
+  background: transparent;
   cursor: pointer;
   text-align: left;
   transition:
-    transform 120ms ease,
     border-color 120ms ease,
     background 120ms ease,
     box-shadow 120ms ease;
 }
 
 .helper-category-toggle:hover {
-  transform: translateY(-1px);
-  border-color: rgba(74, 222, 128, 0.44);
-  background: rgba(12, 43, 35, 0.88);
-  box-shadow: 0 8px 18px rgba(34, 197, 94, 0.1);
+  box-shadow: none;
+}
+
+/* per-category color accents */
+.helper-category-toggle[data-helper-category="game"] {
+  border-color: rgba(74, 222, 128, 0.3);
+}
+.helper-category-toggle[data-helper-category="game"]:hover {
+  border-color: rgba(74, 222, 128, 0.6);
+}
+.helper-category-toggle[data-helper-category="game"] .helper-category-title {
+  color: #86efac;
+}
+
+.helper-category-toggle[data-helper-category="cheats"] {
+  border-color: rgba(239, 68, 68, 0.35);
+}
+.helper-category-toggle[data-helper-category="cheats"]:hover {
+  border-color: rgba(239, 68, 68, 0.65);
+}
+.helper-category-toggle[data-helper-category="cheats"] .helper-category-title {
+  color: #fca5a5;
+}
+
+.helper-category-toggle[data-helper-category="economic"] {
+  border-color: rgba(250, 204, 21, 0.3);
+}
+.helper-category-toggle[data-helper-category="economic"]:hover {
+  border-color: rgba(250, 204, 21, 0.6);
+}
+.helper-category-toggle[data-helper-category="economic"] .helper-category-title {
+  color: #fde68a;
 }
 
 .helper-category-title {
-  margin: 0 2px;
   color: #f3f4f6;
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: 0.04em;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
 }
 
-.helper-category-toggle .helper-category-title {
-  margin: 0;
-}
-
 .helper-category-chevron {
-  width: 10px;
-  height: 10px;
-  border-right: 2px solid rgba(203, 213, 225, 0.9);
-  border-bottom: 2px solid rgba(203, 213, 225, 0.9);
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  opacity: 0.7;
   transform: rotate(45deg);
   transition: transform 120ms ease;
 }
@@ -232,6 +253,17 @@
 
 .helper-category-content[hidden] {
   display: none;
+}
+
+.helper-category-warning {
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: rgba(255, 180, 0, 0.12);
+  border: 1px solid rgba(255, 180, 0, 0.35);
+  color: #f5c542;
+  font-size: 11px;
+  line-height: 1.4;
 }
 
 .helper-subpanel {
@@ -558,6 +590,26 @@
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.1),
     0 0 12px rgba(56, 189, 248, 0.1);
+}
+
+.helper-warning-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 18px;
+  padding: 3px 6px;
+  border: 1px solid rgba(251, 146, 60, 0.4);
+  border-radius: 6px;
+  background:
+    linear-gradient(135deg, rgba(251, 146, 60, 0.22), rgba(249, 115, 22, 0.14) 58%, rgba(245, 158, 11, 0.12)),
+    rgba(127, 29, 29, 0.46);
+  color: #fed7aa;
+  font-size: 9px;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 12px rgba(251, 146, 60, 0.1);
 }
 
 .helper-option-icon-gold {

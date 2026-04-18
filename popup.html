@@ -56,6 +56,27 @@
             <span class="whats-new-badge">Update</span>
           </div>
           <div class="whats-new-feature">
+            <p class="whats-new-feature-title">Auto nuke</p>
+            <p class="whats-new-text">
+              Automatically launches economy and population nukes against enemies. Add them to the player wheel for quick execution.
+            </p>
+            <button
+              class="whats-new-image-button"
+              type="button"
+              aria-expanded="false"
+              data-whats-new-image-button
+            >
+              Show image
+            </button>
+            <div class="whats-new-image-wrap" hidden>
+              <img
+                class="whats-new-image"
+                src="assets/info-images/auto_nuke_1_info.png"
+                alt="Auto nuke preview"
+              >
+            </div>
+          </div>
+          <div class="whats-new-feature">
             <p class="whats-new-feature-title">Block non-team trades</p>
             <p class="whats-new-text">
               Team games only: block trades from players who are not on your team.
@@ -83,9 +104,9 @@
             </p>
           </div>
           <div class="whats-new-feature">
-            <p class="whats-new-feature-title">Nuke landing zones</p>
+            <p class="whats-new-feature-title">Nuke prediction</p>
             <p class="whats-new-text">
-              Show enemy nuke landing points and their explosion radius on the map.
+              Shows predicted enemy nuke landing points and explosion radius on the map.
             </p>
             <button
               class="whats-new-image-button"
@@ -99,9 +120,21 @@
               <img
                 class="whats-new-image"
                 src="assets/info-images/nuke_landing_zones.png"
-                alt="Nuke landing zones preview"
+                alt="Nuke prediction preview"
               >
             </div>
+          </div>
+          <div class="whats-new-feature">
+            <p class="whats-new-feature-title">Nuke suggestion</p>
+            <p class="whats-new-text">
+              Hover an enemy to see recommended high-damage atom and hydrogen nuke targets with prediction radii.
+            </p>
+          </div>
+          <div class="whats-new-feature">
+            <p class="whats-new-feature-title">Game found notification</p>
+            <p class="whats-new-text">
+              Get notified with a popup when Auto-Join finds a matching game, even if the browser window is in the background.
+            </p>
           </div>
         </div>
         <button id="dismissWhatsNewNoticeButton" class="whats-new-button" type="button">
@@ -189,51 +222,6 @@
                 </span>
               </span>
             </label>
-            <label class="filter-card toggle-card">
-              <span class="filter-main">
-                <input type="checkbox" name="showNukeLandingZones">
-                <span class="filter-dot"></span>
-                <span class="filter-copy">
-                  <strong>Nuke landing zones <span class="helper-option-icon helper-option-icon-nuke" aria-hidden="true">!</span></strong>
-                  <small>Shows enemy nuke landing points and explosion radius.</small>
-                </span>
-              </span>
-              <button
-                class="helper-info-button"
-                type="button"
-                data-info-title="Nuke landing zones"
-                data-info-image="assets/info-images/nuke_landing_zones.png"
-                aria-label="Show Nuke landing zones preview"
-              >i</button>
-            </label>
-            <label class="filter-card toggle-card">
-              <span class="filter-main">
-                <input type="checkbox" name="showNukeSuggestions">
-                <span class="filter-dot"></span>
-                <span class="filter-copy">
-                  <strong>
-                    Nuke suggestion
-                    <span class="helper-beta-badge">Beta</span>
-                    <span class="helper-option-icon helper-option-icon-nuke" aria-hidden="true">!</span>
-                  </strong>
-                  <small>Hover an enemy to show high-damage atom and hydrogen targets.</small>
-                </span>
-              </span>
-            </label>
-            <label class="filter-card toggle-card helper-auto-nuke-card">
-              <span class="filter-main">
-                <input type="checkbox" name="autoNuke">
-                <span class="filter-dot"></span>
-                <span class="filter-copy">
-                  <strong>
-                    Auto nuke
-                    <span class="helper-beta-badge">Beta</span>
-                    <span class="helper-option-icon helper-option-icon-nuke helper-option-icon-auto-nuke" aria-hidden="true">!</span>
-                  </strong>
-                  <small>Adds auto economy and population nuke actions to the player wheel.</small>
-                </span>
-              </span>
-            </label>
             <label class="filter-card toggle-card helper-action-card">
               <span class="filter-main">
                 <input
@@ -253,6 +241,73 @@
                 data-info-title="Block non-team trades"
                 data-info-image="assets/info-images/block_non_team_trades_info.png"
                 aria-label="Show Block non-team trades preview"
+              >i</button>
+            </label>
+            </div>
+          </div>
+
+          <div class="helper-category">
+            <button
+              class="helper-category-toggle"
+              type="button"
+              data-helper-category="cheats"
+              aria-expanded="true"
+            >
+              <span class="helper-category-title">Cheats</span>
+              <span class="helper-category-chevron" aria-hidden="true"></span>
+            </button>
+            <div class="helper-category-content" data-helper-category-content="cheats">
+            <p class="helper-category-warning">⚠ Please only use in solo or custom games.</p>
+            <label class="filter-card toggle-card">
+              <span class="filter-main">
+                <input type="checkbox" name="showNukePrediction">
+                <span class="filter-dot"></span>
+                <span class="filter-copy">
+                  <strong>Nuke prediction <span class="helper-option-icon helper-option-icon-nuke" aria-hidden="true">!</span></strong>
+                  <small>Shows predicted enemy nuke landing points and explosion radius.</small>
+                </span>
+              </span>
+              <button
+                class="helper-info-button"
+                type="button"
+                data-info-title="Nuke prediction"
+                data-info-image="assets/info-images/nuke_landing_zones.png"
+                aria-label="Show Nuke prediction preview"
+              >i</button>
+            </label>
+            <label class="filter-card toggle-card">
+              <span class="filter-main">
+                <input type="checkbox" name="showNukeSuggestions">
+                <span class="filter-dot"></span>
+                <span class="filter-copy">
+                  <strong>
+                    Nuke suggestion
+                    <span class="helper-beta-badge">Beta</span>
+                    <span class="helper-warning-badge">May lag</span>
+                  </strong>
+                  <small>Hover an enemy to show high-damage atom and hydrogen targets.</small>
+                </span>
+              </span>
+            </label>
+            <label class="filter-card toggle-card helper-auto-nuke-card">
+              <span class="filter-main">
+                <input type="checkbox" name="autoNuke">
+                <span class="filter-dot"></span>
+                <span class="filter-copy">
+                  <strong>
+                    Auto nuke
+                    <span class="helper-beta-badge">Beta</span>
+                    <span class="helper-option-icon helper-option-icon-nuke helper-option-icon-auto-nuke" aria-hidden="true">!</span>
+                  </strong>
+                  <small>Adds auto economy and population nuke actions to the player wheel.</small>
+                </span>
+              </span>
+              <button
+                class="helper-info-button"
+                type="button"
+                data-info-title="Auto nuke"
+                data-info-images='["assets/info-images/auto_nuke_1_info.png","assets/info-images/auto_nuke_2_info.png"]'
+                aria-label="Show Auto nuke preview"
               >i</button>
             </label>
             </div>
@@ -386,11 +441,20 @@
         </section>
 
         <div class="options-panel">
-          <p class="section-title autojoin-panel-title">Auto-Join</p>
+          <div class="autojoin-panel-header">
+            <p class="section-title autojoin-panel-title">Auto-Join</p>
+          </div>
           <button id="powerButton" class="power-button" type="button" aria-pressed="false">
             <span class="power-label">Auto-Join OFF</span>
             <span class="power-indicator"></span>
           </button>
+          <label class="notif-toggle" id="joinNotificationToggleLabel" title="Show a notification when a game is found">
+            <input type="checkbox" id="joinNotificationToggle">
+            <span class="notif-toggle-track">
+              <span class="notif-toggle-thumb"></span>
+            </span>
+            <span class="notif-toggle-label">Game found notification popup</span>
+          </label>
 
           <p id="statusText" class="status-text"></p>
           <div id="searchTimer" class="search-timer" aria-live="polite" hidden>
@@ -400,7 +464,6 @@
               <span id="searchTimerValue" class="search-timer-value">00:00</span>
             </span>
           </div>
-          <p class="mode-hint">Checked = Include, `Exclude` = block, empty = ignore. Selected maps match any selected map.</p>
 
           <div id="filtersFormSections" class="filters">
             <section class="filter-group">
@@ -564,6 +627,11 @@
             <button id="helperInfoCloseButton" class="helper-info-close" type="button" aria-label="Close helper preview">Close</button>
           </div>
           <img id="helperInfoImage" class="helper-info-image" alt="">
+          <div id="helperInfoNav" class="helper-info-nav" hidden>
+            <button id="helperInfoPrevButton" class="helper-info-nav-button" type="button" aria-label="Previous image">&#8592;</button>
+            <span id="helperInfoNavCounter" class="helper-info-nav-counter"></span>
+            <button id="helperInfoNextButton" class="helper-info-nav-button" type="button" aria-label="Next image">&#8594;</button>
+          </div>
         </div>
       </div>
       <div class="location-footer" aria-label="Cologne, Germany and European Union">

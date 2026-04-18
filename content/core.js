@@ -138,13 +138,13 @@ function syncAttackAmountsHelper() {
   );
 }
 
-function syncNukeLandingZonesHelper() {
+function syncNukePredictionHelper() {
   window.postMessage(
     {
       source: BRIDGE_SOURCE_EXTENSION,
-      type: "SHOW_NUKE_LANDING_ZONES",
+      type: "SHOW_NUKE_PREDICTION",
       payload: {
-        enabled: Boolean(settings.showNukeLandingZones),
+        enabled: Boolean(settings.showNukePrediction),
       },
     },
     "*",
@@ -262,7 +262,7 @@ function syncHelpers() {
   syncSelectiveTradePolicyToggle();
   syncFpsSaverHelper();
   syncAttackAmountsHelper();
-  syncNukeLandingZonesHelper();
+  syncNukePredictionHelper();
   syncNukeSuggestionsHelper();
   syncAutoNukeHelper();
   syncEconomyHeatmapHelper();

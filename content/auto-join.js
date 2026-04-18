@@ -143,7 +143,7 @@ function injectBridge() {
     "page-bridge/gold-per-minute.js",
     "page-bridge/trade-balances.js",
     "page-bridge/attack-amounts.js",
-    "page-bridge/nuke-landing-zones.js",
+    "page-bridge/nuke-prediction.js",
     "page-bridge/nuke-suggestions.js",
     "page-bridge/heatmaps.js",
     "page-bridge/bootstrap.js",
@@ -490,6 +490,14 @@ async function requestJoin(lobby) {
   };
 
   lobbyCooldowns.set(lobby.gameID, Date.now() + LOBBY_RETRY_COOLDOWN_MS);
+
+  if (settings.joinNotification) {
+    chrome.runtime.sendMessage({
+      type: "SHOW_JOIN_NOTIFICATION",
+      gameID: lobby.gameID,
+    }).catch(() => {});
+  }
+
   await disableAutoJoin();
   playJoinAlert();
 

@@ -33,7 +33,6 @@ chrome.runtime.onInstalled.addListener((details) => {
     return;
   }
 
-
   if (details.reason === "update") {
     chrome.storage.local.set({
       [WHATS_NEW_NOTICE_KEY]: true,
@@ -51,4 +50,16 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
 
 syncAutoJoinIcon().catch((error) => {
   console.error("Failed to sync autojoin icon:", error);
+});
+
+chrome.runtime.onMessage.addListener((message) => {
+  if (message?.type === "SHOW_JOIN_NOTIFICATION") {
+    chrome.windows.create({
+      url: chrome.runtime.getURL("game-found.html"),
+      type: "popup",
+      width: 320,
+      height: 180,
+      focused: true,
+    });
+  }
 });
