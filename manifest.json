@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Auto-Join & Helpers for OpenFront (unofficial)",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Automatically joins lobbies when they match your selected criteria.",
   "icons": {
     "16": "assets/icon-16.png",
@@ -69,7 +69,7 @@
         "page-bridge/nuke-suggestions.js",
         "page-bridge/heatmaps.js",
         "page-bridge/bootstrap.js",
-        "assets/autojoin.wav"
+        "assets/autojoin.mp3"
       ],
       "matches": [
         "https://openfront.io/*"

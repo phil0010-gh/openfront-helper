@@ -186,7 +186,6 @@
     const hasOptionsSelected = popup.hasSelectedOptions();
 
     refs.installNotice.hidden = !state.showInstallNotice;
-    refs.whatsNewNotice.hidden = !state.showWhatsNewNotice;
     refs.powerButton.dataset.enabled = String(enabled);
     refs.powerButton.disabled = !hasOptionsSelected;
     refs.powerButton.setAttribute("aria-pressed", String(enabled));
@@ -211,14 +210,8 @@
         : "Show floating helpers panel on OpenFront";
     }
 
-    if (enabled) {
-      refs.statusText.hidden = false;
-      refs.statusText.textContent =
-        "The extension is watching public lobbies and will join the first match based on your include/exclude rules.";
-    } else {
-      refs.statusText.hidden = true;
-      refs.statusText.textContent = "";
-    }
+    refs.statusText.hidden = true;
+    refs.statusText.textContent = "";
 
     popup.renderSearchTimer();
     popup.syncTimerInterval();

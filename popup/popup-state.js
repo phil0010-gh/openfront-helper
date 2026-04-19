@@ -4,7 +4,13 @@
 
   const refs = {
     powerButton: document.getElementById("powerButton"),
-    appTitleButton: document.getElementById("appTitleButton"),
+    settingsButton: document.getElementById("settingsButton"),
+    settingsPanel: document.getElementById("settingsPanel"),
+    settingsSoundInput: document.getElementById("settingsSoundInput"),
+    settingsSoundName: document.getElementById("settingsSoundName"),
+    settingsSoundTestButton: document.getElementById("settingsSoundTestButton"),
+    settingsSoundUploadButton: document.getElementById("settingsSoundUploadButton"),
+    settingsSoundClearButton: document.getElementById("settingsSoundClearButton"),
     statusText: document.getElementById("statusText"),
     searchTimer: document.getElementById("searchTimer"),
     searchTimerValue: document.getElementById("searchTimerValue"),
@@ -17,10 +23,8 @@
     dismissInstallNoticeButton: document.getElementById(
       "dismissInstallNoticeButton",
     ),
-    whatsNewNotice: document.getElementById("whatsNewNotice"),
-    dismissWhatsNewNoticeButton: document.getElementById(
-      "dismissWhatsNewNoticeButton",
-    ),
+    whatsNewNotice: null,
+    dismissWhatsNewNoticeButton: null,
     helperInfoPopup: document.getElementById("helperInfoPopup"),
     helperInfoTitle: document.getElementById("helperInfoTitle"),
     helperInfoImage: document.getElementById("helperInfoImage"),
@@ -43,7 +47,6 @@
   popup.state = {
     settings: shared.normalizeSettings({}, { ensureActiveSearchTimestamp: true }),
     showInstallNotice: false,
-    showWhatsNewNotice: false,
     activeHelperInfoButton: null,
     helperInfoImages: null,
     helperInfoImageIndex: 0,
@@ -100,7 +103,6 @@
     const stored = await chrome.storage.local.get([
       shared.STORAGE_KEY,
       shared.INSTALL_NOTICE_KEY,
-      shared.WHATS_NEW_NOTICE_KEY,
     ]);
     const rawSettings = stored[shared.STORAGE_KEY] || {};
 
@@ -113,8 +115,6 @@
     }
 
     popup.state.showInstallNotice = stored[shared.INSTALL_NOTICE_KEY] === true;
-    popup.state.showWhatsNewNotice =
-      stored[shared.WHATS_NEW_NOTICE_KEY] === true;
   };
 
   popup.saveSettings = async function saveSettings() {

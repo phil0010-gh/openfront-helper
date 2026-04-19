@@ -453,12 +453,15 @@ function ensureJoinAlertAudio() {
     return joinAlertAudio;
   }
 
-  joinAlertAudio = new Audio(chrome.runtime.getURL("assets/autojoin.wav"));
+  joinAlertAudio = new Audio(chrome.runtime.getURL("assets/autojoin.mp3"));
   joinAlertAudio.preload = "auto";
   return joinAlertAudio;
 }
 
 function playJoinAlert() {
+  if (hasCustomNotificationSound) {
+    return; // custom sound plays in the game-found popup
+  }
   try {
     const audio = ensureJoinAlertAudio();
     audio.currentTime = 0;
@@ -573,7 +576,14 @@ async function init() {
   injectBridge();
   window.addEventListener("message", handleBridgeMessage);
   chrome.storage.onChanged.addListener(handleStorageChange);
+  chrome.storage.onChanged.addListener((changes) => {
+    if ("joinNotificationSoundData" in changes) {
+      hasCustomNotificationSound = Boolean(changes.joinNotificationSoundData.newValue);
+    }
+  });
   await loadSettings();
+  const soundStore = await chrome.storage.local.get("joinNotificationSoundData");
+  hasCustomNotificationSound = Boolean(soundStore.joinNotificationSoundData);
   window.addEventListener("resize", () => {
     const panel = document.getElementById(FLOATING_HELPERS_PANEL_ID);
     if (panel) {

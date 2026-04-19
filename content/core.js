@@ -27,6 +27,7 @@ let settings = normalizeSettings();
 let latestLobbySnapshot = null;
 let pendingJoin = null;
 let joinAlertAudio = null;
+let hasCustomNotificationSound = false;
 let lastProcessedSelectiveTradePolicyRequestAt = null;
 let selectiveTradePolicyAvailable = false;
 
@@ -171,6 +172,7 @@ function syncAutoNukeHelper() {
       type: "SET_AUTO_NUKE",
       payload: {
         enabled: Boolean(settings.autoNuke),
+        includeAllies: Boolean(settings.autoNukeIncludeAllies),
       },
     },
     "*",

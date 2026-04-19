@@ -57,6 +57,7 @@
     showNukePrediction: false,
     showNukeSuggestions: false,
     autoNuke: false,
+    autoNukeIncludeAllies: false,
     showEconomyHeatmap: false,
     economyHeatmapIntensity: 1,
     showExportPartnerHeatmap: false,

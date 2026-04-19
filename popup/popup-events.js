@@ -27,20 +27,64 @@
     popup.render();
   });
 
-  refs.dismissWhatsNewNoticeButton.addEventListener("click", async () => {
-    state.showWhatsNewNotice = false;
-    await chrome.storage.local.set({
-      [shared.WHATS_NEW_NOTICE_KEY]: false,
-    });
-    popup.render();
+  const SOUND_KEY = "joinNotificationSoundData";
+  const SOUND_NAME_KEY = "joinNotificationSoundName";
+
+  refs.settingsButton.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isOpen = !refs.settingsPanel.hidden;
+    refs.settingsPanel.hidden = isOpen;
+    refs.settingsButton.setAttribute("aria-expanded", String(!isOpen));
   });
 
-  refs.appTitleButton.addEventListener("click", () => {
-    state.showWhatsNewNotice = true;
-    popup.render();
+  document.addEventListener("click", (e) => {
+    if (!refs.settingsPanel.hidden && !refs.settingsPanel.contains(e.target) && e.target !== refs.settingsButton) {
+      refs.settingsPanel.hidden = true;
+      refs.settingsButton.setAttribute("aria-expanded", "false");
+    }
   });
 
-  refs.whatsNewNotice.addEventListener("click", (event) => {
+  refs.settingsSoundUploadButton.addEventListener("click", () => {
+    refs.settingsSoundInput.click();
+  });
+
+  refs.settingsSoundInput.addEventListener("change", () => {
+    const file = refs.settingsSoundInput.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      await chrome.storage.local.set({
+        [SOUND_KEY]: e.target.result,
+        [SOUND_NAME_KEY]: file.name,
+      });
+      refs.settingsSoundName.textContent = file.name;
+      refs.settingsSoundClearButton.hidden = false;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  refs.settingsSoundTestButton.addEventListener("click", async () => {
+    const stored = await chrome.storage.local.get(SOUND_KEY);
+    if (stored[SOUND_KEY]) {
+      new Audio(stored[SOUND_KEY]).play().catch(() => {});
+    }
+  });
+
+  refs.settingsSoundClearButton.addEventListener("click", async () => {
+    await chrome.storage.local.remove([SOUND_KEY, SOUND_NAME_KEY]);
+    refs.settingsSoundName.textContent = "Default";
+    refs.settingsSoundClearButton.hidden = true;
+    refs.settingsSoundInput.value = "";
+  });
+
+  chrome.storage.local.get([SOUND_KEY, SOUND_NAME_KEY]).then((stored) => {
+    if (stored[SOUND_KEY]) {
+      refs.settingsSoundName.textContent = stored[SOUND_NAME_KEY] || "Custom";
+      refs.settingsSoundClearButton.hidden = false;
+    }
+  });
+
+  refs.whatsNewNotice?.addEventListener("click", (event) => {
     const target = event.target;
     if (!(target instanceof HTMLElement)) {
       return;
