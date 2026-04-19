@@ -39,6 +39,7 @@ body {
 .hero {
   position: relative;
   padding: 16px;
+  min-height: 56px;
   border: 1px solid var(--border);
   border-radius: 20px;
   background: linear-gradient(180deg, rgba(15, 31, 55, 0.96), rgba(7, 17, 32, 0.9));
@@ -54,43 +55,148 @@ body {
   text-transform: uppercase;
 }
 
-.hero h1 {
-  padding-right: 178px;
-  margin: 0;
-  font-size: 24px;
-  line-height: 1.05;
-}
-
-.hero-title-button {
-  display: inline;
-  max-width: 100%;
-  border: 0;
-  border-radius: 8px;
+.settings-button {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px 4px 8px;
+  border: 1px solid rgba(151, 181, 214, 0.18);
+  border-radius: 999px;
   background: transparent;
-  color: inherit;
-  padding: 0;
-  font: inherit;
-  font-weight: inherit;
-  letter-spacing: 0;
-  line-height: inherit;
-  text-align: left;
+  color: rgba(203, 213, 225, 0.55);
   cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
+  z-index: 10;
 }
 
-.hero-title-button:hover,
-.hero-title-button:focus-visible {
-  color: #bae6fd;
+.settings-button:hover,
+.settings-button[aria-expanded="true"] {
+  color: #f3f4f6;
+  border-color: rgba(203, 213, 225, 0.4);
+  background: rgba(255, 255, 255, 0.07);
 }
 
-.hero-title-button:focus-visible {
-  outline: 2px solid rgba(125, 211, 252, 0.6);
-  outline-offset: 3px;
+.settings-icon {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+
+.settings-button-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.settings-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 380px;
+  z-index: 200;
+  padding: 14px 16px;
+  border: 1px solid rgba(151, 181, 214, 0.2);
+  border-radius: 16px;
+  background: linear-gradient(160deg, rgba(10, 25, 47, 0.99), rgba(7, 17, 32, 0.97));
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+
+.settings-panel[hidden] {
+  display: none;
+}
+
+.settings-panel-title {
+  margin: 0 0 12px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(203, 213, 225, 0.5);
+}
+
+.settings-panel-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.settings-panel-row-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.settings-panel-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #f3f4f6;
+}
+
+.settings-panel-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.settings-sound-name {
+  font-size: 10px;
+  color: rgba(203, 213, 225, 0.45);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-sound-btn {
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(151, 181, 214, 0.25);
+  background: transparent;
+  color: rgba(203, 213, 225, 0.75);
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 120ms ease, color 120ms ease, background 120ms ease;
+}
+
+.settings-sound-btn:hover {
+  border-color: rgba(203, 213, 225, 0.5);
+  color: #f3f4f6;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.settings-sound-btn-primary {
+  border-color: rgba(74, 222, 128, 0.3);
+  color: #86efac;
+}
+
+.settings-sound-btn-primary:hover {
+  border-color: rgba(74, 222, 128, 0.6);
+  color: #bbf7d0;
+  background: rgba(74, 222, 128, 0.08);
+}
+
+.settings-sound-btn-danger {
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}
+
+.settings-sound-btn-danger:hover {
+  border-color: rgba(239, 68, 68, 0.6);
+  color: #fecaca;
+  background: rgba(239, 68, 68, 0.08);
 }
 
 .discord-link {
   position: absolute;
   top: 12px;
   right: 12px;
+  transform: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;

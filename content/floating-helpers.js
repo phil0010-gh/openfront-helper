@@ -334,6 +334,7 @@ function createFloatingHelpersPanel() {
     createFloatingHelperRow("showNukePrediction", "Nuke prediction", "Shows predicted enemy nuke landing points and blast radius."),
     createFloatingHelperRow("showNukeSuggestions", "Nuke suggestion", "Hover an enemy to show high-damage atom and hydrogen targets."),
     createFloatingHelperRow("autoNuke", "Auto nuke", "Adds auto economy and population nuke actions to the player wheel."),
+    createFloatingHelperRow("autoNukeIncludeAllies", "↳ Include allies", "Also show auto nuke options when right-clicking allied players."),
     createFloatingHelperActionButton(
       "toggleSelectiveTradePolicy",
       "Block non-team trades",

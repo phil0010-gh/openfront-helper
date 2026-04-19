@@ -12,16 +12,34 @@
   <body>
     <main class="panel">
       <header class="hero">
-        <h1>
-          <button
-            id="appTitleButton"
-            class="hero-title-button"
-            type="button"
-            aria-label="Show what's new"
-          >
-            Auto-Join & Helpers
-          </button>
-        </h1>
+        <button
+          id="settingsButton"
+          class="settings-button"
+          type="button"
+          aria-label="Open settings"
+          aria-expanded="false"
+        >
+          <svg class="settings-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+          <span class="settings-button-label">Settings</span>
+        </button>
+        <div id="settingsPanel" class="settings-panel" hidden>
+          <p class="settings-panel-title">Settings</p>
+          <div class="settings-panel-row">
+            <div class="settings-panel-row-header">
+              <span class="settings-panel-label">Custom notification sound</span>
+              <div class="settings-panel-actions">
+                <button id="settingsSoundTestButton" class="settings-sound-btn" type="button">Test</button>
+                <button id="settingsSoundUploadButton" class="settings-sound-btn settings-sound-btn-primary" type="button">Upload</button>
+                <button id="settingsSoundClearButton" class="settings-sound-btn settings-sound-btn-danger" type="button" hidden>Remove</button>
+              </div>
+            </div>
+            <span id="settingsSoundName" class="settings-sound-name">Default</span>
+            <input id="settingsSoundInput" type="file" accept="audio/*" hidden>
+          </div>
+        </div>
         <a
           class="discord-link"
           href="https://discord.gg/6WFy4NQ9jy"
@@ -49,98 +67,6 @@
         </button>
       </section>
 
-      <section id="whatsNewNotice" class="whats-new-notice" hidden>
-        <div class="whats-new-copy">
-          <div class="whats-new-head">
-            <p class="whats-new-title">What's new</p>
-            <span class="whats-new-badge">Update</span>
-          </div>
-          <div class="whats-new-feature">
-            <p class="whats-new-feature-title">Auto nuke</p>
-            <p class="whats-new-text">
-              Automatically launches economy and population nukes against enemies. Add them to the player wheel for quick execution.
-            </p>
-            <button
-              class="whats-new-image-button"
-              type="button"
-              aria-expanded="false"
-              data-whats-new-image-button
-            >
-              Show image
-            </button>
-            <div class="whats-new-image-wrap" hidden>
-              <img
-                class="whats-new-image"
-                src="assets/info-images/auto_nuke_1_info.png"
-                alt="Auto nuke preview"
-              >
-            </div>
-          </div>
-          <div class="whats-new-feature">
-            <p class="whats-new-feature-title">Block non-team trades</p>
-            <p class="whats-new-text">
-              Team games only: block trades from players who are not on your team.
-            </p>
-            <button
-              class="whats-new-image-button"
-              type="button"
-              aria-expanded="false"
-              data-whats-new-image-button
-            >
-              Show image
-            </button>
-            <div class="whats-new-image-wrap" hidden>
-              <img
-                class="whats-new-image"
-                src="assets/info-images/block_non_team_trades_info.png"
-                alt="Block non-team trades preview"
-              >
-            </div>
-          </div>
-          <div class="whats-new-feature">
-            <p class="whats-new-feature-title">Resizable floating helpers</p>
-            <p class="whats-new-text">
-              Drag the bottom edge of the floating helpers window to change its height.
-            </p>
-          </div>
-          <div class="whats-new-feature">
-            <p class="whats-new-feature-title">Nuke prediction</p>
-            <p class="whats-new-text">
-              Shows predicted enemy nuke landing points and explosion radius on the map.
-            </p>
-            <button
-              class="whats-new-image-button"
-              type="button"
-              aria-expanded="false"
-              data-whats-new-image-button
-            >
-              Show image
-            </button>
-            <div class="whats-new-image-wrap" hidden>
-              <img
-                class="whats-new-image"
-                src="assets/info-images/nuke_landing_zones.png"
-                alt="Nuke prediction preview"
-              >
-            </div>
-          </div>
-          <div class="whats-new-feature">
-            <p class="whats-new-feature-title">Nuke suggestion</p>
-            <p class="whats-new-text">
-              Hover an enemy to see recommended high-damage atom and hydrogen nuke targets with prediction radii.
-            </p>
-          </div>
-          <div class="whats-new-feature">
-            <p class="whats-new-feature-title">Game found notification</p>
-            <p class="whats-new-text">
-              Get notified with a popup when Auto-Join finds a matching game, even if the browser window is in the background.
-            </p>
-          </div>
-        </div>
-        <button id="dismissWhatsNewNoticeButton" class="whats-new-button" type="button">
-          Got it
-        </button>
-      </section>
 
       <form id="filtersForm" class="popup-layout" autocomplete="off">
         <section class="filter-group filter-group-helpers">
@@ -221,27 +147,6 @@
                   <small>Shows how many troops a player attacks with.</small>
                 </span>
               </span>
-            </label>
-            <label class="filter-card toggle-card helper-action-card">
-              <span class="filter-main">
-                <input
-                  id="applySelectiveTradePolicyInput"
-                  type="checkbox"
-                  name="selectiveTradePolicyEnabled"
-                >
-                <span class="filter-dot"></span>
-                <span class="filter-copy">
-                  <strong>Block non-team trades <span class="helper-option-icon helper-option-icon-trade-block" aria-hidden="true">!</span></strong>
-                  <small>Team games only: blocks trades with players who are not on your team.</small>
-                </span>
-              </span>
-              <button
-                class="helper-info-button"
-                type="button"
-                data-info-title="Block non-team trades"
-                data-info-image="assets/info-images/block_non_team_trades_info.png"
-                aria-label="Show Block non-team trades preview"
-              >i</button>
             </label>
             </div>
           </div>

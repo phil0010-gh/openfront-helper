@@ -65,7 +65,7 @@
     }
 
     if (data.type === "SET_AUTO_NUKE") {
-      setAutoNukeEnabled(data.payload?.enabled);
+      setAutoNukeEnabled(data.payload?.enabled, data.payload?.includeAllies);
     }
 
     if (data.type === "SHOW_ECONOMY_HEATMAP") {
