@@ -12,19 +12,31 @@
   <body>
     <main class="panel">
       <header class="hero">
-        <button
-          id="settingsButton"
-          class="settings-button"
-          type="button"
-          aria-label="Open settings"
-          aria-expanded="false"
-        >
-          <svg class="settings-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-          </svg>
-          <span class="settings-button-label">Settings</span>
-        </button>
+        <div class="hero-actions">
+          <button
+            id="settingsButton"
+            class="settings-button"
+            type="button"
+            aria-label="Open settings"
+            aria-expanded="false"
+          >
+            <svg class="settings-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+            <span class="settings-button-label">Settings</span>
+          </button>
+          <button
+            id="languageButton"
+            class="language-button"
+            type="button"
+            aria-label="Change language"
+            aria-expanded="false"
+          >
+            <span aria-hidden="true">A</span>
+            <span id="languageButtonLabel">EN</span>
+          </button>
+        </div>
         <div id="settingsPanel" class="settings-panel" hidden>
           <p class="settings-panel-title">Settings</p>
           <div class="settings-panel-row">
@@ -39,6 +51,11 @@
             <span id="settingsSoundName" class="settings-sound-name">Default</span>
             <input id="settingsSoundInput" type="file" accept="audio/*" hidden>
           </div>
+        </div>
+        <div id="languagePanel" class="language-panel" hidden>
+          <label class="language-search-label" for="languageSearchInput">Search languages</label>
+          <input id="languageSearchInput" class="language-search-input" type="search" placeholder="Search languages" autocomplete="off">
+          <div id="languageList" class="language-list" role="listbox" aria-label="Languages"></div>
         </div>
         <a
           class="discord-link"
@@ -562,6 +579,7 @@
 
     <script src="map-data.js"></script>
     <script src="shared/settings.js"></script>
+    <script src="shared/i18n.js"></script>
     <script src="popup/popup-state.js"></script>
     <script src="popup/popup-render.js"></script>
     <script src="popup/popup-events.js"></script>

@@ -1,11 +1,17 @@
 (function initPopupState(globalScope) {
   const shared = globalScope.OpenFrontHelperSettings;
+  const i18n = globalScope.OpenFrontHelperI18n;
   const popup = (globalScope.OpenFrontPopup = globalScope.OpenFrontPopup || {});
 
   const refs = {
     powerButton: document.getElementById("powerButton"),
     settingsButton: document.getElementById("settingsButton"),
     settingsPanel: document.getElementById("settingsPanel"),
+    languageButton: document.getElementById("languageButton"),
+    languageButtonLabel: document.getElementById("languageButtonLabel"),
+    languagePanel: document.getElementById("languagePanel"),
+    languageSearchInput: document.getElementById("languageSearchInput"),
+    languageList: document.getElementById("languageList"),
     settingsSoundInput: document.getElementById("settingsSoundInput"),
     settingsSoundName: document.getElementById("settingsSoundName"),
     settingsSoundTestButton: document.getElementById("settingsSoundTestButton"),
@@ -43,14 +49,35 @@
   };
 
   popup.shared = shared;
+  popup.i18n = i18n;
   popup.refs = refs;
   popup.state = {
     settings: shared.normalizeSettings({}, { ensureActiveSearchTimestamp: true }),
+    translations: i18n.DEFAULT_TRANSLATIONS,
+    languageOptions: i18n.createLanguageOptions("en"),
     showInstallNotice: false,
     activeHelperInfoButton: null,
     helperInfoImages: null,
     helperInfoImageIndex: 0,
     timerInterval: null,
+  };
+
+  popup.t = function translate(key) {
+    return i18n.getMessage(popup.state.translations, key);
+  };
+
+  popup.localize = function localize(root = document.body) {
+    i18n.localizeElement(root, popup.state.translations);
+  };
+
+  popup.loadTranslations = async function loadTranslations() {
+    popup.state.translations = await i18n.loadBundle(popup.state.settings.language);
+    popup.state.languageOptions = i18n.createLanguageOptions(
+      popup.state.settings.language,
+    );
+    document.documentElement.lang = popup.state.settings.language;
+    document.title = popup.t("Auto-Join & Helpers for OpenFront");
+    popup.localize();
   };
 
   popup.normalizeSearchText = function normalizeSearchText(value) {

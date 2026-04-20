@@ -2,14 +2,18 @@
   const popup = globalScope.OpenFrontPopup;
   const { refs, shared, state } = popup;
 
-  function handleStorageChange(changes, areaName) {
+  async function handleStorageChange(changes, areaName) {
     if (areaName !== "local" || !changes[shared.STORAGE_KEY]) {
       return;
     }
 
+    const previousLanguage = state.settings.language;
     state.settings = shared.normalizeSettings(changes[shared.STORAGE_KEY].newValue, {
       ensureActiveSearchTimestamp: true,
     });
+    if (state.settings.language !== previousLanguage) {
+      await popup.loadTranslations();
+    }
     popup.render();
   }
 
@@ -35,12 +39,35 @@
     const isOpen = !refs.settingsPanel.hidden;
     refs.settingsPanel.hidden = isOpen;
     refs.settingsButton.setAttribute("aria-expanded", String(!isOpen));
+    refs.languagePanel.hidden = true;
+    refs.languageButton.setAttribute("aria-expanded", "false");
+  });
+
+  refs.languageButton.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isOpen = !refs.languagePanel.hidden;
+    refs.languagePanel.hidden = isOpen;
+    refs.languageButton.setAttribute("aria-expanded", String(!isOpen));
+    refs.settingsPanel.hidden = true;
+    refs.settingsButton.setAttribute("aria-expanded", "false");
+    if (!isOpen) {
+      refs.languageSearchInput.focus();
+    }
   });
 
   document.addEventListener("click", (e) => {
     if (!refs.settingsPanel.hidden && !refs.settingsPanel.contains(e.target) && e.target !== refs.settingsButton) {
       refs.settingsPanel.hidden = true;
       refs.settingsButton.setAttribute("aria-expanded", "false");
+    }
+
+    if (
+      !refs.languagePanel.hidden &&
+      !refs.languagePanel.contains(e.target) &&
+      e.target !== refs.languageButton
+    ) {
+      refs.languagePanel.hidden = true;
+      refs.languageButton.setAttribute("aria-expanded", "false");
     }
   });
 
@@ -72,14 +99,14 @@
 
   refs.settingsSoundClearButton.addEventListener("click", async () => {
     await chrome.storage.local.remove([SOUND_KEY, SOUND_NAME_KEY]);
-    refs.settingsSoundName.textContent = "Default";
+    refs.settingsSoundName.textContent = popup.t("defaultSound");
     refs.settingsSoundClearButton.hidden = true;
     refs.settingsSoundInput.value = "";
   });
 
   chrome.storage.local.get([SOUND_KEY, SOUND_NAME_KEY]).then((stored) => {
     if (stored[SOUND_KEY]) {
-      refs.settingsSoundName.textContent = stored[SOUND_NAME_KEY] || "Custom";
+      refs.settingsSoundName.textContent = stored[SOUND_NAME_KEY] || popup.t("customSound");
       refs.settingsSoundClearButton.hidden = false;
     }
   });
@@ -225,7 +252,7 @@
     }
 
     refs.economyHeatmapIntensityValue.textContent =
-      shared.getEconomyHeatmapIntensityLabel(target.value);
+      popup.t(shared.getEconomyHeatmapIntensityLabel(target.value));
   });
 
   refs.filtersForm.addEventListener("click", async (event) => {
@@ -367,6 +394,37 @@
     popup.renderMapSearch();
   });
 
+  refs.languageSearchInput.addEventListener("input", () => {
+    popup.renderLanguageOptions();
+  });
+
+  refs.languageList.addEventListener("click", async (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+
+    const button = target.closest(".language-option");
+    if (!(button instanceof HTMLButtonElement)) {
+      return;
+    }
+
+    const language = shared.normalizeLanguage(button.dataset.language);
+    if (language === state.settings.language) {
+      refs.languagePanel.hidden = true;
+      refs.languageButton.setAttribute("aria-expanded", "false");
+      return;
+    }
+
+    state.settings.language = language;
+    await popup.saveSettings();
+    await popup.loadTranslations();
+    refs.languagePanel.hidden = true;
+    refs.languageButton.setAttribute("aria-expanded", "false");
+    refs.languageSearchInput.value = "";
+    popup.render();
+  });
+
   refs.helperInfoCloseButton.addEventListener("click", () => {
     popup.closeHelperInfo();
   });
@@ -411,12 +469,18 @@
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
       popup.closeHelperInfo();
+      refs.settingsPanel.hidden = true;
+      refs.settingsButton.setAttribute("aria-expanded", "false");
+      refs.languagePanel.hidden = true;
+      refs.languageButton.setAttribute("aria-expanded", "false");
     }
   });
 
   async function init() {
-    popup.renderMapFilterButtons();
     await popup.loadSettings();
+    await popup.loadTranslations();
+    popup.renderMapFilterButtons();
+    popup.renderLanguageOptions();
     chrome.storage.onChanged.addListener(handleStorageChange);
     popup.render();
   }

@@ -41,6 +41,7 @@
   );
 
   const DEFAULT_SETTINGS = {
+    language: "en",
     enabled: false,
     searchStartedAt: null,
     joinNotification: false,
@@ -134,6 +135,11 @@
     return ensureActiveSearchTimestamp ? Date.now() : null;
   }
 
+  function normalizeLanguage(value) {
+    const language = String(value || "").trim().toLowerCase();
+    return /^[a-z]{2}$/.test(language) ? language : DEFAULT_SETTINGS.language;
+  }
+
   function normalizeMapFilters(rawMapFilters = {}) {
     const normalizedMapFilters = createDefaultMapFilters();
     for (const id of MAP_IDS) {
@@ -191,6 +197,7 @@
     normalized.economyHeatmapIntensity = normalizeEconomyHeatmapIntensity(
       normalized.economyHeatmapIntensity,
     );
+    normalized.language = normalizeLanguage(normalized.language);
     normalized.applySelectiveTradePolicyRequestAt = normalizeActionRequestTimestamp(
       normalized.applySelectiveTradePolicyRequestAt,
     );
@@ -210,6 +217,7 @@
     DEFAULT_SETTINGS,
     createDefaultMapFilters,
     normalizeSettings,
+    normalizeLanguage,
     normalizeMapFilters,
     normalizeEconomyHeatmapIntensity,
     normalizeFloatingHelpersPanelPosition,

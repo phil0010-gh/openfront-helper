@@ -45,6 +45,7 @@
       "js": [
         "map-data.js",
         "shared/settings.js",
+        "shared/i18n.js",
         "content/core.js",
         "content/floating-helpers.js",
         "content/auto-join.js"
@@ -70,6 +71,7 @@
         "page-bridge/boat-prediction.js",
         "page-bridge/heatmaps.js",
         "page-bridge/bootstrap.js",
+        "locales/*/common.json",
         "assets/autojoin.mp3"
       ],
       "matches": [
