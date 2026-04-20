@@ -261,6 +261,7 @@
       "showAttackAmounts",
       "showNukePrediction",
       "showNukeSuggestions",
+      "showBoatPrediction",
       "autoNuke",
       "showEconomyHeatmap",
       "showExportPartnerHeatmap",

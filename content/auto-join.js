@@ -145,6 +145,7 @@ function injectBridge() {
     "page-bridge/attack-amounts.js",
     "page-bridge/nuke-prediction.js",
     "page-bridge/nuke-suggestions.js",
+    "page-bridge/boat-prediction.js",
     "page-bridge/heatmaps.js",
     "page-bridge/bootstrap.js",
   ];

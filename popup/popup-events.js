@@ -166,6 +166,7 @@
         "showNukePrediction",
         "showNukeSuggestions",
         "autoNuke",
+        "showBoatPrediction",
       ].includes(target.name)
     ) {
       await updateBooleanSetting(target.name, target.checked);

@@ -56,6 +56,7 @@
     showAttackAmounts: false,
     showNukePrediction: false,
     showNukeSuggestions: false,
+    showBoatPrediction: false,
     autoNuke: false,
     autoNukeIncludeAllies: false,
     showEconomyHeatmap: false,

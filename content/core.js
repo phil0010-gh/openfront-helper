@@ -152,6 +152,19 @@ function syncNukePredictionHelper() {
   );
 }
 
+function syncBoatPredictionHelper() {
+  window.postMessage(
+    {
+      source: BRIDGE_SOURCE_EXTENSION,
+      type: "SHOW_BOAT_PREDICTION",
+      payload: {
+        enabled: Boolean(settings.showBoatPrediction),
+      },
+    },
+    "*",
+  );
+}
+
 function syncNukeSuggestionsHelper() {
   window.postMessage(
     {
@@ -265,6 +278,7 @@ function syncHelpers() {
   syncFpsSaverHelper();
   syncAttackAmountsHelper();
   syncNukePredictionHelper();
+  syncBoatPredictionHelper();
   syncNukeSuggestionsHelper();
   syncAutoNukeHelper();
   syncEconomyHeatmapHelper();

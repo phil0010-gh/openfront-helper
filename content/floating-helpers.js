@@ -332,6 +332,7 @@ function createFloatingHelpersPanel() {
     createFloatingHelperRow("fpsSaver", "FPS Saver", "Disables nuke explosion animations."),
     createFloatingHelperRow("showAttackAmounts", "Attack amounts", "Shows how many troops a player attacks with."),
     createFloatingHelperRow("showNukePrediction", "Nuke prediction", "Shows predicted enemy nuke landing points and blast radius."),
+    createFloatingHelperRow("showBoatPrediction", "Boat prediction", "Shows enemy boat landing points. Red = targeting you, yellow = targeting others."),
     createFloatingHelperRow("showNukeSuggestions", "Nuke suggestion", "Hover an enemy to show high-damage atom and hydrogen targets."),
     createFloatingHelperRow("autoNuke", "Auto nuke", "Adds auto economy and population nuke actions to the player wheel."),
     createFloatingHelperRow("autoNukeIncludeAllies", "↳ Include allies", "Also show auto nuke options when right-clicking allied players."),
