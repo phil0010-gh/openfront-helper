@@ -32,14 +32,60 @@
       excludeButton.className = "map-exclude-button";
       excludeButton.type = "button";
       excludeButton.dataset.mapId = map.id;
-      excludeButton.setAttribute("aria-label", `Exclude map ${map.name}`);
-      excludeButton.textContent = "Exclude";
+      excludeButton.setAttribute("aria-label", `${popup.t("Exclude")} ${map.name}`);
+      excludeButton.textContent = popup.t("Exclude");
 
       tile.append(button, excludeButton);
       fragment.append(tile);
     }
 
     refs.mapFiltersContainer.replaceChildren(fragment);
+  };
+
+  popup.renderLanguageOptions = function renderLanguageOptions() {
+    const query = popup.normalizeSearchText(refs.languageSearchInput.value);
+    const fragment = document.createDocumentFragment();
+    let visibleCount = 0;
+
+    for (const language of state.languageOptions) {
+      if (query && !popup.normalizeSearchText(language.searchText).includes(query)) {
+        continue;
+      }
+
+      const button = document.createElement("button");
+      button.className = "language-option";
+      button.type = "button";
+      button.dataset.language = language.code;
+      button.setAttribute("role", "option");
+      button.setAttribute(
+        "aria-selected",
+        String(language.code === state.settings.language),
+      );
+
+      const name = document.createElement("span");
+      name.className = "language-option-name";
+      name.textContent =
+        language.name === language.nativeName
+          ? language.name
+          : `${language.name} (${language.nativeName})`;
+
+      const code = document.createElement("span");
+      code.className = "language-option-code";
+      code.textContent = language.code;
+
+      button.append(name, code);
+      fragment.append(button);
+      visibleCount += 1;
+    }
+
+    if (visibleCount === 0) {
+      const empty = document.createElement("p");
+      empty.className = "language-empty";
+      empty.textContent = popup.t("noLanguagesFound");
+      fragment.append(empty);
+    }
+
+    refs.languageList.replaceChildren(fragment);
   };
 
   popup.renderMapSearch = function renderMapSearch() {
@@ -186,12 +232,35 @@
     const hasOptionsSelected = popup.hasSelectedOptions();
 
     refs.installNotice.hidden = !state.showInstallNotice;
+    refs.installNotice.querySelector(".install-notice-title").textContent =
+      popup.t("One-time setup");
+    refs.installNotice.querySelector(".install-notice-text").textContent =
+      popup.t("If openfront.io was already open when you installed this extension, reload that tab once. Otherwise the extension will not work on that tab.");
+    refs.dismissInstallNoticeButton.textContent = popup.t("Got it");
+    refs.settingsButton.setAttribute("aria-label", popup.t("openSettings"));
+    refs.settingsButton.querySelector(".settings-button-label").textContent =
+      popup.t("settings");
+    refs.settingsPanel.querySelector(".settings-panel-title").textContent =
+      popup.t("settings");
+    refs.settingsPanel.querySelector(".settings-panel-label").textContent =
+      popup.t("customNotificationSound");
+    refs.settingsSoundTestButton.textContent = popup.t("test");
+    refs.settingsSoundUploadButton.textContent = popup.t("upload");
+    refs.settingsSoundClearButton.textContent = popup.t("remove");
+    if (refs.settingsSoundClearButton.hidden) {
+      refs.settingsSoundName.textContent = popup.t("defaultSound");
+    }
+    refs.languageButton.setAttribute("aria-label", popup.t("openLanguageMenu"));
+    refs.languageButtonLabel.textContent = state.settings.language.toUpperCase();
+    refs.languagePanel.querySelector(".language-search-label").textContent =
+      popup.t("searchLanguages");
+    refs.languageSearchInput.placeholder = popup.t("searchLanguages");
     refs.powerButton.dataset.enabled = String(enabled);
     refs.powerButton.disabled = !hasOptionsSelected;
     refs.powerButton.setAttribute("aria-pressed", String(enabled));
     refs.powerButton.querySelector(".power-label").textContent = enabled
-      ? "Auto-Join ON"
-      : "Auto-Join OFF";
+      ? popup.t("autoJoinOn")
+      : popup.t("autoJoinOff");
 
     if (refs.joinNotificationToggle instanceof HTMLInputElement) {
       refs.joinNotificationToggle.checked = Boolean(state.settings.joinNotification);
@@ -206,8 +275,9 @@
         String(state.settings.showFloatingHelpersPanel),
       );
       refs.helpersPopoutButton.title = state.settings.showFloatingHelpersPanel
-        ? "Hide floating helpers panel on OpenFront"
-        : "Show floating helpers panel on OpenFront";
+        ? popup.t("hideFloatingHelpersPanel")
+        : popup.t("showFloatingHelpersPanel");
+      refs.helpersPopoutButton.setAttribute("aria-label", refs.helpersPopoutButton.title);
     }
 
     refs.statusText.hidden = true;
@@ -261,6 +331,7 @@
       "showAttackAmounts",
       "showNukePrediction",
       "showNukeSuggestions",
+      "showBoatPrediction",
       "autoNuke",
       "showEconomyHeatmap",
       "showExportPartnerHeatmap",
@@ -280,8 +351,8 @@
       );
       refs.applySelectiveTradePolicyInput.title =
         state.settings.autoCancelDeniedTradesAvailable
-          ? "Blocks trades with players who are not on your team."
-          : "Available only during an active team game.";
+          ? popup.t("Blocks trades with players who are not on your team.")
+          : popup.t("Available only during an active team game.");
 
       const actionCard = refs.applySelectiveTradePolicyInput.closest(
         ".helper-action-card",
@@ -305,11 +376,13 @@
 
     if (refs.economyHeatmapIntensityValue instanceof HTMLElement) {
       refs.economyHeatmapIntensityValue.textContent =
-        shared.getEconomyHeatmapIntensityLabel(
+        popup.t(shared.getEconomyHeatmapIntensityLabel(
           state.settings.economyHeatmapIntensity,
-        );
+        ));
     }
 
     popup.renderMapSearch();
+    popup.renderLanguageOptions();
+    popup.localize();
   };
 })(globalThis);

@@ -12,6 +12,7 @@ const {
   normalizeEconomyHeatmapIntensity,
   getEconomyHeatmapIntensityLabel,
 } = globalThis.OpenFrontHelperSettings;
+const i18n = globalThis.OpenFrontHelperI18n;
 
 const BRIDGE_SOURCE_PAGE = "openfront-autojoin-page";
 const BRIDGE_SOURCE_EXTENSION = "openfront-autojoin-extension";
@@ -30,9 +31,21 @@ let joinAlertAudio = null;
 let hasCustomNotificationSound = false;
 let lastProcessedSelectiveTradePolicyRequestAt = null;
 let selectiveTradePolicyAvailable = false;
+let translations = i18n?.DEFAULT_TRANSLATIONS || {};
 
 // Shared settings, defaults, and filter normalization live in `shared/settings.js`
 // so popup and content stay in sync.
+
+function t(key) {
+  return i18n?.getMessage(translations, key) || key;
+}
+
+async function loadContentTranslations() {
+  if (!i18n) {
+    return;
+  }
+  translations = await i18n.loadBundle(settings.language);
+}
 
 // Helper bridge sync -------------------------------------------------------
 function syncBotNationMarkers() {
@@ -152,6 +165,19 @@ function syncNukePredictionHelper() {
   );
 }
 
+function syncBoatPredictionHelper() {
+  window.postMessage(
+    {
+      source: BRIDGE_SOURCE_EXTENSION,
+      type: "SHOW_BOAT_PREDICTION",
+      payload: {
+        enabled: Boolean(settings.showBoatPrediction),
+      },
+    },
+    "*",
+  );
+}
+
 function syncNukeSuggestionsHelper() {
   window.postMessage(
     {
@@ -265,6 +291,7 @@ function syncHelpers() {
   syncFpsSaverHelper();
   syncAttackAmountsHelper();
   syncNukePredictionHelper();
+  syncBoatPredictionHelper();
   syncNukeSuggestionsHelper();
   syncAutoNukeHelper();
   syncEconomyHeatmapHelper();
@@ -275,6 +302,7 @@ function syncHelpers() {
 async function loadSettings() {
   const stored = await chrome.storage.local.get(STORAGE_KEY);
   settings = normalizeSettings(stored[STORAGE_KEY]);
+  await loadContentTranslations();
   selectiveTradePolicyAvailable = Boolean(settings.autoCancelDeniedTradesAvailable);
   lastProcessedSelectiveTradePolicyRequestAt =
     settings.applySelectiveTradePolicyRequestAt;

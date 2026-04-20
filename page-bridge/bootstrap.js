@@ -60,6 +60,10 @@
       setNukePredictionEnabled(data.payload?.enabled);
     }
 
+    if (data.type === "SHOW_BOAT_PREDICTION") {
+      setBoatPredictionEnabled(data.payload?.enabled);
+    }
+
     if (data.type === "SHOW_NUKE_SUGGESTIONS") {
       setNukeSuggestionsEnabled(data.payload?.enabled);
     }

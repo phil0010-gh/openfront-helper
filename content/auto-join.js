@@ -145,6 +145,7 @@ function injectBridge() {
     "page-bridge/attack-amounts.js",
     "page-bridge/nuke-prediction.js",
     "page-bridge/nuke-suggestions.js",
+    "page-bridge/boat-prediction.js",
     "page-bridge/heatmaps.js",
     "page-bridge/bootstrap.js",
   ];
@@ -556,12 +557,17 @@ function handleBridgeMessage(event) {
   }
 }
 
-function handleStorageChange(changes, areaName) {
+async function handleStorageChange(changes, areaName) {
   if (areaName !== "local" || !changes[STORAGE_KEY]) {
     return;
   }
 
+  const previousLanguage = settings.language;
   settings = normalizeSettings(changes[STORAGE_KEY].newValue);
+  if (settings.language !== previousLanguage) {
+    await loadContentTranslations();
+    document.getElementById(FLOATING_HELPERS_PANEL_ID)?.remove();
+  }
   selectiveTradePolicyAvailable = Boolean(settings.autoCancelDeniedTradesAvailable);
   syncHelpers();
   syncFloatingHelpersPanel();

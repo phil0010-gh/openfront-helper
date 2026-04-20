@@ -315,59 +315,60 @@ function createFloatingHelpersPanel() {
   panel.id = FLOATING_HELPERS_PANEL_ID;
   panel.innerHTML = `
     <div class="openfront-helper-floating-header">
-      <p class="openfront-helper-floating-title">Helpers</p>
-      <button class="openfront-helper-floating-close" type="button" aria-label="Close helpers panel">x</button>
+      <p class="openfront-helper-floating-title">${t("Helpers")}</p>
+      <button class="openfront-helper-floating-close" type="button" aria-label="${t("Close helpers panel")}">x</button>
     </div>
     <div class="openfront-helper-floating-body"></div>
-    <div class="openfront-helper-floating-resize" role="separator" aria-orientation="horizontal" aria-label="Resize helpers panel"></div>
+    <div class="openfront-helper-floating-resize" role="separator" aria-orientation="horizontal" aria-label="${t("Resize helpers panel")}"></div>
   `;
 
   const body = panel.querySelector(".openfront-helper-floating-body");
   const gameCategory = document.createElement("section");
   gameCategory.className = "openfront-helper-floating-category";
-  gameCategory.innerHTML = `<p class="openfront-helper-floating-category-title">Game helpers</p>`;
+  gameCategory.innerHTML = `<p class="openfront-helper-floating-category-title">${t("Game helpers")}</p>`;
   gameCategory.append(
-    createFloatingHelperRow("markBotNationsRed", "Mark bot nations red", "Adds a red marker to nation AI names."),
-    createFloatingHelperRow("markHoveredAlliesGreen", "Alliances", "Highlights allies with remaining alliance time."),
-    createFloatingHelperRow("fpsSaver", "FPS Saver", "Disables nuke explosion animations."),
-    createFloatingHelperRow("showAttackAmounts", "Attack amounts", "Shows how many troops a player attacks with."),
-    createFloatingHelperRow("showNukePrediction", "Nuke prediction", "Shows predicted enemy nuke landing points and blast radius."),
-    createFloatingHelperRow("showNukeSuggestions", "Nuke suggestion", "Hover an enemy to show high-damage atom and hydrogen targets."),
-    createFloatingHelperRow("autoNuke", "Auto nuke", "Adds auto economy and population nuke actions to the player wheel."),
-    createFloatingHelperRow("autoNukeIncludeAllies", "↳ Include allies", "Also show auto nuke options when right-clicking allied players."),
+    createFloatingHelperRow("markBotNationsRed", t("Mark bot nations red"), t("Adds a red marker to nation AI names.")),
+    createFloatingHelperRow("markHoveredAlliesGreen", t("Alliances"), t("Highlights allies with remaining alliance time.")),
+    createFloatingHelperRow("fpsSaver", t("FPS Saver"), t("Disables nuke explosion animations.")),
+    createFloatingHelperRow("showAttackAmounts", t("Attack amounts"), t("Shows how many troops a player attacks with.")),
+    createFloatingHelperRow("showNukePrediction", t("Nuke prediction"), t("Shows predicted enemy nuke landing points and blast radius.")),
+    createFloatingHelperRow("showBoatPrediction", t("Boat prediction"), t("Shows enemy boat landing points. Red = targeting you, yellow = targeting others.")),
+    createFloatingHelperRow("showNukeSuggestions", t("Nuke suggestion"), t("Hover an enemy to show high-damage atom and hydrogen targets.")),
+    createFloatingHelperRow("autoNuke", t("Auto nuke"), t("Adds auto economy and population nuke actions to the player wheel.")),
+    createFloatingHelperRow("autoNukeIncludeAllies", `↳ ${t("Include allies")}`, t("Also show auto nuke options when right-clicking allied players.")),
     createFloatingHelperActionButton(
       "toggleSelectiveTradePolicy",
-      "Block non-team trades",
-      "Team games only: blocks trades with players who are not on your team.",
-      "Off",
+      t("Block non-team trades"),
+      t("Team games only: blocks trades with players who are not on your team."),
+      t("Off"),
     ),
   );
 
   const economyCategory = document.createElement("section");
   economyCategory.className = "openfront-helper-floating-category";
-  economyCategory.innerHTML = `<p class="openfront-helper-floating-category-title">Economic helpers</p>`;
+  economyCategory.innerHTML = `<p class="openfront-helper-floating-category-title">${t("Economic helpers")}</p>`;
   economyCategory.append(
-    createFloatingHelperRow("showGoldPerMinute", "Gold per minute", "Adds GPM to the player hover panel."),
-    createFloatingHelperRow("showTeamGoldPerMinute", "Team gold per minute", "Lists each team's total GPM."),
-    createFloatingHelperRow("showTopGoldPerMinute", "Top 10 gold per minute", "Lists the highest tracked player GPM."),
-    createFloatingHelperRow("showTradeBalances", "Trade balances", "Shows observed trade imports and exports."),
+    createFloatingHelperRow("showGoldPerMinute", t("Gold per minute"), t("Adds GPM to the player hover panel.")),
+    createFloatingHelperRow("showTeamGoldPerMinute", t("Team gold per minute"), t("Lists each team's total GPM.")),
+    createFloatingHelperRow("showTopGoldPerMinute", t("Top 10 gold per minute"), t("Lists the highest tracked player GPM.")),
+    createFloatingHelperRow("showTradeBalances", t("Trade balances"), t("Shows observed trade imports and exports.")),
   );
 
   const heatmapPanel = document.createElement("div");
   heatmapPanel.className = "openfront-helper-floating-subpanel";
   heatmapPanel.append(
-    createFloatingHelperRow("showEconomyHeatmap", "Economic heatmap", "Highlights structures with observed trade revenue."),
+    createFloatingHelperRow("showEconomyHeatmap", t("Economic heatmap"), t("Highlights structures with observed trade revenue.")),
   );
   const slider = document.createElement("label");
   slider.className = "openfront-helper-floating-slider";
   slider.innerHTML = `
-    <strong>Economic heatmap intensity</strong>
+    <strong>${t("Economic heatmap intensity")}</strong>
     <span class="openfront-helper-floating-slider-value"></span>
     <input type="range" min="0" max="2" step="1" data-helper-setting="economyHeatmapIntensity">
   `;
   heatmapPanel.append(
     slider,
-    createFloatingHelperRow("showExportPartnerHeatmap", "Export partner heatmap", "Hover a player to highlight export partners."),
+    createFloatingHelperRow("showExportPartnerHeatmap", t("Export partner heatmap"), t("Hover a player to highlight export partners.")),
   );
   economyCategory.append(heatmapPanel);
   body.append(gameCategory, economyCategory);
@@ -419,7 +420,7 @@ function createFloatingHelpersPanel() {
     ) {
       const value = panel.querySelector(".openfront-helper-floating-slider-value");
       if (value) {
-        value.textContent = getEconomyHeatmapIntensityLabel(target.value);
+        value.textContent = t(getEconomyHeatmapIntensityLabel(target.value));
       }
     }
   });
@@ -601,7 +602,7 @@ function updateFloatingHelpersPanel(panel) {
       input.value = String(settings.economyHeatmapIntensity);
       const value = panel.querySelector(".openfront-helper-floating-slider-value");
       if (value) {
-        value.textContent = getEconomyHeatmapIntensityLabel(settings.economyHeatmapIntensity);
+        value.textContent = t(getEconomyHeatmapIntensityLabel(settings.economyHeatmapIntensity));
       }
       continue;
     }
@@ -620,10 +621,10 @@ function updateFloatingHelpersPanel(panel) {
       "aria-pressed",
       String(Boolean(settings.selectiveTradePolicyEnabled)),
     );
-    actionButton.textContent = settings.selectiveTradePolicyEnabled ? "On" : "Off";
+    actionButton.textContent = settings.selectiveTradePolicyEnabled ? t("On") : t("Off");
     actionButton.title = selectiveTradePolicyAvailable
-      ? "Blocks trades with players who are not on your team."
-      : "Available only during an active team game.";
+      ? t("Blocks trades with players who are not on your team.")
+      : t("Available only during an active team game.");
     const actionCard = actionButton.closest(".openfront-helper-floating-action");
     if (actionCard instanceof HTMLElement) {
       actionCard.dataset.disabled = String(!selectiveTradePolicyAvailable);
