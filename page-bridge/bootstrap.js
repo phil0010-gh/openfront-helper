@@ -72,6 +72,10 @@
       setAutoNukeEnabled(data.payload?.enabled, data.payload?.includeAllies);
     }
 
+    if (data.type === "SET_SEND_1_PERCENT_BOAT") {
+      setSend1PercentBoatEnabled(data.payload?.enabled, data.payload?.contextMenu !== false);
+    }
+
     if (data.type === "SHOW_ECONOMY_HEATMAP") {
       setEconomyHeatmapIntensity(data.payload?.intensity);
       setEconomyHeatmapEnabled(data.payload?.enabled);
@@ -98,7 +102,11 @@
     }
   });
 
-  window.setInterval(refreshSelectiveTradePolicyAvailability, 1000);
+  window.setInterval(() => {
+    refreshSelectiveTradePolicyAvailability();
+    refreshCheatsAvailability();
+  }, 1000);
   refreshSelectiveTradePolicyAvailability();
+  refreshCheatsAvailability();
 
   window.__openfrontAutoJoinBridgeReady = true;

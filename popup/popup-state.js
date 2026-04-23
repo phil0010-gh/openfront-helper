@@ -10,6 +10,11 @@
     languageButton: document.getElementById("languageButton"),
     languageButtonLabel: document.getElementById("languageButtonLabel"),
     languagePanel: document.getElementById("languagePanel"),
+    macrosButton: document.getElementById("macrosButton"),
+    macrosPanel: document.getElementById("macrosPanel"),
+    send1PercentBoatToggle: document.getElementById("send1PercentBoatToggle"),
+    send1PercentBoatSubOptions: document.getElementById("send1PercentBoatSubOptions"),
+    send1PercentBoatContextMenuToggle: document.getElementById("send1PercentBoatContextMenuToggle"),
     languageSearchInput: document.getElementById("languageSearchInput"),
     languageList: document.getElementById("languageList"),
     settingsSoundInput: document.getElementById("settingsSoundInput"),
@@ -20,6 +25,10 @@
     statusText: document.getElementById("statusText"),
     searchTimer: document.getElementById("searchTimer"),
     searchTimerValue: document.getElementById("searchTimerValue"),
+    lobbyForecastPanel: document.getElementById("lobbyForecastPanel"),
+    forecastEtaValue: document.getElementById("forecastEtaValue"),
+    forecastChanceValue: document.getElementById("forecastChanceValue"),
+    forecastMedianValue: document.getElementById("forecastMedianValue"),
     filtersForm: document.getElementById("filtersForm"),
     helpersPopoutButton: document.getElementById("helpersPopoutButton"),
     mapFiltersContainer: document.getElementById("mapFilters"),
@@ -46,6 +55,7 @@
     economyHeatmapIntensityValue: document.getElementById(
       "economyHeatmapIntensityValue",
     ),
+    versionLabel: document.getElementById("versionLabel"),
   };
 
   popup.shared = shared;
@@ -104,6 +114,19 @@
       2,
       "0",
     )}`;
+  };
+
+  popup.formatDurationShort = function formatDurationShort(totalSeconds) {
+    const seconds = Math.max(0, Math.round(Number(totalSeconds) || 0));
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    if (minutes <= 0) {
+      return `${remainingSeconds}s`;
+    }
+    if (remainingSeconds === 0) {
+      return `${minutes}m`;
+    }
+    return `${minutes}m ${remainingSeconds}s`;
   };
 
   popup.hasSelectedMapFilters = function hasSelectedMapFilters() {

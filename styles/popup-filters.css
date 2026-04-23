@@ -131,6 +131,21 @@
   transform: translateY(0) scale(0.98);
 }
 
+.helper-info-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.helper-info-button:disabled:hover {
+  transform: none;
+  border-color: rgba(151, 181, 214, 0.24);
+  background: rgba(10, 22, 36, 0.74);
+  color: #cbd5e1;
+  box-shadow: none;
+}
+
 .helper-info-popup {
   position: fixed;
   top: var(--helper-info-top, 0);

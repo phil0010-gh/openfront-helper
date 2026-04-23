@@ -41,6 +41,8 @@
     refs.settingsButton.setAttribute("aria-expanded", String(!isOpen));
     refs.languagePanel.hidden = true;
     refs.languageButton.setAttribute("aria-expanded", "false");
+    refs.macrosPanel.hidden = true;
+    refs.macrosButton.setAttribute("aria-expanded", "false");
   });
 
   refs.languageButton.addEventListener("click", (e) => {
@@ -50,8 +52,32 @@
     refs.languageButton.setAttribute("aria-expanded", String(!isOpen));
     refs.settingsPanel.hidden = true;
     refs.settingsButton.setAttribute("aria-expanded", "false");
+    refs.macrosPanel.hidden = true;
+    refs.macrosButton.setAttribute("aria-expanded", "false");
     if (!isOpen) {
       refs.languageSearchInput.focus();
+    }
+  });
+
+  refs.macrosButton.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isOpen = !refs.macrosPanel.hidden;
+    refs.macrosPanel.hidden = isOpen;
+    refs.macrosButton.setAttribute("aria-expanded", String(!isOpen));
+    refs.settingsPanel.hidden = true;
+    refs.settingsButton.setAttribute("aria-expanded", "false");
+    refs.languagePanel.hidden = true;
+    refs.languageButton.setAttribute("aria-expanded", "false");
+  });
+
+  refs.macrosPanel.addEventListener("change", async (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement)) return;
+    if (target.name === "send1PercentBoat") {
+      await updateBooleanSetting("send1PercentBoat", target.checked);
+      refs.send1PercentBoatSubOptions?.classList.toggle("visible", target.checked);
+    } else if (target.name === "send1PercentBoatContextMenu") {
+      await updateBooleanSetting("send1PercentBoatContextMenu", target.checked);
     }
   });
 
@@ -68,6 +94,15 @@
     ) {
       refs.languagePanel.hidden = true;
       refs.languageButton.setAttribute("aria-expanded", "false");
+    }
+
+    if (
+      !refs.macrosPanel.hidden &&
+      !refs.macrosPanel.contains(e.target) &&
+      e.target !== refs.macrosButton
+    ) {
+      refs.macrosPanel.hidden = true;
+      refs.macrosButton.setAttribute("aria-expanded", "false");
     }
   });
 
@@ -167,6 +202,14 @@
   refs.filtersForm.addEventListener("change", async (event) => {
     const target = event.target;
     if (!(target instanceof HTMLInputElement)) {
+      return;
+    }
+
+    if (
+      ["showNukeSuggestions", "autoNuke"].includes(target.name) &&
+      !state.settings.cheatsAvailable
+    ) {
+      popup.render();
       return;
     }
 
@@ -473,6 +516,8 @@
       refs.settingsButton.setAttribute("aria-expanded", "false");
       refs.languagePanel.hidden = true;
       refs.languageButton.setAttribute("aria-expanded", "false");
+      refs.macrosPanel.hidden = true;
+      refs.macrosButton.setAttribute("aria-expanded", "false");
     }
   });
 

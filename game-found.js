@@ -17,14 +17,56 @@ async function localizeGameFoundWindow() {
   }
 }
 
+function delay(ms) {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
+
+async function playAudioWithRetries(src) {
+  if (!src) {
+    return false;
+  }
+
+  const audio = new Audio(src);
+  audio.preload = "auto";
+  audio.currentTime = 0;
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      await audio.play();
+      return true;
+    } catch (_error) {
+      audio.load();
+      await delay(160 + attempt * 220);
+    }
+  }
+
+  return false;
+}
+
+async function playGameFoundSound() {
+  try {
+    const custom = await chrome.storage.local.get("joinNotificationSoundData");
+    const customSrc =
+      typeof custom.joinNotificationSoundData === "string"
+        ? custom.joinNotificationSoundData
+        : null;
+
+    if (customSrc && (await playAudioWithRetries(customSrc))) {
+      return;
+    }
+
+    await playAudioWithRetries(chrome.runtime.getURL("assets/autojoin.mp3"));
+  } catch (_error) {
+    // Ignore audio/storage errors in the ephemeral notification window.
+  }
+}
+
+playGameFoundSound().catch(() => {});
+
 localizeGameFoundWindow().catch((error) => {
   console.error("Failed to localize game found window:", error);
-});
-
-chrome.storage.local.get("joinNotificationSoundData", (result) => {
-  if (result.joinNotificationSoundData) {
-    new Audio(result.joinNotificationSoundData).play().catch(() => {});
-  }
 });
 
 setTimeout(() => window.close(), 6000);
