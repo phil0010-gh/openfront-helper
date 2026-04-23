@@ -1,6 +1,12 @@
 // Floating helpers panel ---------------------------------------------------
 // Floating helpers panel UI that lives on the OpenFront page.
 
+const CHEATS_SETTING_KEYS = new Set([
+  "showNukeSuggestions",
+  "autoNuke",
+  "autoNukeIncludeAllies",
+]);
+
 function ensureFloatingHelpersStyles() {
   if (document.getElementById(FLOATING_HELPERS_STYLE_ID)) {
     return;
@@ -336,6 +342,7 @@ function createFloatingHelpersPanel() {
     createFloatingHelperRow("showNukeSuggestions", t("Nuke suggestion"), t("Hover an enemy to show high-damage atom and hydrogen targets.")),
     createFloatingHelperRow("autoNuke", t("Auto nuke"), t("Adds auto economy and population nuke actions to the player wheel.")),
     createFloatingHelperRow("autoNukeIncludeAllies", `↳ ${t("Include allies")}`, t("Also show auto nuke options when right-clicking allied players.")),
+    createFloatingHelperRow("send1PercentBoat", t("Send 1% Boat"), t("Right-click any tile to send a boat with 1% troops, then restores your ratio.")),
     createFloatingHelperActionButton(
       "toggleSelectiveTradePolicy",
       t("Block non-team trades"),
@@ -390,6 +397,11 @@ function createFloatingHelpersPanel() {
 
     const key = target.dataset.helperSetting;
     if (!key) {
+      return;
+    }
+
+    if (CHEATS_SETTING_KEYS.has(key) && !settings.cheatsAvailable) {
+      updateFloatingHelpersPanel(panel);
       return;
     }
 
@@ -592,12 +604,20 @@ function positionFloatingHelpersPanel(panel) {
 }
 
 function updateFloatingHelpersPanel(panel) {
+  const cheatsEnabled = Boolean(settings.cheatsAvailable);
+
   for (const input of panel.querySelectorAll("[data-helper-setting]")) {
     if (!(input instanceof HTMLInputElement)) {
       continue;
     }
 
     const key = input.dataset.helperSetting;
+    const isCheatSetting = CHEATS_SETTING_KEYS.has(key);
+    const row = input.closest(".openfront-helper-floating-row");
+    if (row instanceof HTMLElement) {
+      row.hidden = isCheatSetting && !cheatsEnabled;
+    }
+
     if (key === "economyHeatmapIntensity") {
       input.value = String(settings.economyHeatmapIntensity);
       const value = panel.querySelector(".openfront-helper-floating-slider-value");
@@ -607,7 +627,13 @@ function updateFloatingHelpersPanel(panel) {
       continue;
     }
 
+    input.disabled = isCheatSetting && !cheatsEnabled;
     input.checked = Boolean(settings[key]);
+    input.title = "";
+    if (row instanceof HTMLElement) {
+      row.dataset.disabled = String(input.disabled);
+      row.title = "";
+    }
 
   }
 

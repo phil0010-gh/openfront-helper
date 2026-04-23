@@ -28,9 +28,12 @@ let settings = normalizeSettings();
 let latestLobbySnapshot = null;
 let pendingJoin = null;
 let joinAlertAudio = null;
+let customJoinAlertAudio = null;
 let hasCustomNotificationSound = false;
+let customNotificationSoundData = null;
 let lastProcessedSelectiveTradePolicyRequestAt = null;
 let selectiveTradePolicyAvailable = false;
+let cheatsAvailable = false;
 let translations = i18n?.DEFAULT_TRANSLATIONS || {};
 
 // Shared settings, defaults, and filter normalization live in `shared/settings.js`
@@ -184,7 +187,7 @@ function syncNukeSuggestionsHelper() {
       source: BRIDGE_SOURCE_EXTENSION,
       type: "SHOW_NUKE_SUGGESTIONS",
       payload: {
-        enabled: Boolean(settings.showNukeSuggestions),
+        enabled: Boolean(settings.showNukeSuggestions && cheatsAvailable),
       },
     },
     "*",
@@ -197,8 +200,22 @@ function syncAutoNukeHelper() {
       source: BRIDGE_SOURCE_EXTENSION,
       type: "SET_AUTO_NUKE",
       payload: {
-        enabled: Boolean(settings.autoNuke),
+        enabled: Boolean(settings.autoNuke && cheatsAvailable),
         includeAllies: Boolean(settings.autoNukeIncludeAllies),
+      },
+    },
+    "*",
+  );
+}
+
+function syncSend1PercentBoatHelper() {
+  window.postMessage(
+    {
+      source: BRIDGE_SOURCE_EXTENSION,
+      type: "SET_SEND_1_PERCENT_BOAT",
+      payload: {
+        enabled: Boolean(settings.send1PercentBoat),
+        contextMenu: settings.send1PercentBoatContextMenu !== false,
       },
     },
     "*",
@@ -280,6 +297,26 @@ function updateAutoCancelDeniedTradesAvailability(available) {
   syncFloatingHelpersPanel();
 }
 
+function updateCheatsAvailability(available) {
+  const nextAvailable = Boolean(available);
+  const availabilityChanged =
+    nextAvailable !== cheatsAvailable ||
+    nextAvailable !== Boolean(settings.cheatsAvailable);
+
+  cheatsAvailable = nextAvailable;
+
+  if (availabilityChanged) {
+    saveSettings({
+      ...settings,
+      cheatsAvailable: nextAvailable,
+    }).catch((error) => {
+      console.error("Failed to sync cheats availability:", error);
+    });
+  }
+
+  syncHelpers();
+}
+
 function syncHelpers() {
   syncBotNationMarkers();
   syncGoldPerMinuteHelper();
@@ -294,6 +331,7 @@ function syncHelpers() {
   syncBoatPredictionHelper();
   syncNukeSuggestionsHelper();
   syncAutoNukeHelper();
+  syncSend1PercentBoatHelper();
   syncEconomyHeatmapHelper();
   syncExportPartnerHeatmapHelper();
   syncNukeTargetHeatmapHelper();
@@ -304,6 +342,7 @@ async function loadSettings() {
   settings = normalizeSettings(stored[STORAGE_KEY]);
   await loadContentTranslations();
   selectiveTradePolicyAvailable = Boolean(settings.autoCancelDeniedTradesAvailable);
+  cheatsAvailable = Boolean(settings.cheatsAvailable);
   lastProcessedSelectiveTradePolicyRequestAt =
     settings.applySelectiveTradePolicyRequestAt;
   syncHelpers();

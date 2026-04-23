@@ -113,6 +113,7 @@ let selectiveTradePolicyNeedsEmbargoSync = false;
 let selectiveTradePolicyMyPlayerId = null;
 let lastSelectiveTradePolicyRequestAt = null;
 let lastReportedSelectiveTradePolicyAvailability = null;
+let lastReportedCheatsAvailability = null;
 let lastOpenFrontGameContext = null;
 
 const goldTrackers = new Map();

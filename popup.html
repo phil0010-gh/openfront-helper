@@ -36,6 +36,16 @@
             <span aria-hidden="true">A</span>
             <span id="languageButtonLabel">EN</span>
           </button>
+          <button
+            id="macrosButton"
+            class="macros-button"
+            type="button"
+            aria-label="Open macros"
+            aria-expanded="false"
+          >
+            <span aria-hidden="true">⚡</span>
+            <span class="macros-button-label">Macros</span>
+          </button>
         </div>
         <div id="settingsPanel" class="settings-panel" hidden>
           <p class="settings-panel-title">Settings</p>
@@ -56,6 +66,31 @@
           <label class="language-search-label" for="languageSearchInput">Search languages</label>
           <input id="languageSearchInput" class="language-search-input" type="search" placeholder="Search languages" autocomplete="off">
           <div id="languageList" class="language-list" role="listbox" aria-label="Languages"></div>
+        </div>
+        <div id="macrosPanel" class="macros-panel" hidden>
+          <p class="macros-panel-title">Macros</p>
+          <div class="macros-card">
+            <label class="macros-card-header" for="send1PercentBoatToggle">
+              <div class="macros-card-info">
+                <span class="macros-card-name">⚓ Send 1% Boat</span>
+                <span class="macros-card-desc">Send a transport with 1% troops, then restore the attack ratio.</span>
+              </div>
+              <span class="macros-card-toggle">
+                <input type="checkbox" id="send1PercentBoatToggle" name="send1PercentBoat">
+                <span class="macros-card-toggle-track"></span>
+              </span>
+            </label>
+            <div class="macros-sub-options" id="send1PercentBoatSubOptions">
+              <div class="macros-sub-row">
+                <span class="macros-sub-label">Hotkey</span>
+                <kbd class="macros-kbd">Shift + B</kbd>
+              </div>
+              <label class="macros-sub-check-row" for="send1PercentBoatContextMenuToggle">
+                <input type="checkbox" class="macros-sub-check" id="send1PercentBoatContextMenuToggle" name="send1PercentBoatContextMenu">
+                <span class="macros-sub-check-label">Show button in selection wheel</span>
+              </label>
+            </div>
+          </div>
         </div>
         <a
           class="discord-link"
@@ -165,21 +200,6 @@
                 </span>
               </span>
             </label>
-            </div>
-          </div>
-
-          <div class="helper-category">
-            <button
-              class="helper-category-toggle"
-              type="button"
-              data-helper-category="cheats"
-              aria-expanded="true"
-            >
-              <span class="helper-category-title">Cheats</span>
-              <span class="helper-category-chevron" aria-hidden="true"></span>
-            </button>
-            <div class="helper-category-content" data-helper-category-content="cheats">
-            <p class="helper-category-warning">⚠ Please only use in solo or custom games.</p>
             <label class="filter-card toggle-card">
               <span class="filter-main">
                 <input type="checkbox" name="showNukePrediction">
@@ -207,41 +227,8 @@
                 </span>
               </span>
             </label>
-            <label class="filter-card toggle-card">
-              <span class="filter-main">
-                <input type="checkbox" name="showNukeSuggestions">
-                <span class="filter-dot"></span>
-                <span class="filter-copy">
-                  <strong>
-                    Nuke suggestion
-                    <span class="helper-beta-badge">Beta</span>
-                    <span class="helper-warning-badge">May lag</span>
-                  </strong>
-                  <small>Hover an enemy to show high-damage atom and hydrogen targets.</small>
-                </span>
-              </span>
-            </label>
-            <label class="filter-card toggle-card helper-auto-nuke-card">
-              <span class="filter-main">
-                <input type="checkbox" name="autoNuke">
-                <span class="filter-dot"></span>
-                <span class="filter-copy">
-                  <strong>
-                    Auto nuke
-                    <span class="helper-beta-badge">Beta</span>
-                    <span class="helper-option-icon helper-option-icon-nuke helper-option-icon-auto-nuke" aria-hidden="true">!</span>
-                  </strong>
-                  <small>Adds auto economy and population nuke actions to the player wheel.</small>
-                </span>
-              </span>
-              <button
-                class="helper-info-button"
-                type="button"
-                data-info-title="Auto nuke"
-                data-info-images='["assets/info-images/auto_nuke_1_info.png","assets/info-images/auto_nuke_2_info.png"]'
-                aria-label="Show Auto nuke preview"
-              >i</button>
-            </label>
+            
+
             </div>
           </div>
 
@@ -370,6 +357,56 @@
             </div>
             </div>
           </div>
+
+          <div class="helper-category">
+            <button
+              class="helper-category-toggle"
+              type="button"
+              data-helper-category="cheats"
+              aria-expanded="true"
+            >
+              <span class="helper-category-title">Cheats</span>
+              <span class="helper-category-chevron" aria-hidden="true"></span>
+            </button>
+            <div class="helper-category-content" data-helper-category-content="cheats">
+            <p class="helper-category-warning">⚠ Only available in solo or custom games.</p>
+            <label class="filter-card toggle-card">
+              <span class="filter-main">
+                <input type="checkbox" name="showNukeSuggestions">
+                <span class="filter-dot"></span>
+                <span class="filter-copy">
+                  <strong>
+                    Nuke suggestion
+                    <span class="helper-beta-badge">Beta</span>
+                    <span class="helper-warning-badge">May lag</span>
+                  </strong>
+                  <small>Hover an enemy to show high-damage atom and hydrogen targets.</small>
+                </span>
+              </span>
+            </label>
+            <label class="filter-card toggle-card helper-auto-nuke-card">
+              <span class="filter-main">
+                <input type="checkbox" name="autoNuke">
+                <span class="filter-dot"></span>
+                <span class="filter-copy">
+                  <strong>
+                    Auto nuke
+                    <span class="helper-beta-badge">Beta</span>
+                    <span class="helper-option-icon helper-option-icon-nuke helper-option-icon-auto-nuke" aria-hidden="true">!</span>
+                  </strong>
+                  <small>Adds auto economy and population nuke actions to the player wheel.</small>
+                </span>
+              </span>
+              <button
+                class="helper-info-button"
+                type="button"
+                data-info-title="Auto nuke"
+                data-info-images='["assets/info-images/auto_nuke_1_info.png","assets/info-images/auto_nuke_2_info.png"]'
+                aria-label="Show Auto nuke preview"
+              >i</button>
+            </label>
+            </div>
+          </div>
         </section>
 
         <div class="options-panel">
@@ -396,6 +433,24 @@
               <span id="searchTimerValue" class="search-timer-value">00:00</span>
             </span>
           </div>
+              <section id="lobbyForecastPanel" class="lobby-forecast" hidden>
+                <p class="lobby-forecast-title">
+                  <span class="lobby-forecast-title-text">Lobby Forecast</span>
+                  <span class="lobby-forecast-beta">Beta</span>
+                </p>
+                <p class="lobby-forecast-item">
+                  <span>ETA (estimate)</span>
+                  <strong id="forecastEtaValue">-</strong>
+                </p>
+            <p class="lobby-forecast-item">
+              <span>Hit chance next 10 lobbies</span>
+              <strong id="forecastChanceValue">-</strong>
+            </p>
+            <p class="lobby-forecast-item">
+              <span>Median to match</span>
+              <strong id="forecastMedianValue">-</strong>
+            </p>
+          </section>
 
           <div id="filtersFormSections" class="filters">
             <section class="filter-group">
@@ -567,7 +622,7 @@
         </div>
       </div>
       <div class="location-footer" aria-label="Cologne, Germany and European Union">
-        <span class="version-label">v2.0.1</span>
+        <span id="versionLabel" class="version-label"></span>
         <span>Cologne</span>
         <span class="title-flags" aria-hidden="true">
             <img src="assets/icons/cologne-cathedral.png" class="title-cathedral-img" title="Cologne Cathedral" alt="Cologne Cathedral">

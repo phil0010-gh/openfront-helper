@@ -53,19 +53,37 @@
     showTradeBalances: false,
     selectiveTradePolicyEnabled: false,
     autoCancelDeniedTradesAvailable: false,
+    cheatsAvailable: false,
     fpsSaver: false,
     showAttackAmounts: false,
     showNukePrediction: false,
     showNukeSuggestions: false,
     showBoatPrediction: false,
     autoNuke: false,
-    autoNukeIncludeAllies: false,
+    send1PercentBoat: false,
     showEconomyHeatmap: false,
     economyHeatmapIntensity: 1,
     showExportPartnerHeatmap: false,
     showNukeTargetHeatmap: false,
     applySelectiveTradePolicyRequestAt: null,
     showFloatingHelpersPanel: false,
+    lobbyForecast: {
+      available: false,
+      sampleSize: 0,
+      etaMinSeconds: null,
+      etaMaxSeconds: null,
+      hitChanceNext10: null,
+      medianLobbiesToMatch: null,
+      last100Averages: {
+        windowSize: 100,
+        sampleSize: 0,
+        hitRate: null,
+        avgLobbyIntervalMs: null,
+        avgLobbiesPerMinute: null,
+        etaSeconds: null,
+        updatedAt: null,
+      },
+    },
     floatingHelpersPanelPosition: {
       left: null,
       top: null,
@@ -135,6 +153,63 @@
     return ensureActiveSearchTimestamp ? Date.now() : null;
   }
 
+  function normalizeForecastSeconds(value) {
+    const seconds = Number(value);
+    return Number.isFinite(seconds) && seconds > 0 ? Math.round(seconds) : null;
+  }
+
+  function normalizeForecastProbability(value) {
+    const probability = Number(value);
+    if (!Number.isFinite(probability)) {
+      return null;
+    }
+    return Math.max(0, Math.min(1, probability));
+  }
+
+  function normalizeForecastCount(value) {
+    const count = Number(value);
+    return Number.isFinite(count) && count >= 0 ? Math.round(count) : 0;
+  }
+
+  function normalizeForecastMilliseconds(value) {
+    const milliseconds = Number(value);
+    return Number.isFinite(milliseconds) && milliseconds > 0
+      ? Math.round(milliseconds)
+      : null;
+  }
+
+  function normalizeLobbyForecast(value = {}) {
+    const source = value || {};
+    const averagesSource = source.last100Averages || {};
+    return {
+      available: Boolean(source.available),
+      sampleSize: normalizeForecastCount(source.sampleSize),
+      etaMinSeconds: normalizeForecastSeconds(source.etaMinSeconds),
+      etaMaxSeconds: normalizeForecastSeconds(source.etaMaxSeconds),
+      hitChanceNext10: normalizeForecastProbability(source.hitChanceNext10),
+      medianLobbiesToMatch:
+        source.medianLobbiesToMatch == null
+          ? null
+          : Math.max(1, normalizeForecastCount(source.medianLobbiesToMatch)),
+      last100Averages: {
+        windowSize: 100,
+        sampleSize: Math.min(100, normalizeForecastCount(averagesSource.sampleSize)),
+        hitRate: normalizeForecastProbability(averagesSource.hitRate),
+        avgLobbyIntervalMs: normalizeForecastMilliseconds(
+          averagesSource.avgLobbyIntervalMs,
+        ),
+        avgLobbiesPerMinute:
+          averagesSource.avgLobbiesPerMinute == null
+            ? null
+            : Number.isFinite(Number(averagesSource.avgLobbiesPerMinute))
+              ? Math.max(0, Number(averagesSource.avgLobbiesPerMinute))
+              : null,
+        etaSeconds: normalizeForecastSeconds(averagesSource.etaSeconds),
+        updatedAt: normalizeActionRequestTimestamp(averagesSource.updatedAt),
+      },
+    };
+  }
+
   function normalizeLanguage(value) {
     const language = String(value || "").trim().toLowerCase();
     return /^[a-z]{2}$/.test(language) ? language : DEFAULT_SETTINGS.language;
@@ -171,6 +246,7 @@
       floatingHelpersPanelHeight: normalizeFloatingHelpersPanelHeight(
         source.floatingHelpersPanelHeight,
       ),
+      lobbyForecast: normalizeLobbyForecast(source.lobbyForecast),
       collapsedHelperCategories: {
         ...DEFAULT_SETTINGS.collapsedHelperCategories,
         ...collapsedHelperCategories,

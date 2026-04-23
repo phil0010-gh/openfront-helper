@@ -232,6 +232,14 @@
     const hasOptionsSelected = popup.hasSelectedOptions();
 
     refs.installNotice.hidden = !state.showInstallNotice;
+    if (refs.versionLabel instanceof HTMLElement) {
+      const runtime = globalThis.chrome?.runtime;
+      const manifestVersion =
+        typeof runtime?.getManifest === "function"
+          ? runtime.getManifest()?.version
+          : "";
+      refs.versionLabel.textContent = manifestVersion ? `v${manifestVersion}` : "";
+    }
     refs.installNotice.querySelector(".install-notice-title").textContent =
       popup.t("One-time setup");
     refs.installNotice.querySelector(".install-notice-text").textContent =
@@ -287,6 +295,82 @@
     popup.syncTimerInterval();
     popup.renderHelperCategoryCollapse();
 
+    if (refs.lobbyForecastPanel instanceof HTMLElement) {
+      const setForecastLoading = (element) => {
+        if (!(element instanceof HTMLElement)) {
+          return;
+        }
+        element.classList.add("forecast-value-loading");
+        element.textContent = "";
+      };
+
+      const setForecastValue = (element, value) => {
+        if (!(element instanceof HTMLElement)) {
+          return;
+        }
+        element.classList.remove("forecast-value-loading");
+        element.textContent = value;
+      };
+
+      const title = refs.lobbyForecastPanel.querySelector(".lobby-forecast-title-text");
+      const rows = refs.lobbyForecastPanel.querySelectorAll(".lobby-forecast-item span");
+      if (title instanceof HTMLElement) {
+        title.textContent = popup.t("Lobby forecast");
+      }
+      if (rows[0] instanceof HTMLElement) {
+        rows[0].textContent = popup.t("ETA (estimate)");
+      }
+      if (rows[1] instanceof HTMLElement) {
+        rows[1].textContent = popup.t("Hit chance next 10 lobbies");
+      }
+      if (rows[2] instanceof HTMLElement) {
+        rows[2].textContent = popup.t("Median to match");
+      }
+
+      const forecast = state.settings.lobbyForecast || {};
+      const hasForecast = Boolean(forecast.available);
+      refs.lobbyForecastPanel.hidden = !hasForecast;
+      if (hasForecast) {
+        if (refs.forecastEtaValue instanceof HTMLElement) {
+          if (
+            Number.isFinite(forecast.etaMinSeconds) &&
+            Number.isFinite(forecast.etaMaxSeconds) &&
+            forecast.etaMinSeconds > 0 &&
+            forecast.etaMaxSeconds > 0
+          ) {
+            setForecastValue(
+              refs.forecastEtaValue,
+              `${popup.formatDurationShort(forecast.etaMinSeconds)} - ${popup.formatDurationShort(forecast.etaMaxSeconds)}`,
+            );
+          } else {
+            setForecastLoading(refs.forecastEtaValue);
+          }
+        }
+
+        if (refs.forecastChanceValue instanceof HTMLElement) {
+          if (Number.isFinite(forecast.hitChanceNext10)) {
+            setForecastValue(
+              refs.forecastChanceValue,
+              `${Math.round(forecast.hitChanceNext10 * 100)}%`,
+            );
+          } else {
+            setForecastLoading(refs.forecastChanceValue);
+          }
+        }
+
+        if (refs.forecastMedianValue instanceof HTMLElement) {
+          if (Number.isFinite(forecast.medianLobbiesToMatch)) {
+            setForecastValue(
+              refs.forecastMedianValue,
+              `${Math.round(forecast.medianLobbiesToMatch)} ${popup.t("lobbies")}`,
+            );
+          } else {
+            setForecastLoading(refs.forecastMedianValue);
+          }
+        }
+      }
+    }
+
     refs.clearMapFiltersButton.disabled =
       !popup.hasSelectedMapFilters() && !popup.hasExcludedMapFilters();
 
@@ -340,6 +424,42 @@
       const input = refs.filtersForm.elements.namedItem(settingName);
       if (input instanceof HTMLInputElement) {
         input.checked = Boolean(state.settings[settingName]);
+      }
+    }
+
+    if (refs.send1PercentBoatToggle instanceof HTMLInputElement) {
+      refs.send1PercentBoatToggle.checked = Boolean(state.settings.send1PercentBoat);
+      refs.send1PercentBoatSubOptions?.classList.toggle("visible", Boolean(state.settings.send1PercentBoat));
+    }
+    if (refs.send1PercentBoatContextMenuToggle instanceof HTMLInputElement) {
+      refs.send1PercentBoatContextMenuToggle.checked = state.settings.send1PercentBoatContextMenu !== false;
+    }
+
+    const cheatsEnabled = Boolean(state.settings.cheatsAvailable);
+    const cheatsHint = popup.t("Only available in solo or custom games.");
+    const cheatsCategory = refs.filtersForm.querySelector(
+      '[data-helper-category-content="cheats"]',
+    );
+    if (cheatsCategory instanceof HTMLElement) {
+      for (const input of cheatsCategory.querySelectorAll('input[type="checkbox"]')) {
+        if (!(input instanceof HTMLInputElement)) {
+          continue;
+        }
+        input.disabled = !cheatsEnabled;
+        input.title = cheatsEnabled ? "" : cheatsHint;
+        const card = input.closest(".toggle-card");
+        if (card instanceof HTMLElement) {
+          card.dataset.disabled = String(!cheatsEnabled);
+          card.title = input.title;
+        }
+      }
+
+      for (const button of cheatsCategory.querySelectorAll("button")) {
+        if (!(button instanceof HTMLButtonElement)) {
+          continue;
+        }
+        button.disabled = !cheatsEnabled;
+        button.title = cheatsEnabled ? button.dataset.infoTitle || "" : cheatsHint;
       }
     }
 

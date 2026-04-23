@@ -13,6 +13,159 @@ function normalizeMapToken(value) {
   return normalizeComparableText(value).replace(/[^a-z0-9]+/g, "");
 }
 
+function isExtensionContextInvalidatedError(error) {
+  return String(error?.message || error || "").includes("Extension context invalidated");
+}
+
+function isExtensionContextAlive() {
+  try {
+    return typeof chrome !== "undefined" && Boolean(chrome.runtime?.id);
+  } catch (_error) {
+    return false;
+  }
+}
+
+const LOBBY_FORECAST_MAX_RATE_SAMPLES = 240;
+const LOBBY_FORECAST_MAX_DISTANCE_SAMPLES = 120;
+const LOBBY_FORECAST_PERSIST_MS = 4000;
+const LOBBY_FORECAST_MODEL_DRAWS = 3500;
+const LOBBY_FORECAST_PRIOR_STRENGTH = 36;
+const LOBBY_FORECAST_MIN_GROUP_SAMPLES_FOR_WEIGHTING = 12;
+const LOBBY_FORECAST_AVERAGE_WINDOW = 100;
+const LOBBY_FORECAST_MIN_MATCH_SAMPLES_FOR_ROLLING = 20;
+
+let lobbyForecastSeenIds = new Set();
+let lobbyForecastNewLobbyTimestamps = [];
+let lobbyForecastDistanceSamples = [];
+let lobbyForecastTotalNew = 0;
+let lobbyForecastMatchedNew = 0;
+let lobbyForecastSinceLastMatch = 0;
+let lobbyForecastNewByGroup = {
+  special: 0,
+  ffa: 0,
+  team: 0,
+};
+let lobbyForecastRecentLobbyIntervalsMs = [];
+let lobbyForecastRecentMatchOutcomes = [];
+let lobbyForecastLastSeenLobbyAt = null;
+let lobbyForecastRecentLobbyCount = 0;
+let lobbyForecastFilterSignature = "";
+let lobbyForecastLastPersistedAt = 0;
+let lobbyForecastLastPersistedPayload = "";
+let lobbyForecastModelCache = {
+  signature: "",
+  values: {
+    special: 0,
+    ffa: 0,
+    team: 0,
+  },
+};
+
+const FORECAST_MAP_FREQUENCY = Object.freeze({
+  africa: 7,
+  asia: 6,
+  australia: 4,
+  achiran: 5,
+  baikal: 5,
+  betweentwoseas: 5,
+  blacksea: 6,
+  britannia: 5,
+  britanniaclassic: 4,
+  deglaciatedantarctica: 4,
+  eastasia: 5,
+  europe: 3,
+  europeclassic: 3,
+  falklandislands: 4,
+  faroeislands: 4,
+  fourislands: 4,
+  gatewaytotheatlantic: 5,
+  gulfofstlawrence: 4,
+  halkidiki: 4,
+  iceland: 4,
+  italia: 6,
+  japan: 6,
+  lisbon: 4,
+  manicouagan: 4,
+  mars: 3,
+  mena: 6,
+  montreal: 6,
+  newyorkcity: 3,
+  northamerica: 5,
+  pangaea: 5,
+  pluto: 6,
+  southamerica: 5,
+  straitofgibraltar: 5,
+  svalmel: 8,
+  world: 20,
+  lemnos: 3,
+  passage: 4,
+  twolakes: 6,
+  straitofhormuz: 4,
+  surrounded: 4,
+  didierfrance: 1,
+  didier: 1,
+  amazonriver: 3,
+  bosphorusstraits: 3,
+  beringstrait: 4,
+  sierpinski: 10,
+  thebox: 3,
+  yenisei: 6,
+  tradersdream: 4,
+  hawaii: 4,
+  alps: 4,
+  niledelta: 4,
+  arctic: 6,
+  sanfrancisco: 3,
+  aegean: 6,
+  milkyway: 8,
+  mediterranean: 6,
+  dyslexdria: 8,
+  greatlakes: 6,
+  straitofmalacca: 4,
+});
+
+const FORECAST_ARCADE_MAP_IDS = new Set(["thebox", "didier", "didierfrance", "sierpinski"]);
+const FORECAST_WATER_NUKES_BOOSTED_MAPS = new Set(["fourislands", "baikal", "alps", "thebox"]);
+const FORECAST_SPECIAL_COUNT_ROLLS = [1, 1, 1, 2, 2, 2, 2, 2, 3, 3];
+const FORECAST_TEAM_WEIGHTS = Object.freeze([
+  { config: 2, weight: 10 },
+  { config: 3, weight: 10 },
+  { config: 4, weight: 10 },
+  { config: 5, weight: 10 },
+  { config: 6, weight: 10 },
+  { config: 7, weight: 10 },
+  { config: "duos", weight: 5 },
+  { config: "trios", weight: 7.5 },
+  { config: "quads", weight: 7.5 },
+  { config: "humansVsNations", weight: 20 },
+]);
+
+const FORECAST_MUTUALLY_EXCLUSIVE_MODIFIERS = Object.freeze([
+  ["startingGold5M", "startingGold25M"],
+  ["startingGold5M", "startingGold1M"],
+  ["startingGold25M", "startingGold1M"],
+  ["isHardNations", "startingGold25M"],
+  ["isNukesDisabled", "isSAMsDisabled"],
+  ["isNukesDisabled", "isWaterNukes"],
+]);
+
+const FORECAST_SPECIAL_MODIFIER_POOL = Object.freeze([
+  ...Array(2).fill("isRandomSpawn"),
+  ...Array(4).fill("isCompact"),
+  ...Array(2).fill("isCrowded"),
+  ...Array(1).fill("isHardNations"),
+  ...Array(3).fill("startingGold1M"),
+  ...Array(5).fill("startingGold5M"),
+  ...Array(1).fill("startingGold25M"),
+  ...Array(4).fill("goldMultiplier"),
+  ...Array(1).fill("isAlliancesDisabled"),
+  ...Array(1).fill("isPortsDisabled"),
+  ...Array(1).fill("isNukesDisabled"),
+  ...Array(1).fill("isSAMsDisabled"),
+  ...Array(1).fill("isPeaceTime"),
+  ...Array(3).fill("isWaterNukes"),
+]);
+
 function addMapTokensFromValue(value, tokens, depth = 0) {
   if (depth > 4 || value == null) {
     return;
@@ -146,6 +299,7 @@ function injectBridge() {
     "page-bridge/nuke-prediction.js",
     "page-bridge/nuke-suggestions.js",
     "page-bridge/boat-prediction.js",
+    "page-bridge/boat-macro.js",
     "page-bridge/heatmaps.js",
     "page-bridge/bootstrap.js",
   ];
@@ -406,6 +560,695 @@ function lobbyMatchesFilters(lobby, groupKey) {
   return selectedStartGoldIncludes.some((key) => modifiers[key] === true);
 }
 
+function hasSelectedCriteria() {
+  return (
+    FILTER_KEYS.some(
+      (key) => settings.includeFilters[key] || settings.excludeFilters[key],
+    ) ||
+    MAP_IDS.some((id) => settings.mapFilters[id] || settings.mapExcludeFilters[id])
+  );
+}
+
+function createForecastFilterSignature() {
+  return JSON.stringify({
+    include: settings.includeFilters,
+    exclude: settings.excludeFilters,
+    mapFilters: settings.mapFilters,
+    mapExcludeFilters: settings.mapExcludeFilters,
+  });
+}
+
+function resetLobbyForecastTracking(knownIds = []) {
+  lobbyForecastSeenIds = new Set(knownIds.filter((id) => id));
+  lobbyForecastNewLobbyTimestamps = [];
+  lobbyForecastDistanceSamples = [];
+  lobbyForecastTotalNew = 0;
+  lobbyForecastMatchedNew = 0;
+  lobbyForecastSinceLastMatch = 0;
+  lobbyForecastNewByGroup = {
+    special: 0,
+    ffa: 0,
+    team: 0,
+  };
+  lobbyForecastLastPersistedAt = 0;
+  lobbyForecastLastPersistedPayload = "";
+}
+
+function updateLast100LobbyAverages(now, matchOutcome = null) {
+  if (Number.isFinite(lobbyForecastLastSeenLobbyAt)) {
+    const intervalMs = Math.max(0, now - lobbyForecastLastSeenLobbyAt);
+    if (intervalMs > 0) {
+      lobbyForecastRecentLobbyIntervalsMs.push(intervalMs);
+      lobbyForecastRecentLobbyIntervalsMs = withForecastWindow(
+        lobbyForecastRecentLobbyIntervalsMs,
+        LOBBY_FORECAST_AVERAGE_WINDOW,
+      );
+    }
+  }
+  lobbyForecastLastSeenLobbyAt = now;
+  lobbyForecastRecentLobbyCount = Math.min(
+    LOBBY_FORECAST_AVERAGE_WINDOW,
+    lobbyForecastRecentLobbyCount + 1,
+  );
+
+  if (typeof matchOutcome === "boolean") {
+    lobbyForecastRecentMatchOutcomes.push(matchOutcome ? 1 : 0);
+    lobbyForecastRecentMatchOutcomes = withForecastWindow(
+      lobbyForecastRecentMatchOutcomes,
+      LOBBY_FORECAST_AVERAGE_WINDOW,
+    );
+  }
+}
+
+function computeLast100LobbyAverages() {
+  const sampleSize = lobbyForecastRecentLobbyCount;
+  const hitSampleSize = lobbyForecastRecentMatchOutcomes.length;
+  const hitCount = lobbyForecastRecentMatchOutcomes.reduce(
+    (sum, value) => sum + value,
+    0,
+  );
+  const hitRate = hitSampleSize > 0 ? hitCount / hitSampleSize : null;
+
+  const intervalSampleSize = lobbyForecastRecentLobbyIntervalsMs.length;
+  const avgLobbyIntervalMs =
+    intervalSampleSize > 0
+      ? Math.round(
+          lobbyForecastRecentLobbyIntervalsMs.reduce(
+            (sum, value) => sum + value,
+            0,
+          ) / intervalSampleSize,
+        )
+      : null;
+  const avgLobbiesPerMinute =
+    Number.isFinite(avgLobbyIntervalMs) && avgLobbyIntervalMs > 0
+      ? 60_000 / avgLobbyIntervalMs
+      : null;
+  const etaLobbies =
+    Number.isFinite(hitRate) && hitRate > 0
+      ? estimateLobbiesUntilMatch(hitRate, 0.5)
+      : null;
+  const etaSeconds =
+    etaLobbies != null &&
+    Number.isFinite(avgLobbyIntervalMs) &&
+    avgLobbyIntervalMs > 0
+      ? Math.max(1, Math.round((etaLobbies * avgLobbyIntervalMs) / 1000))
+      : null;
+
+  return {
+    windowSize: LOBBY_FORECAST_AVERAGE_WINDOW,
+    sampleSize,
+    hitSampleSize,
+    hitRate: Number.isFinite(hitRate) ? hitRate : null,
+    avgLobbyIntervalMs:
+      Number.isFinite(avgLobbyIntervalMs) && avgLobbyIntervalMs > 0
+        ? avgLobbyIntervalMs
+        : null,
+    avgLobbiesPerMinute:
+      Number.isFinite(avgLobbiesPerMinute) && avgLobbiesPerMinute > 0
+        ? avgLobbiesPerMinute
+        : null,
+    etaSeconds,
+    updatedAt: sampleSize > 0 ? Date.now() : null,
+  };
+}
+
+function getForecastMapsForType(type) {
+  const entries = [];
+  for (const map of MAPS) {
+    let weight = Number(FORECAST_MAP_FREQUENCY[map.id] || 0);
+    if (weight <= 0) {
+      continue;
+    }
+    if (type !== "special" && FORECAST_ARCADE_MAP_IDS.has(map.id)) {
+      continue;
+    }
+    if (type === "team" && (map.id === "baikal" || map.id === "fourislands")) {
+      weight *= 2;
+    }
+    entries.push({
+      id: map.id,
+      weight,
+    });
+  }
+  return entries;
+}
+
+function pickWeighted(items) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return null;
+  }
+
+  const total = items.reduce((sum, item) => sum + item.weight, 0);
+  if (!(total > 0)) {
+    return null;
+  }
+
+  let roll = Math.random() * total;
+  for (const item of items) {
+    roll -= item.weight;
+    if (roll <= 0) {
+      return item;
+    }
+  }
+  return items[items.length - 1];
+}
+
+function shuffleInPlace(values) {
+  for (let i = values.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [values[i], values[j]] = [values[j], values[i]];
+  }
+}
+
+function randomTeamConfigForMap(mapId) {
+  if (mapId === "baikal" && Math.random() < 0.75) {
+    return 2;
+  }
+  if (mapId === "fourislands" && Math.random() < 0.75) {
+    return 4;
+  }
+
+  const entry = pickWeighted(FORECAST_TEAM_WEIGHTS);
+  return entry ? entry.config : 2;
+}
+
+function teamConfigToTeamSize(teamConfig) {
+  if (teamConfig === "duos") {
+    return 2;
+  }
+  if (teamConfig === "trios") {
+    return 3;
+  }
+  if (teamConfig === "quads") {
+    return 4;
+  }
+  return typeof teamConfig === "number" ? teamConfig : null;
+}
+
+function getRandomSpecialModifiers(excluded, countReduction = 0) {
+  const excludedSet = new Set(excluded);
+  const rolledCount =
+    FORECAST_SPECIAL_COUNT_ROLLS[
+      Math.floor(Math.random() * FORECAST_SPECIAL_COUNT_ROLLS.length)
+    ];
+  const wantedCount = Math.max(0, rolledCount - countReduction);
+
+  const pool = FORECAST_SPECIAL_MODIFIER_POOL.filter(
+    (key) => !excludedSet.has(key),
+  );
+  shuffleInPlace(pool);
+
+  const selected = new Set();
+  for (const key of pool) {
+    if (selected.size >= wantedCount) {
+      break;
+    }
+
+    const blocked = FORECAST_MUTUALLY_EXCLUSIVE_MODIFIERS.some(
+      ([left, right]) =>
+        (key === left && selected.has(right)) ||
+        (key === right && selected.has(left)),
+    );
+
+    if (!blocked) {
+      selected.add(key);
+    }
+  }
+
+  return {
+    isRandomSpawn: selected.has("isRandomSpawn"),
+    startingGold: selected.has("startingGold25M")
+      ? 25_000_000
+      : selected.has("startingGold5M")
+        ? 5_000_000
+        : selected.has("startingGold1M")
+          ? 1_000_000
+          : 0,
+    goldMultiplier: selected.has("goldMultiplier") ? 2 : 1,
+    isAlliancesDisabled: selected.has("isAlliancesDisabled"),
+  };
+}
+
+function createForecastScenario(type) {
+  const map = pickWeighted(getForecastMapsForType(type));
+  if (!map) {
+    return null;
+  }
+
+  if (type === "ffa") {
+    return {
+      mapId: map.id,
+      ffaLobby: true,
+      duosLobby: false,
+      triosLobby: false,
+      quadsLobby: false,
+      teamsLargerThanTriosLobby: false,
+      startingGold0M: true,
+      randomSpawn: false,
+      alliancesDisabled: false,
+      startingGold5M: false,
+      startingGold25M: false,
+      goldMultiplier2x: false,
+    };
+  }
+
+  if (type === "team") {
+    const teamConfig = randomTeamConfigForMap(map.id);
+    const teamSize = teamConfigToTeamSize(teamConfig);
+    return {
+      mapId: map.id,
+      ffaLobby: false,
+      duosLobby: teamSize === 2,
+      triosLobby: teamSize === 3,
+      quadsLobby: teamSize === 4,
+      teamsLargerThanTriosLobby: teamSize != null && teamSize > 4,
+      startingGold0M: true,
+      randomSpawn: false,
+      alliancesDisabled: false,
+      startingGold5M: false,
+      startingGold25M: false,
+      goldMultiplier2x: false,
+    };
+  }
+
+  const isTeamMode = Math.random() >= 0.5;
+  const teamConfig = isTeamMode ? randomTeamConfigForMap(map.id) : null;
+  const excludedModifiers = [];
+
+  if (teamConfig === "duos" || teamConfig === "trios" || teamConfig === "quads") {
+    excludedModifiers.push("isRandomSpawn");
+  }
+  if (map.id === "fourislands") {
+    excludedModifiers.push("goldMultiplier", "startingGold25M");
+  }
+  if (isTeamMode) {
+    excludedModifiers.push("isHardNations");
+  }
+  if (teamConfig === "humansVsNations") {
+    excludedModifiers.push("startingGold25M", "isPeaceTime");
+  }
+
+  let forcedWaterNukes = false;
+  if (FORECAST_WATER_NUKES_BOOSTED_MAPS.has(map.id) && Math.random() < 0.5) {
+    excludedModifiers.push("isWaterNukes", "isNukesDisabled");
+    forcedWaterNukes = true;
+  }
+
+  const specialModifiers = getRandomSpecialModifiers(
+    excludedModifiers,
+    forcedWaterNukes ? 1 : 0,
+  );
+  const teamSize = teamConfigToTeamSize(teamConfig);
+  const startingGold = specialModifiers.startingGold;
+
+  return {
+    mapId: map.id,
+    ffaLobby: !isTeamMode,
+    duosLobby: isTeamMode && teamSize === 2,
+    triosLobby: isTeamMode && teamSize === 3,
+    quadsLobby: isTeamMode && teamSize === 4,
+    teamsLargerThanTriosLobby: isTeamMode && teamSize != null && teamSize > 4,
+    startingGold0M: startingGold === 0,
+    randomSpawn: specialModifiers.isRandomSpawn,
+    alliancesDisabled: specialModifiers.isAlliancesDisabled,
+    startingGold5M: startingGold === 5_000_000,
+    startingGold25M: startingGold === 25_000_000,
+    goldMultiplier2x: specialModifiers.goldMultiplier === 2,
+  };
+}
+
+function scenarioMatchesFilters(scenario) {
+  if (!scenario || !scenario.mapId) {
+    return false;
+  }
+
+  const includedMapIds = MAP_IDS.filter((id) => settings.mapFilters[id]);
+  const excludedMapIds = MAP_IDS.filter((id) => settings.mapExcludeFilters[id]);
+  if (excludedMapIds.includes(scenario.mapId)) {
+    return false;
+  }
+  if (includedMapIds.length > 0 && !includedMapIds.includes(scenario.mapId)) {
+    return false;
+  }
+
+  const selectedLobbyTypeIncludes = LOBBY_TYPE_FILTER_KEYS.filter(
+    (key) => settings.includeFilters[key],
+  );
+  const selectedLobbyTypeExcludes = LOBBY_TYPE_FILTER_KEYS.filter(
+    (key) => settings.excludeFilters[key],
+  );
+  if (selectedLobbyTypeExcludes.some((key) => scenario[key] === true)) {
+    return false;
+  }
+  if (
+    selectedLobbyTypeIncludes.length > 0 &&
+    !selectedLobbyTypeIncludes.some((key) => scenario[key] === true)
+  ) {
+    return false;
+  }
+
+  const nonStartGoldMatches = FILTER_KEYS.every((key) => {
+    if (START_GOLD_FILTER_KEYS.includes(key) || LOBBY_TYPE_FILTER_KEYS.includes(key)) {
+      return true;
+    }
+    if (settings.includeFilters[key] && !scenario[key]) {
+      return false;
+    }
+    if (settings.excludeFilters[key] && scenario[key]) {
+      return false;
+    }
+    return true;
+  });
+  if (!nonStartGoldMatches) {
+    return false;
+  }
+
+  const selectedStartGoldIncludes = START_GOLD_FILTER_KEYS.filter(
+    (key) => settings.includeFilters[key],
+  );
+  const selectedStartGoldExcludes = START_GOLD_FILTER_KEYS.filter(
+    (key) => settings.excludeFilters[key],
+  );
+  if (selectedStartGoldExcludes.some((key) => scenario[key] === true)) {
+    return false;
+  }
+  if (selectedStartGoldIncludes.length === 0) {
+    return true;
+  }
+  return selectedStartGoldIncludes.some((key) => scenario[key] === true);
+}
+
+function estimateModelHitRateByType(type) {
+  let matches = 0;
+  let total = 0;
+  for (let i = 0; i < LOBBY_FORECAST_MODEL_DRAWS; i += 1) {
+    const scenario = createForecastScenario(type);
+    if (!scenario) {
+      continue;
+    }
+    total += 1;
+    if (scenarioMatchesFilters(scenario)) {
+      matches += 1;
+    }
+  }
+  if (total === 0) {
+    return 0;
+  }
+  return Math.max(0, Math.min(1, matches / total));
+}
+
+function getModelHitRates() {
+  const signature = createForecastFilterSignature();
+  if (lobbyForecastModelCache.signature === signature) {
+    return lobbyForecastModelCache.values;
+  }
+
+  const values = {
+    special: estimateModelHitRateByType("special"),
+    ffa: estimateModelHitRateByType("ffa"),
+    team: estimateModelHitRateByType("team"),
+  };
+  lobbyForecastModelCache = {
+    signature,
+    values,
+  };
+  return values;
+}
+
+function getForecastGroupWeights() {
+  const total =
+    lobbyForecastNewByGroup.special +
+    lobbyForecastNewByGroup.ffa +
+    lobbyForecastNewByGroup.team;
+
+  if (total >= LOBBY_FORECAST_MIN_GROUP_SAMPLES_FOR_WEIGHTING) {
+    return {
+      special: lobbyForecastNewByGroup.special / total,
+      ffa: lobbyForecastNewByGroup.ffa / total,
+      team: lobbyForecastNewByGroup.team / total,
+    };
+  }
+
+  return {
+    special: 1 / 3,
+    ffa: 1 / 3,
+    team: 1 / 3,
+  };
+}
+
+function getModelHitRate() {
+  const modelRates = getModelHitRates();
+  const weights = getForecastGroupWeights();
+  return (
+    modelRates.special * weights.special +
+    modelRates.ffa * weights.ffa +
+    modelRates.team * weights.team
+  );
+}
+
+function withForecastWindow(samples, maxCount) {
+  if (samples.length <= maxCount) {
+    return samples;
+  }
+  return samples.slice(samples.length - maxCount);
+}
+
+function quantile(values, percentile) {
+  if (!Array.isArray(values) || values.length === 0) {
+    return null;
+  }
+
+  const sorted = [...values].sort((a, b) => a - b);
+  const index = Math.max(0, Math.min(sorted.length - 1, Math.floor((sorted.length - 1) * percentile)));
+  return sorted[index];
+}
+
+function estimateLobbiesUntilMatch(p, percentile) {
+  if (!(p > 0 && p < 1)) {
+    return p >= 1 ? 1 : null;
+  }
+
+  const remainingProbability = 1 - percentile;
+  if (!(remainingProbability > 0 && remainingProbability < 1)) {
+    return null;
+  }
+
+  const value = Math.log(remainingProbability) / Math.log(1 - p);
+  return Number.isFinite(value) && value > 0 ? Math.max(1, Math.ceil(value)) : null;
+}
+
+function buildLobbyForecastPayload() {
+  const last100Averages = computeLast100LobbyAverages();
+
+  if (!hasSelectedCriteria()) {
+    return {
+      available: false,
+      sampleSize: lobbyForecastTotalNew,
+      etaMinSeconds: null,
+      etaMaxSeconds: null,
+      hitChanceNext10: null,
+      medianLobbiesToMatch: null,
+      last100Averages,
+    };
+  }
+
+  const modelHitRate = getModelHitRate();
+  const rollingHitRate = last100Averages.hitRate;
+  const rollingSampleSize =
+    Number.isFinite(rollingHitRate) &&
+    last100Averages.hitSampleSize >= LOBBY_FORECAST_MIN_MATCH_SAMPLES_FOR_ROLLING
+    ? last100Averages.sampleSize
+    : 0;
+  const rollingHits = Number.isFinite(rollingHitRate)
+    ? rollingHitRate * rollingSampleSize
+    : 0;
+  const sessionSampleSize = rollingSampleSize === 0 ? lobbyForecastTotalNew : 0;
+  const sessionHits = rollingSampleSize === 0 ? lobbyForecastMatchedNew : 0;
+  const posteriorHitRate =
+    (rollingHits + sessionHits + modelHitRate * LOBBY_FORECAST_PRIOR_STRENGTH) /
+    (rollingSampleSize + sessionSampleSize + LOBBY_FORECAST_PRIOR_STRENGTH);
+  const hitRate = Math.max(0, Math.min(1, posteriorHitRate));
+  const etaHitRate = hitRate > 0 ? hitRate : Math.max(modelHitRate, 1 / LOBBY_FORECAST_MODEL_DRAWS);
+  const hitChanceNext10 = 1 - (1 - hitRate) ** 10;
+
+  const medianEmpirical = quantile(lobbyForecastDistanceSamples, 0.5);
+  const medianModel = estimateLobbiesUntilMatch(etaHitRate, 0.5);
+  const medianLobbiesToMatch = medianEmpirical ?? medianModel;
+  const minLobbiesEmpirical = quantile(lobbyForecastDistanceSamples, 0.25);
+  const maxLobbiesEmpirical = quantile(lobbyForecastDistanceSamples, 0.75);
+  const minLobbiesModel = estimateLobbiesUntilMatch(etaHitRate, 0.25);
+  const maxLobbiesModel = estimateLobbiesUntilMatch(etaHitRate, 0.75);
+  const minLobbies = minLobbiesEmpirical ?? minLobbiesModel;
+  const maxLobbies = maxLobbiesEmpirical ?? maxLobbiesModel;
+
+  let etaMinSeconds = null;
+  let etaMaxSeconds = null;
+  let lobbiesPerSecond = null;
+  if (lobbyForecastNewLobbyTimestamps.length >= 2) {
+    const firstSeen = lobbyForecastNewLobbyTimestamps[0];
+    const lastSeen =
+      lobbyForecastNewLobbyTimestamps[lobbyForecastNewLobbyTimestamps.length - 1];
+    const durationMs = Math.max(1, lastSeen - firstSeen);
+    lobbiesPerSecond =
+      (lobbyForecastNewLobbyTimestamps.length - 1) / (durationMs / 1000);
+  } else if (
+    Number.isFinite(last100Averages.avgLobbyIntervalMs) &&
+    last100Averages.avgLobbyIntervalMs > 0
+  ) {
+    lobbiesPerSecond = 1000 / last100Averages.avgLobbyIntervalMs;
+  }
+
+  if (lobbiesPerSecond > 0) {
+    etaMinSeconds =
+      minLobbies != null ? Math.max(1, Math.round(minLobbies / lobbiesPerSecond)) : null;
+    etaMaxSeconds =
+      maxLobbies != null ? Math.max(1, Math.round(maxLobbies / lobbiesPerSecond)) : null;
+  }
+
+  return {
+    available: true,
+    sampleSize: lobbyForecastTotalNew,
+    etaMinSeconds:
+      Number.isFinite(etaMinSeconds) && etaMinSeconds > 0
+        ? etaMinSeconds
+        : null,
+    etaMaxSeconds:
+      Number.isFinite(etaMaxSeconds) && etaMaxSeconds > 0
+        ? etaMaxSeconds
+        : null,
+    hitChanceNext10: Number.isFinite(hitChanceNext10) ? hitChanceNext10 : null,
+    medianLobbiesToMatch:
+      medianLobbiesToMatch != null ? Math.max(1, Math.round(medianLobbiesToMatch)) : null,
+    last100Averages,
+  };
+}
+
+function persistLobbyForecast(force = false) {
+  if (!isExtensionContextAlive()) {
+    return;
+  }
+
+  let payload;
+  let serialized;
+  try {
+    payload = buildLobbyForecastPayload();
+    serialized = JSON.stringify(payload);
+  } catch (error) {
+    if (isExtensionContextInvalidatedError(error)) {
+      return;
+    }
+    console.error("Failed to build lobby forecast payload:", error);
+    return;
+  }
+
+  if (!force && serialized === lobbyForecastLastPersistedPayload) {
+    return;
+  }
+
+  const now = Date.now();
+  if (!force && now - lobbyForecastLastPersistedAt < LOBBY_FORECAST_PERSIST_MS) {
+    return;
+  }
+
+  lobbyForecastLastPersistedAt = now;
+  lobbyForecastLastPersistedPayload = serialized;
+  (async () => {
+    try {
+      if (!isExtensionContextAlive()) {
+        return;
+      }
+
+      const stored = await chrome.storage.local.get(STORAGE_KEY);
+      if (!isExtensionContextAlive()) {
+        return;
+      }
+
+      const freshestSettings = normalizeSettings(stored[STORAGE_KEY]);
+      await chrome.storage.local.set({
+        [STORAGE_KEY]: {
+          ...freshestSettings,
+          lobbyForecast: payload,
+        },
+      });
+    } catch (error) {
+      if (isExtensionContextInvalidatedError(error)) {
+        return;
+      }
+      console.error("Failed to persist lobby forecast:", error);
+    }
+  })().catch((error) => {
+    if (isExtensionContextInvalidatedError(error)) {
+      return;
+    }
+    console.error("Failed to persist lobby forecast:", error);
+  });
+}
+
+function updateLobbyForecast(snapshot) {
+  if (!isExtensionContextAlive()) {
+    return;
+  }
+
+  const currentFilterSignature = createForecastFilterSignature();
+  const criteriaSelected = hasSelectedCriteria();
+  const lobbies = flattenLobbies(snapshot);
+  const currentIds = lobbies
+    .map(({ lobby }) => String(lobby?.gameID || ""))
+    .filter(Boolean);
+
+  if (lobbyForecastFilterSignature !== currentFilterSignature) {
+    lobbyForecastFilterSignature = currentFilterSignature;
+    lobbyForecastRecentMatchOutcomes = [];
+    resetLobbyForecastTracking(currentIds);
+    persistLobbyForecast(true);
+    return;
+  }
+
+  const now = Date.now();
+  for (const { lobby, groupKey } of lobbies) {
+    const gameID = String(lobby?.gameID || "");
+    if (!gameID || lobbyForecastSeenIds.has(gameID)) {
+      continue;
+    }
+
+    lobbyForecastSeenIds.add(gameID);
+    if (!criteriaSelected) {
+      updateLast100LobbyAverages(now, null);
+      continue;
+    }
+
+    lobbyForecastTotalNew += 1;
+    lobbyForecastSinceLastMatch += 1;
+    if (groupKey === "special" || groupKey === "ffa" || groupKey === "team") {
+      lobbyForecastNewByGroup[groupKey] += 1;
+    }
+    lobbyForecastNewLobbyTimestamps.push(now);
+    lobbyForecastNewLobbyTimestamps = withForecastWindow(
+      lobbyForecastNewLobbyTimestamps,
+      LOBBY_FORECAST_MAX_RATE_SAMPLES,
+    );
+
+    const isMatch = lobbyMatchesFilters(lobby, groupKey);
+    updateLast100LobbyAverages(now, isMatch);
+
+    if (isMatch) {
+      lobbyForecastMatchedNew += 1;
+      lobbyForecastDistanceSamples.push(lobbyForecastSinceLastMatch);
+      lobbyForecastDistanceSamples = withForecastWindow(
+        lobbyForecastDistanceSamples,
+        LOBBY_FORECAST_MAX_DISTANCE_SAMPLES,
+      );
+      lobbyForecastSinceLastMatch = 0;
+    }
+  }
+
+  if (!criteriaSelected) {
+    lobbyForecastRecentMatchOutcomes = [];
+  }
+
+  persistLobbyForecast();
+}
+
 function flattenLobbies(snapshot) {
   const groups = snapshot?.games;
   if (!groups || typeof groups !== "object") {
@@ -459,17 +1302,53 @@ function ensureJoinAlertAudio() {
   return joinAlertAudio;
 }
 
-function playJoinAlert() {
-  if (hasCustomNotificationSound) {
-    return; // custom sound plays in the game-found popup
+function ensureCustomJoinAlertAudio() {
+  if (!customNotificationSoundData) {
+    customJoinAlertAudio = null;
+    return null;
   }
+
+  if (customJoinAlertAudio?.src === customNotificationSoundData) {
+    return customJoinAlertAudio;
+  }
+
+  customJoinAlertAudio = new Audio(customNotificationSoundData);
+  customJoinAlertAudio.preload = "auto";
+  return customJoinAlertAudio;
+}
+
+function tryPlayAudio(audio, onFailure) {
+  if (!audio) {
+    return false;
+  }
+
   try {
-    const audio = ensureJoinAlertAudio();
     audio.currentTime = 0;
     const playPromise = audio.play();
     if (playPromise && typeof playPromise.catch === "function") {
-      playPromise.catch(() => {});
+      playPromise.catch(() => {
+        onFailure?.();
+      });
     }
+    return true;
+  } catch (_error) {
+    onFailure?.();
+    return false;
+  }
+}
+
+function playJoinAlert() {
+  if (
+    hasCustomNotificationSound &&
+    tryPlayAudio(ensureCustomJoinAlertAudio(), () => {
+      tryPlayAudio(ensureJoinAlertAudio());
+    })
+  ) {
+    return;
+  }
+
+  try {
+    tryPlayAudio(ensureJoinAlertAudio());
   } catch (_error) {
     // Ignore audio playback failures caused by browser autoplay rules.
   }
@@ -495,15 +1374,23 @@ async function requestJoin(lobby) {
 
   lobbyCooldowns.set(lobby.gameID, Date.now() + LOBBY_RETRY_COOLDOWN_MS);
 
+  let notificationWindowRequested = false;
   if (settings.joinNotification) {
-    chrome.runtime.sendMessage({
-      type: "SHOW_JOIN_NOTIFICATION",
-      gameID: lobby.gameID,
-    }).catch(() => {});
+    try {
+      await chrome.runtime.sendMessage({
+        type: "SHOW_JOIN_NOTIFICATION",
+        gameID: lobby.gameID,
+      });
+      notificationWindowRequested = true;
+    } catch (_error) {
+      notificationWindowRequested = false;
+    }
   }
 
   await disableAutoJoin();
-  playJoinAlert();
+  if (!settings.joinNotification || !notificationWindowRequested) {
+    playJoinAlert();
+  }
 
   window.postMessage(
     {
@@ -548,12 +1435,25 @@ function handleBridgeMessage(event) {
 
   if (data.type === "PUBLIC_LOBBIES_UPDATE") {
     latestLobbySnapshot = data.payload;
-    tryAutoJoin();
+    try {
+      updateLobbyForecast(latestLobbySnapshot);
+      tryAutoJoin();
+    } catch (error) {
+      if (isExtensionContextInvalidatedError(error)) {
+        return;
+      }
+      throw error;
+    }
     return;
   }
 
   if (data.type === "SELECTIVE_TRADE_POLICY_AVAILABILITY") {
     updateAutoCancelDeniedTradesAvailability(data.payload?.available);
+    return;
+  }
+
+  if (data.type === "CHEATS_AVAILABILITY") {
+    updateCheatsAvailability(data.payload?.available);
   }
 }
 
@@ -563,16 +1463,31 @@ async function handleStorageChange(changes, areaName) {
   }
 
   const previousLanguage = settings.language;
+  const previousForecastSignature = createForecastFilterSignature();
   settings = normalizeSettings(changes[STORAGE_KEY].newValue);
   if (settings.language !== previousLanguage) {
     await loadContentTranslations();
     document.getElementById(FLOATING_HELPERS_PANEL_ID)?.remove();
   }
   selectiveTradePolicyAvailable = Boolean(settings.autoCancelDeniedTradesAvailable);
+  cheatsAvailable = Boolean(settings.cheatsAvailable);
   syncHelpers();
   syncFloatingHelpersPanel();
   if (!settings.enabled) {
     pendingJoin = null;
+  }
+  const nextForecastSignature = createForecastFilterSignature();
+  if (nextForecastSignature !== previousForecastSignature) {
+    lobbyForecastFilterSignature = nextForecastSignature;
+    lobbyForecastRecentMatchOutcomes = [];
+    resetLobbyForecastTracking(
+      latestLobbySnapshot
+        ? flattenLobbies(latestLobbySnapshot)
+            .map(({ lobby }) => String(lobby?.gameID || ""))
+            .filter(Boolean)
+        : [],
+    );
+    persistLobbyForecast(true);
   }
   tryAutoJoin();
 }
@@ -584,12 +1499,26 @@ async function init() {
   chrome.storage.onChanged.addListener(handleStorageChange);
   chrome.storage.onChanged.addListener((changes) => {
     if ("joinNotificationSoundData" in changes) {
-      hasCustomNotificationSound = Boolean(changes.joinNotificationSoundData.newValue);
+      customNotificationSoundData =
+        typeof changes.joinNotificationSoundData.newValue === "string"
+          ? changes.joinNotificationSoundData.newValue
+          : null;
+      hasCustomNotificationSound = Boolean(customNotificationSoundData);
+      if (!hasCustomNotificationSound) {
+        customJoinAlertAudio = null;
+      }
     }
   });
   await loadSettings();
+  lobbyForecastFilterSignature = createForecastFilterSignature();
+  resetLobbyForecastTracking();
+  persistLobbyForecast(true);
   const soundStore = await chrome.storage.local.get("joinNotificationSoundData");
-  hasCustomNotificationSound = Boolean(soundStore.joinNotificationSoundData);
+  customNotificationSoundData =
+    typeof soundStore.joinNotificationSoundData === "string"
+      ? soundStore.joinNotificationSoundData
+      : null;
+  hasCustomNotificationSound = Boolean(customNotificationSoundData);
   window.addEventListener("resize", () => {
     const panel = document.getElementById(FLOATING_HELPERS_PANEL_ID);
     if (panel) {
@@ -597,6 +1526,7 @@ async function init() {
     }
   });
   ensureJoinAlertAudio();
+  ensureCustomJoinAlertAudio();
   tryAutoJoin();
   window.setInterval(resetPendingJoinIfExpired, 1000);
 }
