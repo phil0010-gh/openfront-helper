@@ -193,20 +193,24 @@
     return points;
   }
 
-  function isEnemyBoatUnit(game, unit) {
+  function getBoatPredictionRelation(game, unit) {
     const owner = unit?.owner?.();
-    const myPlayer = game?.myPlayer?.();
-    if (!owner?.isPlayer?.() || !myPlayer?.isPlayer?.()) {
-      return false;
+    const relation = getPlayerRelationToMyPlayer(game, owner);
+    return relation === "enemy" || relation === "ally" ? relation : null;
+  }
+
+  function getBoatPredictionColors(relation, targeting) {
+    if (relation === "ally") {
+      return {
+        color: "rgba(74, 222, 128, 0.95)",
+        bg: "rgba(20, 83, 45, 0.2)",
+      };
     }
-    if (owner.smallID?.() === myPlayer.smallID?.()) {
-      return false;
-    }
-    try {
-      return !owner.isFriendly?.(myPlayer) && !myPlayer.isFriendly?.(owner);
-    } catch (_error) {
-      return true;
-    }
+
+    return {
+      color: targeting ? "rgba(248, 113, 113, 0.95)" : "rgba(250, 204, 21, 0.95)",
+      bg: targeting ? "rgba(127, 29, 29, 0.22)" : "rgba(113, 90, 0, 0.18)",
+    };
   }
 
   function isBoatTargetingMyPlayer(game, targetTile) {
@@ -303,7 +307,12 @@
     const transportHoverData = [];
 
     for (const unit of context.game.units(...BOAT_UNIT_TYPES)) {
-      if (!unit?.isActive?.() || !isEnemyBoatUnit(context.game, unit)) {
+      if (!unit?.isActive?.()) {
+        continue;
+      }
+
+      const relation = getBoatPredictionRelation(context.game, unit);
+      if (!relation) {
         continue;
       }
 
@@ -326,9 +335,9 @@
       }
 
       const targeting = isBoatTargetingMyPlayer(context.game, targetTile);
-      const color = targeting ? "rgba(248, 113, 113, 0.95)" : "rgba(250, 204, 21, 0.95)";
-      const bg = targeting ? "rgba(127, 29, 29, 0.22)" : "rgba(113, 90, 0, 0.18)";
-      const labelText = `${targeting ? "Landing!" : "Landing"} · ${getBoatOwnerLabel(unit)}`;
+      const { color, bg } = getBoatPredictionColors(relation, targeting);
+      const labelPrefix = relation === "ally" ? "Ally landing" : targeting ? "Landing!" : "Landing";
+      const labelText = `${labelPrefix} · ${getBoatOwnerLabel(unit)}`;
 
       const unitId = String(unit.id?.() ?? `${screenPos.worldX}:${screenPos.worldY}`);
       const motionPlanUnitId = Number(unit.id?.());

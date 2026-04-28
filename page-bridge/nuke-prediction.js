@@ -23,12 +23,12 @@
         top: var(--nuke-y);
         width: var(--nuke-diameter);
         height: var(--nuke-diameter);
-        border: 2px dashed rgba(248, 113, 113, 0.92);
+        border: 2px dashed var(--nuke-color, rgba(248, 113, 113, 0.92));
         border-radius: 50%;
-        background: rgba(127, 29, 29, 0.18);
+        background: var(--nuke-bg, rgba(127, 29, 29, 0.18));
         box-shadow:
-          0 0 18px rgba(248, 113, 113, 0.36),
-          inset 0 0 24px rgba(248, 113, 113, 0.18);
+          0 0 18px var(--nuke-glow, rgba(248, 113, 113, 0.36)),
+          inset 0 0 24px var(--nuke-inner-glow, rgba(248, 113, 113, 0.18));
         transform: translate(-50%, -50%);
       }
 
@@ -38,8 +38,8 @@
         position: absolute;
         left: 50%;
         top: 50%;
-        background: rgba(254, 202, 202, 0.94);
-        box-shadow: 0 0 10px rgba(248, 113, 113, 0.6);
+        background: var(--nuke-cross-color, rgba(254, 202, 202, 0.94));
+        box-shadow: 0 0 10px var(--nuke-cross-glow, rgba(248, 113, 113, 0.6));
         transform: translate(-50%, -50%);
       }
 
@@ -58,10 +58,10 @@
         left: var(--nuke-x);
         top: calc(var(--nuke-y) - var(--nuke-radius) - 10px);
         padding: 4px 8px;
-        border: 1px solid rgba(248, 113, 113, 0.52);
+        border: 1px solid var(--nuke-label-border, rgba(248, 113, 113, 0.52));
         border-radius: 8px;
         background: rgba(7, 12, 18, 0.86);
-        color: #fecaca;
+        color: var(--nuke-label-color, #fecaca);
         font: 900 11px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         letter-spacing: 0;
         text-shadow: 0 1px 4px rgba(0, 0, 0, 0.92);
@@ -85,20 +85,36 @@
     return container;
   }
 
-  function isEnemyNukeUnit(game, unit) {
+  function getNukePredictionRelation(game, unit) {
     const owner = unit?.owner?.();
-    const myPlayer = game?.myPlayer?.();
-    if (!owner?.isPlayer?.() || !myPlayer?.isPlayer?.()) {
-      return false;
+    const relation = getPlayerRelationToMyPlayer(game, owner);
+    return relation === "enemy" || relation === "ally" ? relation : null;
+  }
+
+  function getNukePredictionColors(relation) {
+    if (relation === "ally") {
+      return {
+        color: "rgba(74, 222, 128, 0.92)",
+        bg: "rgba(20, 83, 45, 0.18)",
+        glow: "rgba(74, 222, 128, 0.36)",
+        innerGlow: "rgba(74, 222, 128, 0.18)",
+        crossColor: "rgba(187, 247, 208, 0.94)",
+        crossGlow: "rgba(74, 222, 128, 0.6)",
+        labelBorder: "rgba(74, 222, 128, 0.52)",
+        labelColor: "#bbf7d0",
+      };
     }
-    if (owner.smallID?.() === myPlayer.smallID?.()) {
-      return false;
-    }
-    try {
-      return !owner.isFriendly?.(myPlayer) && !myPlayer.isFriendly?.(owner);
-    } catch (_error) {
-      return true;
-    }
+
+    return {
+      color: "rgba(248, 113, 113, 0.92)",
+      bg: "rgba(127, 29, 29, 0.18)",
+      glow: "rgba(248, 113, 113, 0.36)",
+      innerGlow: "rgba(248, 113, 113, 0.18)",
+      crossColor: "rgba(254, 202, 202, 0.94)",
+      crossGlow: "rgba(248, 113, 113, 0.6)",
+      labelBorder: "rgba(248, 113, 113, 0.52)",
+      labelColor: "#fecaca",
+    };
   }
 
   function getNukeLandingRadius(game, unit) {
@@ -149,9 +165,14 @@
       return;
     }
 
-    const activeIds = new Set();
+    const landings = new Map();
     for (const unit of context.game.units(...NUKE_UNIT_TYPES)) {
-      if (!unit?.isActive?.() || !isEnemyNukeUnit(context.game, unit)) {
+      if (!unit?.isActive?.()) {
+        continue;
+      }
+
+      const relation = getNukePredictionRelation(context.game, unit);
+      if (!relation) {
         continue;
       }
 
@@ -180,28 +201,6 @@
         continue;
       }
 
-      const unitId = String(unit.id?.() ?? targetTile);
-      activeIds.add(unitId);
-      let zone = container.querySelector(
-        `.openfront-helper-nuke-zone[data-nuke-id="${escapeCssIdentifier(unitId)}"]`,
-      );
-      if (!zone) {
-        zone = document.createElement("div");
-        zone.className = "openfront-helper-nuke-zone";
-        zone.dataset.nukeId = unitId;
-        container.appendChild(zone);
-      }
-
-      let label = container.querySelector(
-        `.openfront-helper-nuke-label[data-nuke-id="${escapeCssIdentifier(unitId)}"]`,
-      );
-      if (!label) {
-        label = document.createElement("div");
-        label.className = "openfront-helper-nuke-label";
-        label.dataset.nukeId = unitId;
-        container.appendChild(label);
-      }
-
       const radius = Math.max(
         12,
         getNukeLandingScreenRadius(
@@ -210,14 +209,65 @@
           getNukeLandingRadius(context.game, unit),
         ),
       );
-      zone.style.setProperty("--nuke-x", `${screenPos.x}px`);
-      zone.style.setProperty("--nuke-y", `${screenPos.y}px`);
-      zone.style.setProperty("--nuke-radius", `${radius}px`);
-      zone.style.setProperty("--nuke-diameter", `${radius * 2}px`);
-      label.style.setProperty("--nuke-x", `${screenPos.x}px`);
-      label.style.setProperty("--nuke-y", `${screenPos.y}px`);
-      label.style.setProperty("--nuke-radius", `${radius}px`);
-      label.textContent = "Enemy nuke";
+      const landingId = `tile-${targetTile}`;
+      const landing = landings.get(landingId);
+      if (landing) {
+        landing.count += 1;
+        landing.radius = Math.max(landing.radius, radius);
+        if (landing.relation !== "enemy") {
+          landing.relation = relation;
+        }
+      } else {
+        landings.set(landingId, {
+          count: 1,
+          radius,
+          relation,
+          screenPos,
+        });
+      }
+    }
+
+    const activeIds = new Set();
+    for (const [landingId, landing] of landings) {
+      activeIds.add(landingId);
+      let zone = container.querySelector(
+        `.openfront-helper-nuke-zone[data-nuke-id="${escapeCssIdentifier(landingId)}"]`,
+      );
+      if (!zone) {
+        zone = document.createElement("div");
+        zone.className = "openfront-helper-nuke-zone";
+        zone.dataset.nukeId = landingId;
+        container.appendChild(zone);
+      }
+
+      let label = container.querySelector(
+        `.openfront-helper-nuke-label[data-nuke-id="${escapeCssIdentifier(landingId)}"]`,
+      );
+      if (!label) {
+        label = document.createElement("div");
+        label.className = "openfront-helper-nuke-label";
+        label.dataset.nukeId = landingId;
+        container.appendChild(label);
+      }
+
+      const colors = getNukePredictionColors(landing.relation);
+      zone.style.setProperty("--nuke-x", `${landing.screenPos.x}px`);
+      zone.style.setProperty("--nuke-y", `${landing.screenPos.y}px`);
+      zone.style.setProperty("--nuke-radius", `${landing.radius}px`);
+      zone.style.setProperty("--nuke-diameter", `${landing.radius * 2}px`);
+      zone.style.setProperty("--nuke-color", colors.color);
+      zone.style.setProperty("--nuke-bg", colors.bg);
+      zone.style.setProperty("--nuke-glow", colors.glow);
+      zone.style.setProperty("--nuke-inner-glow", colors.innerGlow);
+      zone.style.setProperty("--nuke-cross-color", colors.crossColor);
+      zone.style.setProperty("--nuke-cross-glow", colors.crossGlow);
+      label.style.setProperty("--nuke-x", `${landing.screenPos.x}px`);
+      label.style.setProperty("--nuke-y", `${landing.screenPos.y}px`);
+      label.style.setProperty("--nuke-radius", `${landing.radius}px`);
+      label.style.setProperty("--nuke-label-border", colors.labelBorder);
+      label.style.setProperty("--nuke-label-color", colors.labelColor);
+      const labelPrefix = landing.relation === "ally" ? "Ally nuke" : "Enemy nuke";
+      label.textContent = landing.count > 1 ? `${labelPrefix} ${landing.count}x` : labelPrefix;
     }
 
     for (const marker of container.querySelectorAll("[data-nuke-id]")) {

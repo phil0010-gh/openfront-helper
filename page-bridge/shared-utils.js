@@ -38,6 +38,34 @@ function getPlayerDisplayName(player) {
   }
 }
 
+function getPlayerRelationToMyPlayer(game, player) {
+  let myPlayer = null;
+  try {
+    myPlayer = game?.myPlayer?.();
+    if (!player?.isPlayer?.() || !myPlayer?.isPlayer?.()) {
+      return null;
+    }
+  } catch (_error) {
+    return null;
+  }
+
+  const playerId = getPlayerSmallId(player, NaN);
+  const myPlayerId = getPlayerSmallId(myPlayer, NaN);
+  if (Number.isFinite(playerId) && playerId === myPlayerId) {
+    return "self";
+  }
+
+  try {
+    if (player.isFriendly?.(myPlayer) || myPlayer.isFriendly?.(player)) {
+      return "ally";
+    }
+  } catch (_error) {
+    return "enemy";
+  }
+
+  return "enemy";
+}
+
 function getPlayerTeamName(player) {
   try {
     const team = player?.team?.();
