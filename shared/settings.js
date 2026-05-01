@@ -45,17 +45,17 @@
     enabled: false,
     searchStartedAt: null,
     joinNotification: false,
+    minLobbySize: null,
     markBotNationsRed: false,
     showGoldPerMinute: false,
     showTeamGoldPerMinute: false,
     showTopGoldPerMinute: false,
     markHoveredAlliesGreen: false,
+    showAllianceRequestsPanel: false,
     showTradeBalances: false,
     selectiveTradePolicyEnabled: false,
     autoCancelDeniedTradesAvailable: false,
     cheatsAvailable: false,
-    fpsSaver: false,
-    showAttackAmounts: false,
     showNukePrediction: false,
     showNukeSuggestions: false,
     showBoatPrediction: false,
@@ -138,6 +138,14 @@
   function normalizeActionRequestTimestamp(value) {
     const timestamp = Number(value);
     return Number.isFinite(timestamp) && timestamp > 0 ? timestamp : null;
+  }
+
+  function normalizeMinLobbySize(value) {
+    if (value == null || value === "") {
+      return null;
+    }
+    const size = Number(value);
+    return Number.isFinite(size) && size > 0 ? Math.min(100, Math.floor(size)) : null;
   }
 
   function normalizeSearchStartedAt(rawSettings, ensureActiveSearchTimestamp) {
@@ -240,6 +248,7 @@
         source,
         ensureActiveSearchTimestamp,
       ),
+      minLobbySize: normalizeMinLobbySize(source.minLobbySize),
       floatingHelpersPanelPosition: normalizeFloatingHelpersPanelPosition(
         floatingHelpersPanelPosition,
       ),
@@ -293,6 +302,7 @@
     DEFAULT_SETTINGS,
     createDefaultMapFilters,
     normalizeSettings,
+    normalizeMinLobbySize,
     normalizeLanguage,
     normalizeMapFilters,
     normalizeEconomyHeatmapIntensity,

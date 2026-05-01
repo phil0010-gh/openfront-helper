@@ -92,18 +92,20 @@
             </div>
           </div>
         </div>
-        <a
-          class="discord-link"
-          href="https://discord.gg/6WFy4NQ9jy"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Join our Discord"
-        >
-          <svg class="discord-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M20.3 4.5A16.6 16.6 0 0 0 16.2 3l-.2.4a12.7 12.7 0 0 1 3.6 1.8 13.6 13.6 0 0 0-10.4 0 12.7 12.7 0 0 1 3.6-1.8L12.6 3a16.6 16.6 0 0 0-4.1 1.5C5.9 8.4 5.2 12.2 5.6 16a16.7 16.7 0 0 0 5.1 2.6l.6-1a10.7 10.7 0 0 1-1.6-.8l.4-.3a11.9 11.9 0 0 0 10.6 0l.4.3a10.7 10.7 0 0 1-1.6.8l.6 1a16.7 16.7 0 0 0 5.1-2.6c.5-4.4-.8-8.1-2.9-11.5ZM11 13.7c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Zm6.4 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Z"></path>
-          </svg>
-          <span>Join our Discord</span>
-        </a>
+        <div class="discord-callout" aria-hidden="false">
+          <a
+            class="discord-link"
+            href="https://discord.gg/6WFy4NQ9jy"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Join our Discord"
+          >
+            <svg class="discord-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M20.3 4.5A16.6 16.6 0 0 0 16.2 3l-.2.4a12.7 12.7 0 0 1 3.6 1.8 13.6 13.6 0 0 0-10.4 0 12.7 12.7 0 0 1 3.6-1.8L12.6 3a16.6 16.6 0 0 0-4.1 1.5C5.9 8.4 5.2 12.2 5.6 16a16.7 16.7 0 0 0 5.1 2.6l.6-1a10.7 10.7 0 0 1-1.6-.8l.4-.3a11.9 11.9 0 0 0 10.6 0l.4.3a10.7 10.7 0 0 1-1.6.8l.6 1a16.7 16.7 0 0 0 5.1-2.6c.5-4.4-.8-8.1-2.9-11.5ZM11 13.7c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Zm6.4 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Z"></path>
+            </svg>
+            <span>Join our Discord</span>
+          </a>
+        </div>
       </header>
 
       <section id="installNotice" class="install-notice" hidden>
@@ -180,25 +182,22 @@
                 aria-label="Show alliances preview"
               >i</button>
             </label>
-            <label class="filter-card toggle-card">
+            <label class="filter-card toggle-card helper-alliance-request-card">
               <span class="filter-main">
-                <input type="checkbox" name="fpsSaver">
+                <input type="checkbox" name="showAllianceRequestsPanel">
                 <span class="filter-dot"></span>
                 <span class="filter-copy">
-                  <strong>FPS Saver <span class="helper-option-icon helper-option-icon-fps" aria-hidden="true">💥</span></strong>
-                  <small>Disables nuke explosion animations to reduce lag.</small>
+                  <strong>Alliance requests panel <span class="helper-option-icon helper-option-icon-alliance" aria-hidden="true">🤝</span></strong>
+                  <small>Moves alliance requests and renewal prompts into a separate right-side window.</small>
                 </span>
               </span>
-            </label>
-            <label class="filter-card toggle-card">
-              <span class="filter-main">
-                <input type="checkbox" name="showAttackAmounts">
-                <span class="filter-dot"></span>
-                <span class="filter-copy">
-                  <strong>Attack amounts <span class="helper-option-icon helper-option-icon-attack" aria-hidden="true">⚔️</span></strong>
-                  <small>Shows how many troops a player attacks with.</small>
-                </span>
-              </span>
+              <button
+                class="helper-info-button"
+                type="button"
+                data-info-title="Alliance requests panel"
+                data-info-image="assets/info-images/alliance_requests_info.png"
+                aria-label="Show alliances preview"
+              >i</button>
             </label>
             <label class="filter-card toggle-card">
               <span class="filter-main">
@@ -226,6 +225,13 @@
                   <small>Shows enemy boat landing points. Red = targeting you, yellow = targeting others.</small>
                 </span>
               </span>
+              <button
+                class="helper-info-button"
+                type="button"
+                data-info-title="Boat prediction"
+                data-info-image="assets/info-images/boat_prediction_info.png"
+                aria-label="Boat prediction"
+              >i</button>
             </label>
             
 
@@ -424,7 +430,6 @@
             </span>
             <span class="notif-toggle-label">Game found notification popup</span>
           </label>
-
           <p id="statusText" class="status-text"></p>
           <div id="searchTimer" class="search-timer" aria-live="polite" hidden>
             <span class="search-radar" aria-hidden="true"></span>
@@ -587,6 +592,23 @@
                 <button class="exclude-button" type="button" data-filter="startingGold25M">Exclude</button>
               </label>
             </section>
+
+            <label class="autojoin-number-card" for="minLobbySizeInput">
+              <span class="autojoin-number-copy">
+                <strong>Min lobby size</strong>
+                <small>Only join lobbies whose max player count is greater than this number.</small>
+              </span>
+              <input
+                id="minLobbySizeInput"
+                name="minLobbySize"
+                type="number"
+                min="1"
+                max="100"
+                step="1"
+                inputmode="numeric"
+                placeholder="0"
+              >
+            </label>
 
             <aside class="map-filter-panel" aria-labelledby="mapFilterTitle">
               <div class="map-filter-head">

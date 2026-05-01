@@ -116,6 +116,19 @@ function syncHoveredAlliesHelper() {
   );
 }
 
+function syncAllianceRequestsPanelHelper() {
+  window.postMessage(
+    {
+      source: BRIDGE_SOURCE_EXTENSION,
+      type: "SHOW_ALLIANCE_REQUESTS_PANEL",
+      payload: {
+        enabled: Boolean(settings.showAllianceRequestsPanel),
+      },
+    },
+    "*",
+  );
+}
+
 function syncTradeBalancesHelper() {
   window.postMessage(
     {
@@ -123,32 +136,6 @@ function syncTradeBalancesHelper() {
       type: "SHOW_TRADE_BALANCES",
       payload: {
         enabled: Boolean(settings.showTradeBalances),
-      },
-    },
-    "*",
-  );
-}
-
-function syncFpsSaverHelper() {
-  window.postMessage(
-    {
-      source: BRIDGE_SOURCE_EXTENSION,
-      type: "SET_FPS_SAVER",
-      payload: {
-        enabled: Boolean(settings.fpsSaver),
-      },
-    },
-    "*",
-  );
-}
-
-function syncAttackAmountsHelper() {
-  window.postMessage(
-    {
-      source: BRIDGE_SOURCE_EXTENSION,
-      type: "SHOW_ATTACK_AMOUNTS",
-      payload: {
-        enabled: Boolean(settings.showAttackAmounts),
       },
     },
     "*",
@@ -323,10 +310,9 @@ function syncHelpers() {
   syncTeamGoldPerMinuteHelper();
   syncTopGoldPerMinuteHelper();
   syncHoveredAlliesHelper();
+  syncAllianceRequestsPanelHelper();
   syncTradeBalancesHelper();
   syncSelectiveTradePolicyToggle();
-  syncFpsSaverHelper();
-  syncAttackAmountsHelper();
   syncNukePredictionHelper();
   syncBoatPredictionHelper();
   syncNukeSuggestionsHelper();

@@ -223,6 +223,17 @@
       return;
     }
 
+    if (target.name === "minLobbySize") {
+      state.settings.minLobbySize = shared.normalizeMinLobbySize(target.value);
+      state.settings = shared.normalizeSettings(state.settings, {
+        ensureActiveSearchTimestamp: true,
+      });
+      popup.resetAutoJoinIfEmpty();
+      await popup.saveSettings();
+      popup.render();
+      return;
+    }
+
     if (
       [
         "markBotNationsRed",
@@ -230,9 +241,8 @@
         "showTeamGoldPerMinute",
         "showTopGoldPerMinute",
         "markHoveredAlliesGreen",
+        "showAllianceRequestsPanel",
         "showTradeBalances",
-        "fpsSaver",
-        "showAttackAmounts",
         "showNukePrediction",
         "showNukeSuggestions",
         "autoNuke",

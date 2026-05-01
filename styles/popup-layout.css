@@ -111,6 +111,54 @@
   color: rgba(134, 239, 172, 0.9);
 }
 
+.autojoin-number-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 88px;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 11px;
+  border: 1px solid rgba(125, 211, 252, 0.2);
+  border-radius: 12px;
+  background: rgba(8, 18, 33, 0.52);
+}
+
+.autojoin-number-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.autojoin-number-copy strong {
+  color: #e0f2fe;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.autojoin-number-copy small {
+  color: rgba(203, 213, 225, 0.62);
+  font-size: 10px;
+  line-height: 1.25;
+}
+
+.autojoin-number-card input {
+  width: 100%;
+  min-height: 32px;
+  padding: 6px 9px;
+  border: 1px solid rgba(151, 181, 214, 0.24);
+  border-radius: 8px;
+  background: rgba(7, 17, 32, 0.78);
+  color: #f3f4f6;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  outline: none;
+}
+
+.autojoin-number-card input:focus {
+  border-color: rgba(125, 211, 252, 0.58);
+  box-shadow: 0 0 0 3px rgba(125, 211, 252, 0.12);
+}
+
 .map-filter-panel {
   min-width: 0;
   max-height: none;

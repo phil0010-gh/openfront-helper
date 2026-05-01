@@ -100,6 +100,8 @@
   "Auto-Join OFF": "Auto-Join OFF",
   "Game found notification popup": "Game found notification popup",
   "Show a notification when a game is found": "Show a notification when a game is found",
+  "Min lobby size": "Min lobby size",
+  "Only join lobbies whose max player count is greater than this number.": "Only join lobbies whose max player count is greater than this number.",
   "Searching for": "Searching for",
   "Lobby Type": "Lobby Type",
   "FFA": "FFA",

@@ -80,6 +80,56 @@
         letter-spacing: 0;
         text-transform: uppercase;
       }
+
+      #${ALLY_MARKER_CONTAINER_ID} .openfront-helper-ally-line.openfront-helper-ally-warning {
+        stroke: rgba(249, 115, 22, 0.68);
+        filter: drop-shadow(0 0 5px rgba(249, 115, 22, 0.76));
+      }
+
+      #${ALLY_MARKER_CONTAINER_ID} .openfront-helper-ally-dot.openfront-helper-ally-warning {
+        color: #ffedd5;
+      }
+
+      #${ALLY_MARKER_CONTAINER_ID} .openfront-helper-ally-dot.openfront-helper-ally-warning::before {
+        background: rgba(249, 115, 22, 0.76);
+        box-shadow:
+          0 0 0 2px rgba(154, 52, 18, 0.4),
+          0 0 13px rgba(249, 115, 22, 0.82);
+      }
+
+      #${ALLY_MARKER_CONTAINER_ID} .openfront-helper-ally-dot.openfront-helper-ally-warning .openfront-helper-ally-time {
+        border-color: rgba(253, 186, 116, 0.42);
+        background: rgba(67, 20, 7, 0.82);
+      }
+
+      #${ALLY_MARKER_CONTAINER_ID} .openfront-helper-ally-dot.openfront-helper-ally-warning .openfront-helper-ally-label {
+        color: rgba(255, 237, 213, 0.84);
+      }
+
+      #${ALLY_MARKER_CONTAINER_ID} .openfront-helper-ally-line.openfront-helper-ally-critical {
+        stroke: rgba(239, 68, 68, 0.72);
+        filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.82));
+      }
+
+      #${ALLY_MARKER_CONTAINER_ID} .openfront-helper-ally-dot.openfront-helper-ally-critical {
+        color: #fee2e2;
+      }
+
+      #${ALLY_MARKER_CONTAINER_ID} .openfront-helper-ally-dot.openfront-helper-ally-critical::before {
+        background: rgba(239, 68, 68, 0.82);
+        box-shadow:
+          0 0 0 2px rgba(127, 29, 29, 0.44),
+          0 0 13px rgba(239, 68, 68, 0.86);
+      }
+
+      #${ALLY_MARKER_CONTAINER_ID} .openfront-helper-ally-dot.openfront-helper-ally-critical .openfront-helper-ally-time {
+        border-color: rgba(252, 165, 165, 0.46);
+        background: rgba(69, 10, 10, 0.84);
+      }
+
+      #${ALLY_MARKER_CONTAINER_ID} .openfront-helper-ally-dot.openfront-helper-ally-critical .openfront-helper-ally-label {
+        color: rgba(254, 226, 226, 0.86);
+      }
     `;
     (document.head || document.documentElement).appendChild(style);
   }
@@ -135,6 +185,19 @@
     return `${remainingSeconds}s`;
   }
 
+  function getAllianceUrgencyClass(totalSeconds) {
+    if (!Number.isFinite(totalSeconds)) {
+      return "";
+    }
+    if (totalSeconds < 30) {
+      return "openfront-helper-ally-critical";
+    }
+    if (totalSeconds <= 60) {
+      return "openfront-helper-ally-warning";
+    }
+    return "";
+  }
+
   function getAllianceTimingText(game, alliance) {
     const currentTick = Number(game?.ticks?.());
     const expiresAt = Number(alliance?.expiresAt);
@@ -144,11 +207,14 @@
     ) {
       return {
         remaining: "unknown left",
+        urgencyClass: "",
       };
     }
 
+    const remainingSeconds = (expiresAt - currentTick) / 10;
     return {
-      remaining: `${formatAllianceDuration((expiresAt - currentTick) / 10)} left`,
+      remaining: `${formatAllianceDuration(remainingSeconds)} left`,
+      urgencyClass: getAllianceUrgencyClass(remainingSeconds),
     };
   }
 
@@ -250,6 +316,18 @@
 
       const alliance = getAllianceView(overlay.player, player);
       const timing = getAllianceTimingText(overlay.game, alliance);
+      marker.classList.remove(
+        "openfront-helper-ally-warning",
+        "openfront-helper-ally-critical",
+      );
+      line.classList.remove(
+        "openfront-helper-ally-warning",
+        "openfront-helper-ally-critical",
+      );
+      if (timing.urgencyClass) {
+        marker.classList.add(timing.urgencyClass);
+        line.classList.add(timing.urgencyClass);
+      }
       const remaining = marker.querySelector(".openfront-helper-ally-remaining");
       if (remaining) {
         remaining.textContent = timing.remaining;

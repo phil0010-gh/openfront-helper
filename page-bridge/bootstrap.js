@@ -44,16 +44,12 @@
       setAllyMarkersEnabled(data.payload?.enabled);
     }
 
+    if (data.type === "SHOW_ALLIANCE_REQUESTS_PANEL") {
+      setAllianceRequestsPanelEnabled(data.payload?.enabled);
+    }
+
     if (data.type === "SHOW_TRADE_BALANCES") {
       setTradeBalancesEnabled(data.payload?.enabled);
-    }
-
-    if (data.type === "SET_FPS_SAVER") {
-      setFpsSaverEnabled(data.payload?.enabled);
-    }
-
-    if (data.type === "SHOW_ATTACK_AMOUNTS") {
-      setAttackAmountsEnabled(data.payload?.enabled);
     }
 
     if (data.type === "SHOW_NUKE_PREDICTION") {

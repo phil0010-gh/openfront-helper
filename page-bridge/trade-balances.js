@@ -662,6 +662,7 @@
     }
     lastProcessedTradeBalanceTick = currentTick;
 
+    processFactoryPortSpendUpdates(game);
     refreshTradeShipSourceTrackers(game);
     processTrainTradeStops(game);
 
@@ -921,6 +922,26 @@
       .slice(0, 5);
   }
 
+  function getTradeBalanceRenderSignature(player, totals, spend, entries) {
+    const playerId = getPlayerSmallId(player);
+    const breakEvenBucket = Math.floor(Date.now() / 1000);
+    return JSON.stringify({
+      playerId,
+      imports: Math.round(totals.imports || 0),
+      exports: Math.round(totals.exports || 0),
+      firstExportAt: totals.firstExportAt,
+      spend: Math.round(spend || 0),
+      breakEvenBucket,
+      entries: entries.map((entry) => [
+        entry.partnerId,
+        entry.partnerName,
+        Math.round(entry.total || 0),
+        Math.round(entry.imports || 0),
+        Math.round(entry.exports || 0),
+      ]),
+    });
+  }
+
   function findTradePartnerPlayer(players, entry) {
     const numericPartnerId = Number(entry?.partnerId);
     if (Number.isFinite(numericPartnerId)) {
@@ -998,19 +1019,36 @@
 
     const context = getOpenFrontGameContext();
     if (context?.game) {
-      processFactoryPortSpendUpdates(context.game);
       processTradeBalanceUpdates(context.game);
     }
 
     const overlay = getHoveredPlayerInfoOverlay();
     if (!overlay?.game) {
       badge.dataset.visible = "false";
+      tradeBalanceRenderSignature = "";
       syncHelperStatsContainerVisibility();
       tradeBalanceAnimationFrame = requestAnimationFrame(updateTradeBalanceBadge);
       return;
     }
 
     const totals = getTradeBalanceTotals(overlay.player);
+    const factoryPortSpendTotal = getFactoryPortSpendTotal(overlay.player);
+    const entries = getTradeBalanceEntries(overlay.player);
+    const nextRenderSignature = getTradeBalanceRenderSignature(
+      overlay.player,
+      totals,
+      factoryPortSpendTotal,
+      entries,
+    );
+    if (nextRenderSignature === tradeBalanceRenderSignature) {
+      positionHelperStatsContainer();
+      badge.dataset.visible = "true";
+      syncHelperStatsContainerVisibility();
+      tradeBalanceAnimationFrame = requestAnimationFrame(updateTradeBalanceBadge);
+      return;
+    }
+    tradeBalanceRenderSignature = nextRenderSignature;
+
     const imports = badge.querySelector(".openfront-helper-trade-imports");
     const exports = badge.querySelector(".openfront-helper-trade-exports");
     const factoryPortSpend = badge.querySelector(
@@ -1018,7 +1056,6 @@
     );
     const roi = badge.querySelector(".openfront-helper-trade-roi");
     const breakEven = badge.querySelector(".openfront-helper-trade-break-even");
-    const factoryPortSpendTotal = getFactoryPortSpendTotal(overlay.player);
     const exportWindowMs = Number.isFinite(totals.firstExportAt)
       ? Date.now() - totals.firstExportAt
       : NaN;
@@ -1045,7 +1082,6 @@
 
     const rows = badge.querySelector(".openfront-helper-trade-rows");
     if (rows) {
-      const entries = getTradeBalanceEntries(overlay.player);
       if (entries.length === 0) {
         rows.innerHTML = `<span class="openfront-helper-trade-empty">No observed trade yet</span>`;
       } else {
@@ -1086,6 +1122,7 @@
       }
       tradeBalanceAnimationFrame = null;
       lastProcessedTradeBalanceTick = null;
+      tradeBalanceRenderSignature = "";
       if (!exportPartnerHeatmapEnabled && !economyHeatmapEnabled) {
         tradeBalanceTrackers.clear();
         exportPartnerSourceTrackers.clear();

@@ -118,6 +118,7 @@ function ensureFloatingHelpersStyles() {
     }
 
     #${FLOATING_HELPERS_PANEL_ID} .openfront-helper-floating-row {
+      position: relative;
       display: grid;
       grid-template-columns: 18px minmax(0, 1fr);
       gap: 9px;
@@ -130,11 +131,89 @@ function ensureFloatingHelpersStyles() {
       cursor: pointer;
     }
 
+    #${FLOATING_HELPERS_PANEL_ID} .openfront-helper-floating-alliance-request-row {
+      isolation: isolate;
+      overflow: hidden;
+      border-color: rgba(125, 211, 252, 0.24);
+      background:
+        radial-gradient(circle at 16% 18%, rgba(219, 234, 254, 0.08), transparent 26%),
+        radial-gradient(circle at 88% 8%, rgba(56, 189, 248, 0.07), transparent 28%),
+        linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(8, 38, 48, 0.84) 48%, rgba(15, 30, 52, 0.9));
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.07),
+        0 8px 18px rgba(15, 23, 42, 0.12);
+    }
+
+    #${FLOATING_HELPERS_PANEL_ID} .openfront-helper-floating-alliance-request-row::before {
+      content: "";
+      position: absolute;
+      inset: -18px;
+      z-index: -1;
+      pointer-events: none;
+      background:
+        repeating-radial-gradient(
+          ellipse at 18% 50%,
+          transparent 0 12px,
+          rgba(219, 234, 254, 0.1) 13px 14px,
+          transparent 15px 24px
+        ),
+        repeating-radial-gradient(
+          ellipse at 82% 50%,
+          transparent 0 10px,
+          rgba(125, 211, 252, 0.08) 11px 12px,
+          transparent 13px 22px
+        );
+      opacity: 0.4;
+      transform: rotate(-7deg) scale(1.08);
+    }
+
+    #${FLOATING_HELPERS_PANEL_ID} .openfront-helper-floating-alliance-request-row::after {
+      content: "";
+      position: absolute;
+      inset: 1px;
+      z-index: -1;
+      border-radius: 7px;
+      pointer-events: none;
+      background:
+        linear-gradient(120deg, rgba(255, 255, 255, 0.07), transparent 28%, rgba(125, 211, 252, 0.045) 54%, transparent 78%),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.035), transparent 46%, rgba(14, 165, 233, 0.045));
+      opacity: 0.62;
+    }
+
+    #${FLOATING_HELPERS_PANEL_ID} .openfront-helper-floating-alliance-request-row:hover {
+      transform: translateY(-2px);
+      border-color: rgba(125, 211, 252, 0.42);
+      background:
+        radial-gradient(circle at 16% 18%, rgba(219, 234, 254, 0.11), transparent 26%),
+        radial-gradient(circle at 88% 8%, rgba(56, 189, 248, 0.11), transparent 28%),
+        linear-gradient(135deg, rgba(17, 27, 54, 0.96), rgba(8, 45, 56, 0.88) 48%, rgba(15, 34, 58, 0.94));
+      box-shadow:
+        0 10px 22px rgba(15, 23, 42, 0.16),
+        0 0 18px rgba(56, 189, 248, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    #${FLOATING_HELPERS_PANEL_ID} .openfront-helper-floating-alliance-request-row:has(input:checked) {
+      border-color: rgba(125, 211, 252, 0.58);
+      background:
+        radial-gradient(circle at 16% 18%, rgba(219, 234, 254, 0.13), transparent 26%),
+        radial-gradient(circle at 88% 8%, rgba(56, 189, 248, 0.13), transparent 28%),
+        linear-gradient(135deg, rgba(17, 27, 54, 0.96), rgba(8, 52, 66, 0.9) 48%, rgba(15, 34, 58, 0.94));
+      box-shadow:
+        0 0 0 3px rgba(125, 211, 252, 0.06),
+        0 0 14px rgba(56, 189, 248, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
     #${FLOATING_HELPERS_PANEL_ID} .openfront-helper-floating-row input[type="checkbox"] {
       width: 16px;
       height: 16px;
       margin: 0;
       accent-color: #22c55e;
+    }
+
+    #${FLOATING_HELPERS_PANEL_ID} .openfront-helper-floating-alliance-request-row input[type="checkbox"] {
+      accent-color: #7dd3fc;
     }
 
     #${FLOATING_HELPERS_PANEL_ID} .openfront-helper-floating-row[data-disabled="true"] {
@@ -283,9 +362,11 @@ function ensureFloatingHelpersStyles() {
   (document.head || document.documentElement).appendChild(style);
 }
 
-function createFloatingHelperRow(key, title, description) {
+function createFloatingHelperRow(key, title, description, extraClass = "") {
   const label = document.createElement("label");
-  label.className = "openfront-helper-floating-row";
+  label.className = extraClass
+    ? `openfront-helper-floating-row ${extraClass}`
+    : "openfront-helper-floating-row";
   label.innerHTML = `
     <input type="checkbox" data-helper-setting="${key}">
     <span class="openfront-helper-floating-copy">
@@ -335,8 +416,7 @@ function createFloatingHelpersPanel() {
   gameCategory.append(
     createFloatingHelperRow("markBotNationsRed", t("Mark bot nations red"), t("Adds a red marker to nation AI names.")),
     createFloatingHelperRow("markHoveredAlliesGreen", t("Alliances"), t("Highlights allies with remaining alliance time.")),
-    createFloatingHelperRow("fpsSaver", t("FPS Saver"), t("Disables nuke explosion animations.")),
-    createFloatingHelperRow("showAttackAmounts", t("Attack amounts"), t("Shows how many troops a player attacks with.")),
+    createFloatingHelperRow("showAllianceRequestsPanel", t("Alliance requests panel"), t("Moves alliance requests and renewal prompts into a separate right-side window."), "openfront-helper-floating-alliance-request-row"),
     createFloatingHelperRow("showNukePrediction", t("Nuke prediction"), t("Shows predicted enemy nuke landing points and blast radius.")),
     createFloatingHelperRow("showBoatPrediction", t("Boat prediction"), t("Shows enemy boat landing points. Red = targeting you, yellow = targeting others.")),
     createFloatingHelperRow("showNukeSuggestions", t("Nuke suggestion"), t("Hover an enemy to show high-damage atom and hydrogen targets.")),

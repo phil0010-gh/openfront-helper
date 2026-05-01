@@ -25,6 +25,7 @@
     statusText: document.getElementById("statusText"),
     searchTimer: document.getElementById("searchTimer"),
     searchTimerValue: document.getElementById("searchTimerValue"),
+    minLobbySizeInput: document.getElementById("minLobbySizeInput"),
     lobbyForecastPanel: document.getElementById("lobbyForecastPanel"),
     forecastEtaValue: document.getElementById("forecastEtaValue"),
     forecastChanceValue: document.getElementById("forecastChanceValue"),
@@ -139,6 +140,7 @@
 
   popup.hasSelectedOptions = function hasSelectedOptions() {
     return (
+      popup.state.settings.minLobbySize != null ||
       shared.FILTER_KEYS.some(
         (key) =>
           popup.state.settings.includeFilters[key] ||

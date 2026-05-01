@@ -274,6 +274,11 @@
       refs.joinNotificationToggle.checked = Boolean(state.settings.joinNotification);
     }
 
+    if (refs.minLobbySizeInput instanceof HTMLInputElement) {
+      refs.minLobbySizeInput.value =
+        state.settings.minLobbySize == null ? "" : String(state.settings.minLobbySize);
+    }
+
     if (refs.helpersPopoutButton instanceof HTMLButtonElement) {
       refs.helpersPopoutButton.dataset.active = String(
         state.settings.showFloatingHelpersPanel,
@@ -410,9 +415,8 @@
       "showTeamGoldPerMinute",
       "showTopGoldPerMinute",
       "markHoveredAlliesGreen",
+      "showAllianceRequestsPanel",
       "showTradeBalances",
-      "fpsSaver",
-      "showAttackAmounts",
       "showNukePrediction",
       "showNukeSuggestions",
       "showBoatPrediction",

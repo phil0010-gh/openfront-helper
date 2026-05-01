@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Auto-Join & Helpers for OpenFront (unofficial)",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "Automatically joins lobbies when they match your selected criteria.",
   "icons": {
     "16": "assets/icon-16.png",
@@ -62,10 +62,10 @@
         "page-bridge/shared-utils.js",
         "page-bridge/selective-trade-policy.js",
         "page-bridge/alliances.js",
+        "page-bridge/alliance-requests-panel.js",
         "page-bridge/bot-markers.js",
         "page-bridge/gold-per-minute.js",
         "page-bridge/trade-balances.js",
-        "page-bridge/attack-amounts.js",
         "page-bridge/nuke-prediction.js",
         "page-bridge/nuke-suggestions.js",
         "page-bridge/boat-prediction.js",

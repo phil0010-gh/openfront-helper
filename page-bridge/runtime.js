@@ -6,6 +6,15 @@ const BOT_MARKER_CONTAINER_ID = "openfront-helper-bot-marker-layer";
 const BOT_MARKER_STYLE_ID = "openfront-helper-bot-marker-styles";
 const ALLY_MARKER_CONTAINER_ID = "openfront-helper-ally-marker-layer";
 const ALLY_MARKER_STYLE_ID = "openfront-helper-ally-marker-styles";
+const ALLIANCE_REQUEST_PANEL_ID = "openfront-helper-alliance-request-panel";
+const ALLIANCE_REQUEST_PANEL_STYLE_ID =
+  "openfront-helper-alliance-request-panel-styles";
+const ALLIANCE_FOCUS_FLASH_CONTAINER_ID =
+  "openfront-helper-alliance-focus-flash-layer";
+const ALLIANCE_FOCUS_FLASH_STYLE_ID =
+  "openfront-helper-alliance-focus-flash-styles";
+const ALLIANCE_FOCUS_FLASH_CANVAS_CLASS =
+  "openfront-helper-alliance-focus-flash-canvas";
 const ECONOMY_HEATMAP_CONTAINER_ID = "openfront-helper-economy-heatmap-layer";
 const ECONOMY_HEATMAP_STYLE_ID = "openfront-helper-economy-heatmap-styles";
 const ECONOMY_HEATMAP_CANVAS_CLASS = "openfront-helper-economy-heatmap-canvas";
@@ -31,8 +40,6 @@ const TOP_GOLD_PER_MINUTE_BADGE_ID = "openfront-helper-top-gpm-badge";
 const TOP_GOLD_PER_MINUTE_STYLE_ID = "openfront-helper-top-gpm-styles";
 const TRADE_BALANCE_BADGE_ID = "openfront-helper-trade-balance-badge";
 const TRADE_BALANCE_STYLE_ID = "openfront-helper-trade-balance-styles";
-const ATTACK_AMOUNT_CONTAINER_ID = "openfront-helper-attack-amount-layer";
-const ATTACK_AMOUNT_STYLE_ID = "openfront-helper-attack-amount-styles";
 const NUKE_LANDING_CONTAINER_ID = "openfront-helper-nuke-landing-layer";
 const NUKE_LANDING_STYLE_ID = "openfront-helper-nuke-landing-styles";
 const BOAT_LANDING_CONTAINER_ID = "openfront-helper-boat-landing-layer";
@@ -63,6 +70,9 @@ let botMarkersEnabled = false;
 let botMarkerAnimationFrame = null;
 let allyMarkersEnabled = false;
 let allyMarkerAnimationFrame = null;
+let allianceRequestsPanelEnabled = false;
+let allianceRequestsPanelAnimationFrame = null;
+let allianceFocusFlashAnimationFrame = null;
 let goldPerMinuteEnabled = false;
 let goldPerMinuteInterval = null;
 let goldPerMinuteAnimationFrame = null;
@@ -75,10 +85,7 @@ let topGoldPerMinuteAnimationFrame = null;
 let tradeBalancesEnabled = false;
 let tradeBalanceAnimationFrame = null;
 let lastProcessedTradeBalanceTick = null;
-let fpsSaverEnabled = false;
-let fpsSaverPatchInstalled = false;
-let attackAmountsEnabled = false;
-let attackAmountAnimationFrame = null;
+let tradeBalanceRenderSignature = "";
 let nukePredictionEnabled = false;
 let nukeLandingAnimationFrame = null;
 let boatPredictionEnabled = false;
@@ -92,9 +99,6 @@ let lastNukeSuggestionSignature = "";
 let lastNukeSuggestionSignatureCheckAt = 0;
 let currentNukeSuggestionResults = [];
 let nukeSuggestionTileComputeKey = null;
-let nextAttackAmountPositionRefreshAt = 0;
-let attackAmountPositionVersion = 0;
-let attackAmountPositionRequestInFlight = false;
 let economyHeatmapEnabled = false;
 let economyHeatmapAnimationFrame = null;
 let lastEconomyHeatmapDrawAt = 0;
@@ -125,17 +129,13 @@ const factoryPortSpendTrackers = new Map();
 const factoryPortUnitTrackers = new Map();
 const trainTradeTrackers = new Map();
 const tradeShipSourceTrackers = new Map();
-const attackAmountPositions = new Map();
-const attackAmountBorderTiles = new Map();
-const attackAmountBorderTileRequests = new Set();
 const autoNukeOriginalRootSubMenus = new Map();
 const autoNukeOriginalAttackSubMenus = new Map();
 const selectiveTradePolicyAllowedPartnerIds = new Set();
 const originalPlayerHasEmbargoMethods = new WeakMap();
-const trackedNukeFx = new WeakSet();
-const trackedFxArrays = new Set();
-const originalArrayConcat = Array.prototype.concat;
-
+const allianceRequestsPanelEvents = [];
+const capturedAllianceRequestEvents = new WeakSet();
+let allianceRequestsPanelRenderSignature = "";
 function postToExtension(type, payload) {
   window.postMessage(
     {

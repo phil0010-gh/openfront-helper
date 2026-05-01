@@ -292,10 +292,10 @@ function injectBridge() {
     "page-bridge/shared-utils.js",
     "page-bridge/selective-trade-policy.js",
     "page-bridge/alliances.js",
+    "page-bridge/alliance-requests-panel.js",
     "page-bridge/bot-markers.js",
     "page-bridge/gold-per-minute.js",
     "page-bridge/trade-balances.js",
-    "page-bridge/attack-amounts.js",
     "page-bridge/nuke-prediction.js",
     "page-bridge/nuke-suggestions.js",
     "page-bridge/boat-prediction.js",
@@ -464,6 +464,23 @@ function getTeamSizePerLobby(lobby) {
   return null;
 }
 
+function getLobbyMaxPlayers(lobby) {
+  const config = lobby?.gameConfig || {};
+  const candidates = [
+    config.maxPlayers,
+    config.maxPlayerCount,
+    lobby?.maxPlayers,
+    lobby?.maxPlayerCount,
+  ];
+  for (const candidate of candidates) {
+    const maxPlayers = Number(candidate);
+    if (Number.isFinite(maxPlayers) && maxPlayers > 0) {
+      return maxPlayers;
+    }
+  }
+  return null;
+}
+
 function extractTrackedFilters(lobby, groupKey) {
   const config = lobby?.gameConfig || {};
   const publicModifiers = config.publicGameModifiers || {};
@@ -495,6 +512,13 @@ function extractTrackedFilters(lobby, groupKey) {
 }
 
 function lobbyMatchesFilters(lobby, groupKey) {
+  if (settings.minLobbySize != null) {
+    const maxPlayers = getLobbyMaxPlayers(lobby);
+    if (!Number.isFinite(maxPlayers) || maxPlayers <= settings.minLobbySize) {
+      return false;
+    }
+  }
+
   if (!lobbyMatchesMapFilters(lobby)) {
     return false;
   }
@@ -565,6 +589,7 @@ function hasSelectedCriteria() {
     FILTER_KEYS.some(
       (key) => settings.includeFilters[key] || settings.excludeFilters[key],
     ) ||
+    settings.minLobbySize != null ||
     MAP_IDS.some((id) => settings.mapFilters[id] || settings.mapExcludeFilters[id])
   );
 }
@@ -575,6 +600,7 @@ function createForecastFilterSignature() {
     exclude: settings.excludeFilters,
     mapFilters: settings.mapFilters,
     mapExcludeFilters: settings.mapExcludeFilters,
+    minLobbySize: settings.minLobbySize,
   });
 }
 
