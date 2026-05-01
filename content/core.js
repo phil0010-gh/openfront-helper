@@ -116,6 +116,19 @@ function syncHoveredAlliesHelper() {
   );
 }
 
+function syncAllianceRequestsPanel() {
+  window.postMessage(
+    {
+      source: BRIDGE_SOURCE_EXTENSION,
+      type: "SET_ALLIANCE_REQUESTS_PANEL",
+      payload: {
+        enabled: Boolean(settings.showAllianceRequestsPanel),
+      },
+    },
+    "*",
+  );
+}
+
 function syncTradeBalancesHelper() {
   window.postMessage(
     {
@@ -323,6 +336,7 @@ function syncHelpers() {
   syncTeamGoldPerMinuteHelper();
   syncTopGoldPerMinuteHelper();
   syncHoveredAlliesHelper();
+  syncAllianceRequestsPanel();
   syncTradeBalancesHelper();
   syncSelectiveTradePolicyToggle();
   syncFpsSaverHelper();

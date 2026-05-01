@@ -230,6 +230,7 @@
         "showTeamGoldPerMinute",
         "showTopGoldPerMinute",
         "markHoveredAlliesGreen",
+        "showAllianceRequestsPanel",
         "showTradeBalances",
         "fpsSaver",
         "showAttackAmounts",

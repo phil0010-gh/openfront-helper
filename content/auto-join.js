@@ -291,6 +291,7 @@ function injectBridge() {
     "page-bridge/runtime.js",
     "page-bridge/shared-utils.js",
     "page-bridge/selective-trade-policy.js",
+    "page-bridge/alliance-requests.js",
     "page-bridge/alliances.js",
     "page-bridge/bot-markers.js",
     "page-bridge/gold-per-minute.js",

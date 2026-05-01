@@ -67,6 +67,7 @@
     showNukeTargetHeatmap: false,
     applySelectiveTradePolicyRequestAt: null,
     showFloatingHelpersPanel: false,
+    showAllianceRequestsPanel: false,
     lobbyForecast: {
       available: false,
       sampleSize: 0,
