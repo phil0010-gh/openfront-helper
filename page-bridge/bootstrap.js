@@ -100,6 +100,10 @@
     if (data.type === "SET_SELECTIVE_TRADE_POLICY") {
       setSelectiveTradePolicyEnabled(Boolean(data.payload?.enabled));
     }
+
+    if (data.type === "SET_ALLIANCE_REQUESTS_PANEL") {
+      setAllianceRequestsEnabled(Boolean(data.payload?.enabled));
+    }
   });
 
   window.setInterval(() => {
