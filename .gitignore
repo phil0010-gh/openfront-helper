@@ -14,6 +14,8 @@ build/
 # Local environment and OS files
 .env
 .env.*
+supabase-chat-grants.sql
+supabase-chat-setup.sql
 .DS_Store
 Thumbs.db
 
