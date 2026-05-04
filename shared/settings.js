@@ -51,6 +51,7 @@
     language: "en",
     enabled: false,
     searchStartedAt: null,
+    analyticsEnabled: false,
     joinNotification: false,
     minLobbySize: null,
     markBotNationsRed: false,
@@ -287,6 +288,7 @@
     normalized.economyHeatmapIntensity = normalizeEconomyHeatmapIntensity(
       normalized.economyHeatmapIntensity,
     );
+    normalized.analyticsEnabled = source.analyticsEnabled === true;
     normalized.language = normalizeLanguage(normalized.language);
     normalized.applySelectiveTradePolicyRequestAt = normalizeActionRequestTimestamp(
       normalized.applySelectiveTradePolicyRequestAt,

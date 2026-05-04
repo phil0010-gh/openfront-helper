@@ -1,2 +1,24 @@
 .idea/
 OpenFrontIO-main/
+
+# Dependencies
+node_modules/
+
+# Packaged extension builds
+*.zip
+*.crx
+*.xpi
+dist/
+build/
+
+# Local environment and OS files
+.env
+.env.*
+.DS_Store
+Thumbs.db
+
+# Logs and temporary files
+*.log
+*.tmp
+tmp/
+temp/

@@ -33,6 +33,48 @@
 
   const SOUND_KEY = "joinNotificationSoundData";
   const SOUND_NAME_KEY = "joinNotificationSoundName";
+  const ANALYTICS_CLIENT_ID_KEY = "analyticsClientId";
+
+  function closeAnalyticsConsentPopup() {
+    if (refs.analyticsConsentPopup instanceof HTMLElement) {
+      refs.analyticsConsentPopup.hidden = true;
+      refs.analyticsConsentPopup.setAttribute("aria-hidden", "true");
+    }
+  }
+
+  function openAnalyticsConsentPopup() {
+    if (refs.analyticsConsentPopup instanceof HTMLElement) {
+      refs.settingsPanel.hidden = true;
+      refs.settingsButton.setAttribute("aria-expanded", "false");
+      refs.languagePanel.hidden = true;
+      refs.languageButton.setAttribute("aria-expanded", "false");
+      refs.macrosPanel.hidden = true;
+      refs.macrosButton.setAttribute("aria-expanded", "false");
+      refs.analyticsConsentPopup.hidden = false;
+      refs.analyticsConsentPopup.setAttribute("aria-hidden", "false");
+      refs.analyticsConsentEnableButton?.focus();
+    }
+  }
+
+  async function setAnalyticsEnabled(enabled) {
+    state.settings.analyticsEnabled = enabled;
+    await popup.saveSettings();
+
+    if (enabled) {
+      chrome.runtime
+        .sendMessage({
+          type: "ANALYTICS_EVENT",
+          name: "analytics_enabled",
+        })
+        .catch((error) => {
+          console.error("Failed to track analytics opt-in:", error);
+        });
+    } else {
+      await chrome.storage.local.remove(ANALYTICS_CLIENT_ID_KEY);
+    }
+
+    popup.render();
+  }
 
   refs.settingsButton.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -68,6 +110,29 @@
     refs.settingsButton.setAttribute("aria-expanded", "false");
     refs.languagePanel.hidden = true;
     refs.languageButton.setAttribute("aria-expanded", "false");
+  });
+
+  refs.analyticsOptInButton?.addEventListener("click", async (event) => {
+    event.stopPropagation();
+    if (!state.settings.analyticsEnabled) {
+      openAnalyticsConsentPopup();
+      return;
+    }
+
+    await setAnalyticsEnabled(false);
+  });
+
+  refs.analyticsConsentEnableButton?.addEventListener("click", async () => {
+    await setAnalyticsEnabled(true);
+    closeAnalyticsConsentPopup();
+  });
+
+  refs.analyticsConsentCancelButton?.addEventListener("click", closeAnalyticsConsentPopup);
+  refs.analyticsConsentCloseButton?.addEventListener("click", closeAnalyticsConsentPopup);
+  refs.analyticsConsentPopup?.addEventListener("click", (event) => {
+    if (event.target === refs.analyticsConsentPopup) {
+      closeAnalyticsConsentPopup();
+    }
   });
 
   refs.macrosPanel.addEventListener("change", async (event) => {
@@ -521,6 +586,7 @@
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
+      closeAnalyticsConsentPopup();
       popup.closeHelperInfo();
       refs.settingsPanel.hidden = true;
       refs.settingsButton.setAttribute("aria-expanded", "false");

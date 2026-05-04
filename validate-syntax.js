@@ -1,8 +1,8 @@
-const fs = require('fs');
 const { execSync } = require('child_process');
+const path = require('path');
 
 try {
-  execSync('node --check page-bridge\\alliance-requests-panel.js', { stdio: 'inherit' });
+  execSync(`node --check ${JSON.stringify(path.join('page-bridge', 'alliance-requests-panel.js'))}`, { stdio: 'inherit' });
   console.log('Syntax check passed');
 } catch (error) {
   console.error('Syntax check failed');

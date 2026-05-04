@@ -5,6 +5,7 @@ const ANALYTICS_CONFIG = {
 };
 
 const ANALYTICS_CLIENT_ID_KEY = "analyticsClientId";
+const ANALYTICS_SETTINGS_KEY = "settings";
 const ANALYTICS_ENDPOINT = "https://www.google-analytics.com/mp/collect";
 
 function isAnalyticsConfigured() {
@@ -13,6 +14,11 @@ function isAnalyticsConfigured() {
       ANALYTICS_CONFIG.measurementId &&
       ANALYTICS_CONFIG.apiSecret,
   );
+}
+
+async function isAnalyticsOptedIn() {
+  const stored = await chrome.storage.local.get(ANALYTICS_SETTINGS_KEY);
+  return stored[ANALYTICS_SETTINGS_KEY]?.analyticsEnabled === true;
 }
 
 function sanitizeAnalyticsEventName(name) {
@@ -59,6 +65,10 @@ async function trackAnalyticsEvent(name, params = {}) {
 
   const eventName = sanitizeAnalyticsEventName(name);
   if (!eventName) {
+    return;
+  }
+
+  if (!(await isAnalyticsOptedIn())) {
     return;
   }
 

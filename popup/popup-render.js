@@ -248,6 +248,19 @@
     refs.settingsButton.setAttribute("aria-label", popup.t("openSettings"));
     refs.settingsButton.querySelector(".settings-button-label").textContent =
       popup.t("settings");
+    if (refs.analyticsOptInButton instanceof HTMLButtonElement) {
+      const analyticsEnabled = Boolean(state.settings.analyticsEnabled);
+      const analyticsTitle = analyticsEnabled
+        ? popup.t("analyticsOptInOn")
+        : popup.t("analyticsOptInOff");
+      refs.analyticsOptInButton.dataset.enabled = String(analyticsEnabled);
+      refs.analyticsOptInButton.setAttribute("aria-pressed", String(analyticsEnabled));
+      refs.analyticsOptInButton.setAttribute("aria-label", analyticsTitle);
+      refs.analyticsOptInButton.title = popup.t("analyticsOptInDescription");
+      refs.analyticsOptInButton.querySelector(
+        ".analytics-opt-in-button-label",
+      ).textContent = popup.t("sendAnonymousUsageData");
+    }
     refs.settingsPanel.querySelector(".settings-panel-title").textContent =
       popup.t("settings");
     refs.settingsPanel.querySelector(".settings-panel-label").textContent =
