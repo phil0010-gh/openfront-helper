@@ -8,7 +8,7 @@
     settingsButton: document.getElementById("settingsButton"),
     settingsPanel: document.getElementById("settingsPanel"),
     languagePanel: document.getElementById("languagePanel"),
-    macrosButton: document.getElementById("macrosButton"),
+    chatToggleButton: document.getElementById("chatToggleButton"),
     analyticsOptInButton: document.getElementById("analyticsOptInButton"),
     analyticsSupportPopup: document.getElementById("analyticsSupportPopup"),
     analyticsSupportDismissButton: document.getElementById(
@@ -21,6 +21,9 @@
     analyticsConsentCloseButton: document.getElementById("analyticsConsentCloseButton"),
     analyticsConsentCancelButton: document.getElementById("analyticsConsentCancelButton"),
     analyticsConsentEnableButton: document.getElementById("analyticsConsentEnableButton"),
+    chatSafetyPopup: document.getElementById("chatSafetyPopup"),
+    chatSafetyCancelButton: document.getElementById("chatSafetyCancelButton"),
+    chatSafetyEnableButton: document.getElementById("chatSafetyEnableButton"),
     macrosPanel: document.getElementById("macrosPanel"),
     send1PercentBoatToggle: document.getElementById("send1PercentBoatToggle"),
     send1PercentBoatSubOptions: document.getElementById("send1PercentBoatSubOptions"),

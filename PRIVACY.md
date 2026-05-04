@@ -62,6 +62,9 @@ If you use chat, the following data may be transmitted to Supabase:
 Supabase may also process technical connection data such
 as IP address, user agent, and request logs as part of normal network operation.
 
+Chat messages are configured to expire after 24 hours. The extension filters out
+older messages and the chat backend is configured to delete expired chat rows.
+
 Do not send sensitive information, passwords, personal contact details, private
 messages, or other confidential information through the extension chat.
 

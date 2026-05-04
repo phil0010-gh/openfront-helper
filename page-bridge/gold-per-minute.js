@@ -209,9 +209,6 @@
         white-space: nowrap;
       }
 
-      #${TEAM_GOLD_PER_MINUTE_BADGE_ID} .openfront-helper-team-gpm-empty {
-        color: rgba(220, 252, 231, 0.72);
-      }
     `;
     (document.head || document.documentElement).appendChild(style);
   }
@@ -671,19 +668,21 @@
         color: getTeamColor(entry.team, context.game),
         value: entry.trackedPlayers > 0 ? formatGoldPerMinute(entry.total) : "tracking",
       }));
-      const nextSignature =
-        rows.length < 2
-          ? "empty"
-          : rowData
-              .map((entry) => `${entry.team}|${entry.color}|${entry.value}`)
-              .join(";");
-
       if (rows.length < 2) {
-        if (teamGoldPerMinuteRenderSignature !== nextSignature) {
-          rowsContainer.innerHTML = `<span class="openfront-helper-team-gpm-empty">Only shown in team games</span>`;
-          teamGoldPerMinuteRenderSignature = nextSignature;
-        }
-      } else if (teamGoldPerMinuteRenderSignature !== nextSignature) {
+        badge.dataset.visible = "false";
+        teamGoldPerMinuteRenderSignature = "";
+        syncHelperStatsContainerVisibility();
+        teamGoldPerMinuteAnimationFrame = requestAnimationFrame(
+          updateTeamGoldPerMinuteBadge,
+        );
+        return;
+      }
+
+      const nextSignature = rowData
+        .map((entry) => `${entry.team}|${entry.color}|${entry.value}`)
+        .join(";");
+
+      if (teamGoldPerMinuteRenderSignature !== nextSignature) {
         rowsContainer.replaceChildren(
           ...rowData.map((entry) => {
             const row = document.createElement("span");
@@ -992,4 +991,3 @@
       updateTopGoldPerMinuteBadge();
     }
   }
-

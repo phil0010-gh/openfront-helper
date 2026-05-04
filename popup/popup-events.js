@@ -54,12 +54,35 @@
     if (refs.analyticsConsentPopup instanceof HTMLElement) {
       refs.settingsPanel.hidden = true;
       refs.settingsButton.setAttribute("aria-expanded", "false");
-      refs.macrosPanel.hidden = true;
-      refs.macrosButton.setAttribute("aria-expanded", "false");
+      closeChatSafetyPopup();
       refs.analyticsConsentPopup.hidden = false;
       refs.analyticsConsentPopup.setAttribute("aria-hidden", "false");
       refs.analyticsConsentEnableButton?.focus();
     }
+  }
+
+  function closeChatSafetyPopup() {
+    if (refs.chatSafetyPopup instanceof HTMLElement) {
+      refs.chatSafetyPopup.hidden = true;
+      refs.chatSafetyPopup.setAttribute("aria-hidden", "true");
+    }
+  }
+
+  function openChatSafetyPopup() {
+    if (refs.chatSafetyPopup instanceof HTMLElement) {
+      refs.settingsPanel.hidden = true;
+      refs.settingsButton.setAttribute("aria-expanded", "false");
+      closeAnalyticsConsentPopup();
+      refs.chatSafetyPopup.hidden = false;
+      refs.chatSafetyPopup.setAttribute("aria-hidden", "false");
+      refs.chatSafetyEnableButton?.focus();
+    }
+  }
+
+  async function setExtensionChatEnabled(enabled) {
+    state.settings.showExtensionChat = Boolean(enabled);
+    await popup.saveSettings();
+    popup.render();
   }
 
   async function setAnalyticsEnabled(enabled) {
@@ -92,20 +115,25 @@
     const isOpen = !refs.settingsPanel.hidden;
     refs.settingsPanel.hidden = isOpen;
     refs.settingsButton.setAttribute("aria-expanded", String(!isOpen));
-    refs.macrosPanel.hidden = true;
-    refs.macrosButton.setAttribute("aria-expanded", "false");
     popup.render();
   });
 
-  refs.macrosButton.addEventListener("click", (e) => {
+  refs.chatToggleButton.addEventListener("click", async (e) => {
     e.stopPropagation();
     state.showAnalyticsSupportNotice = false;
-    const isOpen = !refs.macrosPanel.hidden;
-    refs.macrosPanel.hidden = isOpen;
-    refs.macrosButton.setAttribute("aria-expanded", String(!isOpen));
-    refs.settingsPanel.hidden = true;
-    refs.settingsButton.setAttribute("aria-expanded", "false");
-    popup.render();
+    const nextShowExtensionChat = !state.settings.showExtensionChat;
+    if (nextShowExtensionChat) {
+      openChatSafetyPopup();
+      return;
+    }
+    await setExtensionChatEnabled(false);
+  });
+
+  refs.chatSafetyCancelButton?.addEventListener("click", closeChatSafetyPopup);
+
+  refs.chatSafetyEnableButton?.addEventListener("click", async () => {
+    closeChatSafetyPopup();
+    await setExtensionChatEnabled(true);
   });
 
   refs.analyticsOptInButton?.addEventListener("click", async (event) => {
@@ -164,14 +192,6 @@
       refs.settingsButton.setAttribute("aria-expanded", "false");
     }
 
-    if (
-      !refs.macrosPanel.hidden &&
-      !refs.macrosPanel.contains(e.target) &&
-      e.target !== refs.macrosButton
-    ) {
-      refs.macrosPanel.hidden = true;
-      refs.macrosButton.setAttribute("aria-expanded", "false");
-    }
   });
 
   refs.settingsSoundUploadButton.addEventListener("click", () => {
@@ -589,8 +609,6 @@
       popup.closeHelperInfo();
       refs.settingsPanel.hidden = true;
       refs.settingsButton.setAttribute("aria-expanded", "false");
-      refs.macrosPanel.hidden = true;
-      refs.macrosButton.setAttribute("aria-expanded", "false");
     }
   });
 

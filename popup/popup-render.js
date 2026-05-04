@@ -248,6 +248,20 @@
     refs.settingsButton.setAttribute("aria-label", popup.t("openSettings"));
     refs.settingsButton.querySelector(".settings-button-label").textContent =
       popup.t("settings");
+    if (refs.chatToggleButton instanceof HTMLButtonElement) {
+      const chatEnabled = state.settings.showExtensionChat === true;
+      refs.chatToggleButton.dataset.enabled = String(chatEnabled);
+      refs.chatToggleButton.setAttribute("aria-pressed", String(chatEnabled));
+      refs.chatToggleButton.setAttribute(
+        "aria-label",
+        chatEnabled ? popup.t("hideExtensionChat") : popup.t("showExtensionChat"),
+      );
+      refs.chatToggleButton.title = chatEnabled
+        ? popup.t("hideExtensionChat")
+        : popup.t("showExtensionChat");
+      refs.chatToggleButton.querySelector(".chat-toggle-button-label").textContent =
+        popup.t("chat");
+    }
     if (refs.analyticsOptInButton instanceof HTMLButtonElement) {
       const analyticsEnabled = Boolean(state.settings.analyticsEnabled);
       const analyticsTitle = analyticsEnabled
@@ -272,6 +286,22 @@
         popup.t("analyticsSupportDismiss");
       refs.analyticsSupportReviewButton.textContent =
         popup.t("analyticsSupportReview");
+    }
+    if (refs.chatSafetyPopup instanceof HTMLElement) {
+      refs.chatSafetyPopup.querySelector(".chat-safety-title").textContent =
+        popup.t("chatSafetyTitle");
+      refs.chatSafetyPopup.querySelector(".chat-safety-text").textContent =
+        popup.t("chatSafetyNotice");
+      refs.chatSafetyPopup.querySelector('[data-chat-safety-item="public"]').textContent =
+        popup.t("chatSafetyPublic");
+      refs.chatSafetyPopup.querySelector('[data-chat-safety-item="backend"]').textContent =
+        popup.t("chatSafetyBackend");
+      refs.chatSafetyPopup.querySelector('[data-chat-safety-item="private"]').textContent =
+        popup.t("chatSafetyNoPrivate");
+      refs.chatSafetyPopup.querySelector('[data-chat-safety-item="sensitive"]').textContent =
+        popup.t("chatSafetyNoSensitive");
+      refs.chatSafetyCancelButton.textContent = popup.t("cancel");
+      refs.chatSafetyEnableButton.textContent = popup.t("chatSafetyEnable");
     }
     refs.settingsPanel.querySelector(".settings-panel-title").textContent =
       popup.t("settings");

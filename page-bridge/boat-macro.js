@@ -258,13 +258,35 @@
     boatMacroLastMouseY = event.clientY;
   }
 
+  function isBoatMacroEditableTarget(target) {
+    if (!(target instanceof Element)) {
+      return false;
+    }
+    return (
+      target instanceof HTMLInputElement ||
+      target instanceof HTMLTextAreaElement ||
+      target instanceof HTMLSelectElement ||
+      target.isContentEditable ||
+      Boolean(target.closest('[contenteditable="true"], [contenteditable="plaintext-only"], [role="textbox"]'))
+    );
+  }
+
+  function isBoatMacroTypingEvent(event) {
+    const path = typeof event.composedPath === "function" ? event.composedPath() : [];
+    if (path.some((target) => isBoatMacroEditableTarget(target))) {
+      return true;
+    }
+    return isBoatMacroEditableTarget(document.activeElement);
+  }
+
   function isBoatMacroHotkey(event) {
     return (
       event.code === "KeyN" &&
       !event.shiftKey &&
       !event.altKey &&
       !event.ctrlKey &&
-      !event.metaKey
+      !event.metaKey &&
+      !isBoatMacroTypingEvent(event)
     );
   }
 
