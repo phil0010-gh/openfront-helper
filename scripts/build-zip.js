@@ -26,15 +26,6 @@ const INCLUDE = [
   "scripts",
   "shared",
   "styles",
-  "OpenFrontIO-main/resources/maps/antarctica/thumbnail.webp",
-  "OpenFrontIO-main/resources/maps/archipelagosea/thumbnail.webp",
-  "OpenFrontIO-main/resources/maps/bajacalifornia/thumbnail.webp",
-  "OpenFrontIO-main/resources/maps/beringsea/thumbnail.webp",
-  "OpenFrontIO-main/resources/maps/caucasus/thumbnail.webp",
-  "OpenFrontIO-main/resources/maps/conakry/thumbnail.webp",
-  "OpenFrontIO-main/resources/maps/losangeles/thumbnail.webp",
-  "OpenFrontIO-main/resources/maps/luna/thumbnail.webp",
-  "OpenFrontIO-main/resources/maps/marenostrum/thumbnail.webp",
 ];
 
 // Collect all files to zip
