@@ -26,6 +26,84 @@
   const SOUND_KEY = "joinNotificationSoundData";
   const SOUND_NAME_KEY = "joinNotificationSoundName";
   const ANALYTICS_CLIENT_ID_KEY = "analyticsClientId";
+  const TRACKED_FEATURE_SETTING_NAMES = {
+    enabled: "auto_join",
+    joinNotification: "join_notification",
+    showFloatingHelpersPanel: "floating_helpers_panel",
+    showExtensionChat: "extension_chat",
+    markBotNationsRed: "mark_bot_nations_red",
+    showGoldPerMinute: "gold_per_minute",
+    showTeamGoldPerMinute: "team_gold_per_minute",
+    showTopGoldPerMinute: "top_gold_per_minute",
+    markHoveredAlliesGreen: "hovered_allies",
+    showAllianceRequestsPanel: "alliance_requests_panel",
+    showTradeBalances: "trade_balances",
+    selectiveTradePolicyEnabled: "selective_trade_policy",
+    showNukePrediction: "nuke_prediction",
+    showNukeSuggestions: "nuke_suggestions",
+    autoNuke: "auto_nuke",
+    showBoatPrediction: "boat_prediction",
+    send1PercentBoat: "send_1_percent_boat",
+    send1PercentBoatContextMenu: "send_1_percent_boat_context_menu",
+    showEconomyHeatmap: "economy_heatmap",
+    showExportPartnerHeatmap: "export_partner_heatmap",
+  };
+
+  function getSelectedLanguage(settings = state.settings) {
+    return String(settings?.language || "unknown");
+  }
+
+  function getEnabledTrackedFeatureNames(settings = state.settings) {
+    return Object.entries(TRACKED_FEATURE_SETTING_NAMES)
+      .filter(([settingName]) => settings?.[settingName] === true)
+      .map(([, featureName]) => featureName);
+  }
+
+  function sendAnalyticsEvent(name, params = {}, userProperties = {}) {
+    return chrome.runtime.sendMessage({
+      type: "ANALYTICS_EVENT",
+      name,
+      params,
+      userProperties,
+    });
+  }
+
+  async function trackPopupAnalyticsSnapshot() {
+    if (!state.settings.analyticsEnabled) {
+      return;
+    }
+
+    const selectedLanguage = getSelectedLanguage();
+    const enabledFeatureNames = getEnabledTrackedFeatureNames();
+    const userProperties = {
+      selected_language: selectedLanguage,
+      enabled_feature_count: enabledFeatureNames.length,
+    };
+
+    await sendAnalyticsEvent(
+      "popup_opened",
+      {
+        selected_language: selectedLanguage,
+        enabled_feature_count: enabledFeatureNames.length,
+      },
+      userProperties,
+    );
+
+    await Promise.all(
+      enabledFeatureNames.map((featureName) =>
+        sendAnalyticsEvent(
+          "feature_active_snapshot",
+          {
+            feature_name: featureName,
+            selected_language: selectedLanguage,
+          },
+          userProperties,
+        ).catch((error) => {
+          console.error(`Failed to track analytics feature snapshot for ${featureName}:`, error);
+        }),
+      ),
+    );
+  }
 
   function closeAnalyticsConsentPopup() {
     if (refs.analyticsConsentPopup instanceof HTMLElement) {
@@ -138,11 +216,17 @@
     });
 
     if (enabled) {
-      chrome.runtime
-        .sendMessage({
-          type: "ANALYTICS_EVENT",
-          name: "analytics_enabled",
-        })
+      sendAnalyticsEvent(
+        "analytics_enabled",
+        {
+          selected_language: getSelectedLanguage(),
+          enabled_feature_count: getEnabledTrackedFeatureNames().length,
+        },
+        {
+          selected_language: getSelectedLanguage(),
+          enabled_feature_count: getEnabledTrackedFeatureNames().length,
+        },
+      )
         .catch((error) => {
           console.error("Failed to track analytics opt-in:", error);
         });
@@ -675,6 +759,9 @@
     popup.renderLanguageOptions();
     chrome.storage.onChanged.addListener(handleStorageChange);
     popup.render();
+    trackPopupAnalyticsSnapshot().catch((error) => {
+      console.error("Failed to track popup analytics snapshot:", error);
+    });
     checkActiveOpenFrontTabNeedsReload().catch((error) => {
       console.error("Failed to check whether OpenFront needs reload:", error);
     });

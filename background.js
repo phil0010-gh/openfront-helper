@@ -1,6 +1,31 @@
 const WHATS_NEW_NOTICE_KEY = "whatsNewNoticePending";
 const ANALYTICS_SUPPORT_NOTICE_KEY = "analyticsSupportNoticePending";
 const STORAGE_KEY = "settings";
+const TRACKED_FEATURE_SETTING_NAMES = {
+  enabled: "auto_join",
+  joinNotification: "join_notification",
+  showFloatingHelpersPanel: "floating_helpers_panel",
+  showExtensionChat: "extension_chat",
+  markBotNationsRed: "mark_bot_nations_red",
+  showGoldPerMinute: "gold_per_minute",
+  showTeamGoldPerMinute: "team_gold_per_minute",
+  showTopGoldPerMinute: "top_gold_per_minute",
+  markHoveredAlliesGreen: "hovered_allies",
+  showAllianceRequestsPanel: "alliance_requests_panel",
+  showTradeBalances: "trade_balances",
+  selectiveTradePolicyEnabled: "selective_trade_policy",
+  showNukePrediction: "nuke_prediction",
+  showNukeSuggestions: "nuke_suggestions",
+  autoNuke: "auto_nuke",
+  showBoatPrediction: "boat_prediction",
+  send1PercentBoat: "send_1_percent_boat",
+  send1PercentBoatContextMenu: "send_1_percent_boat_context_menu",
+  showEconomyHeatmap: "economy_heatmap",
+  showExportPartnerHeatmap: "export_partner_heatmap",
+};
+try {
+  importScripts("analytics-config.js");
+} catch (_error) {}
 importScripts("analytics.js");
 const DEFAULT_ICON = {
   16: "assets/icon-16.png",
@@ -19,6 +44,24 @@ function setAutoJoinIcon(settings = {}) {
   chrome.action.setIcon({
     path: settings?.enabled ? ACTIVE_ICON : DEFAULT_ICON,
   });
+}
+
+function trackSettingsDiff(previousSettings = {}, nextSettings = {}) {
+  for (const [key, featureName] of Object.entries(TRACKED_FEATURE_SETTING_NAMES)) {
+    const previousValue = previousSettings?.[key] === true;
+    const nextValue = nextSettings?.[key] === true;
+    if (previousValue === nextValue) {
+      continue;
+    }
+
+    trackAnalyticsEvent("feature_config_changed", {
+      feature_name: featureName,
+      enabled: nextValue,
+      selected_language: String(nextSettings?.language || "unknown"),
+    }).catch((error) => {
+      console.error(`Failed to track analytics feature toggle for ${key}:`, error);
+    });
+  }
 }
 
 async function syncAutoJoinIcon() {
@@ -55,7 +98,9 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
     return;
   }
 
-  setAutoJoinIcon(changes[STORAGE_KEY].newValue);
+  const settingsChange = changes[STORAGE_KEY];
+  setAutoJoinIcon(settingsChange.newValue);
+  trackSettingsDiff(settingsChange.oldValue, settingsChange.newValue);
 });
 
 syncAutoJoinIcon().catch((error) => {
@@ -64,7 +109,9 @@ syncAutoJoinIcon().catch((error) => {
 
 chrome.runtime.onMessage.addListener((message) => {
   if (message?.type === "ANALYTICS_EVENT") {
-    trackAnalyticsEvent(message.name, message.params).catch((error) => {
+    trackAnalyticsEvent(message.name, message.params, {
+      userProperties: message.userProperties,
+    }).catch((error) => {
       console.error("Failed to track analytics event:", error);
     });
     return;

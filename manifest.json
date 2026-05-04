@@ -19,6 +19,7 @@
   "host_permissions": [
     "https://openfront.io/*",
     "https://www.google-analytics.com/*",
+    "https://region1.google-analytics.com/*",
     "https://ttzudvqvgykhideubjwo.supabase.co/*"
   ],
   "browser_specific_settings": {

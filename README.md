@@ -58,6 +58,20 @@ As a fallback, the extension also checks for visible `FREE FOR ALL` text inside 
 3. Click `Load unpacked`
 4. Select the [chrome-extension](C:\Users\win\WebstormProjects\openfronti\chrome-extension) folder
 
+## Analytics setup
+
+Anonymous usage analytics use the GA4 Measurement Protocol from the background
+service worker.
+
+1. Copy `analytics-config.example.js` to `analytics-config.js`
+2. Set your `measurementId` and Measurement Protocol `apiSecret`
+3. Set `enabled: true`
+4. Reload the extension in `chrome://extensions`
+
+`analytics-config.js` is ignored by git so the secret stays local. Set
+`debug: true` temporarily if you want requests to go to the Google validation
+endpoint instead of production.
+
 ## Behavior
 
 - The extension listens to OpenFront's real public lobby updates.
