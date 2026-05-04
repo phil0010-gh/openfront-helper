@@ -215,7 +215,7 @@
   "GitHub": "GitHub",
   "Open GitHub repository": "Open GitHub repository",
   "N": "N",
-  "chat": "Chat",
+  "chat": "Ingame Chat",
   "extensionChat": "Extension chat",
   "closeChat": "Close chat",
   "chatDisplayName": "Chat display name",
@@ -231,7 +231,7 @@
   "lobbyChatUnavailable": "Lobby chat is available after a round is detected.",
   "chatConnectionFailed": "Chat connection failed.",
   "chatSendFailed": "Message could not be sent.",
-  "Chat": "Chat",
+  "Chat": "Ingame Chat",
   "Extension chat": "Extension chat",
   "Close chat": "Close chat",
   "Chat display name": "Chat display name",
@@ -247,5 +247,6 @@
   "Lobby chat is available after a round is detected.": "Lobby chat is available after a round is detected.",
   "Chat connection failed.": "Chat connection failed.",
   "Message could not be sent.": "Message could not be sent.",
-  "Share anonymous usage data?": "Share anonymous usage data?"
+  "Share anonymous usage data?": "Share anonymous usage data?",
+  "Ingame Chat": "Ingame Chat"
 }
