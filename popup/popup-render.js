@@ -231,7 +231,6 @@
     const enabled = state.settings.enabled;
     const hasOptionsSelected = popup.hasSelectedOptions();
 
-    refs.installNotice.hidden = !state.showInstallNotice;
     if (refs.versionLabel instanceof HTMLElement) {
       const runtime = globalThis.chrome?.runtime;
       const manifestVersion =
@@ -240,11 +239,6 @@
           : "";
       refs.versionLabel.textContent = manifestVersion ? `v${manifestVersion}` : "";
     }
-    refs.installNotice.querySelector(".install-notice-title").textContent =
-      popup.t("One-time setup");
-    refs.installNotice.querySelector(".install-notice-text").textContent =
-      popup.t("If openfront.io was already open when you installed this extension, reload that tab once. Otherwise the extension will not work on that tab.");
-    refs.dismissInstallNoticeButton.textContent = popup.t("Got it");
     refs.settingsButton.setAttribute("aria-label", popup.t("openSettings"));
     refs.settingsButton.querySelector(".settings-button-label").textContent =
       popup.t("settings");
@@ -302,6 +296,14 @@
         popup.t("chatSafetyNoSensitive");
       refs.chatSafetyCancelButton.textContent = popup.t("cancel");
       refs.chatSafetyEnableButton.textContent = popup.t("chatSafetyEnable");
+    }
+    if (refs.openFrontReloadPopup instanceof HTMLElement) {
+      refs.openFrontReloadPopup.querySelector(".openfront-reload-title").textContent =
+        popup.t("openFrontReloadTitle");
+      refs.openFrontReloadPopup.querySelector(".openfront-reload-text").textContent =
+        popup.t("openFrontReloadText");
+      refs.openFrontReloadCancelButton.textContent = popup.t("cancel");
+      refs.openFrontReloadButton.textContent = popup.t("openFrontReloadButton");
     }
     refs.settingsPanel.querySelector(".settings-panel-title").textContent =
       popup.t("settings");

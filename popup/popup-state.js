@@ -24,6 +24,9 @@
     chatSafetyPopup: document.getElementById("chatSafetyPopup"),
     chatSafetyCancelButton: document.getElementById("chatSafetyCancelButton"),
     chatSafetyEnableButton: document.getElementById("chatSafetyEnableButton"),
+    openFrontReloadPopup: document.getElementById("openFrontReloadPopup"),
+    openFrontReloadCancelButton: document.getElementById("openFrontReloadCancelButton"),
+    openFrontReloadButton: document.getElementById("openFrontReloadButton"),
     macrosPanel: document.getElementById("macrosPanel"),
     send1PercentBoatToggle: document.getElementById("send1PercentBoatToggle"),
     send1PercentBoatSubOptions: document.getElementById("send1PercentBoatSubOptions"),
@@ -48,10 +51,6 @@
     mapFiltersContainer: document.getElementById("mapFilters"),
     mapSearchInput: document.getElementById("mapSearchInput"),
     clearMapFiltersButton: document.getElementById("clearMapFiltersButton"),
-    installNotice: document.getElementById("installNotice"),
-    dismissInstallNoticeButton: document.getElementById(
-      "dismissInstallNoticeButton",
-    ),
     whatsNewNotice: null,
     dismissWhatsNewNoticeButton: null,
     helperInfoPopup: document.getElementById("helperInfoPopup"),
@@ -79,11 +78,11 @@
     settings: shared.normalizeSettings({}, { ensureActiveSearchTimestamp: true }),
     translations: i18n.DEFAULT_TRANSLATIONS,
     languageOptions: i18n.createLanguageOptions("en"),
-    showInstallNotice: false,
     showAnalyticsSupportNotice: false,
     activeHelperInfoButton: null,
     helperInfoImages: null,
     helperInfoImageIndex: 0,
+    openFrontReloadTabId: null,
     timerInterval: null,
   };
 
@@ -168,7 +167,6 @@
   popup.loadSettings = async function loadSettings() {
     const stored = await chrome.storage.local.get([
       shared.STORAGE_KEY,
-      shared.INSTALL_NOTICE_KEY,
       shared.ANALYTICS_SUPPORT_NOTICE_KEY,
     ]);
     const rawSettings = stored[shared.STORAGE_KEY] || {};
@@ -181,7 +179,6 @@
       await popup.saveSettings();
     }
 
-    popup.state.showInstallNotice = stored[shared.INSTALL_NOTICE_KEY] === true;
     popup.state.showAnalyticsSupportNotice =
       stored[shared.ANALYTICS_SUPPORT_NOTICE_KEY] === true &&
       !popup.state.settings.analyticsEnabled;

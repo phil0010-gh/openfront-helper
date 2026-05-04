@@ -161,6 +161,18 @@
             </div>
           </div>
         </div>
+        <div id="openFrontReloadPopup" class="analytics-consent-popup openfront-reload-popup" aria-hidden="true" hidden>
+          <div class="analytics-consent-card openfront-reload-card" role="dialog" aria-modal="true" aria-labelledby="openFrontReloadTitle">
+            <div class="analytics-consent-head">
+              <p id="openFrontReloadTitle" class="analytics-consent-title openfront-reload-title"></p>
+            </div>
+            <p class="analytics-consent-text openfront-reload-text"></p>
+            <div class="analytics-consent-actions">
+              <button id="openFrontReloadCancelButton" class="analytics-consent-button" type="button"></button>
+              <button id="openFrontReloadButton" class="analytics-consent-button analytics-consent-button-primary" type="button"></button>
+            </div>
+          </div>
+        </div>
         <div class="discord-callout" aria-hidden="false">
           <a
             class="discord-link github-link"
@@ -187,20 +199,6 @@
           </a>
         </div>
       </header>
-
-      <section id="installNotice" class="install-notice" hidden>
-        <div class="install-notice-copy">
-          <p class="install-notice-title">One-time setup</p>
-          <p class="install-notice-text">
-            If <strong>openfront.io</strong> was already open when you installed this extension,
-            reload that tab once. Otherwise the extension will not work on that tab.
-          </p>
-        </div>
-        <button id="dismissInstallNoticeButton" class="install-notice-button" type="button">
-          Got it
-        </button>
-      </section>
-
 
       <form id="filtersForm" class="popup-layout" autocomplete="off">
         <section class="filter-group filter-group-helpers">

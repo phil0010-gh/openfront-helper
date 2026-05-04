@@ -1,4 +1,3 @@
-const INSTALL_NOTICE_KEY = "installReloadNoticePending";
 const WHATS_NEW_NOTICE_KEY = "whatsNewNoticePending";
 const ANALYTICS_SUPPORT_NOTICE_KEY = "analyticsSupportNoticePending";
 const STORAGE_KEY = "settings";
@@ -31,9 +30,6 @@ chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === "install") {
     trackAnalyticsEvent("extension_installed").catch((error) => {
       console.error("Failed to track analytics event:", error);
-    });
-    chrome.storage.local.set({
-      [INSTALL_NOTICE_KEY]: true,
     });
     return;
   }

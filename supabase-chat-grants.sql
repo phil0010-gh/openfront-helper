@@ -37,3 +37,32 @@ create trigger chat_messages_delete_expired_after_insert
 after insert on public.chat_messages
 for each statement
 execute function public.delete_expired_chat_messages();
+
+create or replace function public.validate_chat_message()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  if new.message ~* '(https?://|www\.|[a-z0-9.-]+\.[a-z]{2,}(/|\s|$))' then
+    raise exception 'Links are not allowed in chat messages';
+  end if;
+
+  if (
+    select count(*)
+    from public.chat_messages
+    where user_id = new.user_id
+      and created_at > now() - interval '30 seconds'
+  ) >= 5 then
+    raise exception 'You are sending messages too quickly';
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists validate_chat_message_before_insert on public.chat_messages;
+create trigger validate_chat_message_before_insert
+before insert on public.chat_messages
+for each row
+execute function public.validate_chat_message();

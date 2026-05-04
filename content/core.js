@@ -327,3 +327,12 @@ async function saveSettings(nextSettings) {
     [STORAGE_KEY]: settings,
   });
 }
+
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (message?.type === "OPENFRONT_HELPER_PING") {
+    sendResponse({
+      ok: true,
+      source: "openfront-helper-content",
+    });
+  }
+});

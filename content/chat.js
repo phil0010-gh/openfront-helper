@@ -13,6 +13,7 @@ const OPENFRONT_CHAT_CLEANUP_MS = 10 * 60 * 1000;
 const OPENFRONT_CHAT_MAX_MESSAGE_LENGTH = 500;
 const OPENFRONT_CHAT_MAX_DISPLAY_NAME_LENGTH = 32;
 const OPENFRONT_CHAT_GLOBAL_ROOM_ID = "global";
+const OPENFRONT_CHAT_LINK_PATTERN = /(https?:\/\/|www\.|[a-z0-9.-]+\.[a-z]{2,}(\/|\s|$))/i;
 
 const openFrontChatConfig = globalThis.OpenFrontHelperChatConfig || {};
 const openFrontChatState = {
@@ -112,6 +113,25 @@ function normalizeChatMessage(value) {
     .trim()
     .replace(/\s+/g, " ")
     .slice(0, OPENFRONT_CHAT_MAX_MESSAGE_LENGTH);
+}
+
+function containsChatLink(value) {
+  return OPENFRONT_CHAT_LINK_PATTERN.test(String(value || ""));
+}
+
+function getChatSendErrorStatus(error) {
+  const message = String(error?.message || "");
+  if (message.includes("Links are not allowed")) {
+    return chatT("Links are not allowed in chat messages.");
+  }
+  if (message.includes("sending messages too quickly")) {
+    return chatT("You are sending messages too quickly. Please wait a moment.");
+  }
+  return chatT("Message could not be sent.");
+}
+
+function isExtensionContextInvalidatedError(error) {
+  return String(error?.message || error).includes("Extension context invalidated");
 }
 
 function getChatRoomId(roomType) {
@@ -348,11 +368,26 @@ function ensureChatStyles() {
     }
 
     #${OPENFRONT_CHAT_WIDGET_ID} .openfront-chat-title {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
       margin: 0;
       color: #bbf7d0;
       font-size: 12px;
       font-weight: 900;
       text-transform: uppercase;
+    }
+
+    #${OPENFRONT_CHAT_WIDGET_ID} .openfront-chat-beta {
+      padding: 2px 5px;
+      border: 1px solid rgba(125, 211, 252, 0.28);
+      border-radius: 999px;
+      background: rgba(14, 165, 233, 0.1);
+      color: rgba(186, 230, 253, 0.9);
+      font-size: 9px;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: 0.04em;
     }
 
     #${OPENFRONT_CHAT_WIDGET_ID} .openfront-chat-close {
@@ -412,6 +447,13 @@ function ensureChatStyles() {
     #${OPENFRONT_CHAT_WIDGET_ID} .openfront-chat-status {
       min-height: 16px;
       color: rgba(203, 213, 225, 0.64);
+      font-size: 10px;
+      line-height: 1.35;
+    }
+
+    #${OPENFRONT_CHAT_WIDGET_ID} .openfront-chat-expiry-note {
+      margin: -5px 0 0;
+      color: rgba(203, 213, 225, 0.48);
       font-size: 10px;
       line-height: 1.35;
     }
@@ -678,6 +720,9 @@ function finishChatWidgetDrag(widget, shouldSave) {
   }, 0);
 
   saveChatWidgetPosition(openFrontChatState.widgetPosition).catch((error) => {
+    if (isExtensionContextInvalidatedError(error)) {
+      return;
+    }
     console.error("Failed to save OpenFront chat position:", error);
   });
 }
@@ -1001,7 +1046,15 @@ async function sendChatMessage(messageText) {
     }),
   });
   if (!response.ok) {
-    throw new Error(`Chat send failed: ${response.status}`);
+    let errorMessage = "";
+    try {
+      const body = await response.text();
+      const parsed = body ? JSON.parse(body) : null;
+      errorMessage = parsed?.message || body;
+    } catch (_error) {
+      errorMessage = "";
+    }
+    throw new Error(errorMessage || `Chat send failed: ${response.status}`);
   }
 }
 
@@ -1055,7 +1108,7 @@ function createChatWidget() {
     <button class="openfront-chat-toggle" type="button">💬 ${chatT("Chat")}<span class="openfront-chat-badge" hidden>0</span></button>
     <section class="openfront-chat-panel" hidden>
       <div class="openfront-chat-header">
-        <p class="openfront-chat-title">${chatT("Extension chat")}</p>
+        <p class="openfront-chat-title">${chatT("Extension chat")}<span class="openfront-chat-beta">${chatT("Beta")}</span></p>
         <button class="openfront-chat-close" type="button" aria-label="${chatT("Close chat")}">x</button>
       </div>
       <div class="openfront-chat-controls">
@@ -1065,6 +1118,7 @@ function createChatWidget() {
           <button class="openfront-chat-tab" data-room-type="lobby" type="button">${chatT("Lobby")}</button>
         </div>
         <div class="openfront-chat-status"></div>
+        <div class="openfront-chat-expiry-note">${chatT("Messages older than 24 hours are automatically deleted.")}</div>
       </div>
       <div class="openfront-chat-messages" aria-live="polite"></div>
       <form class="openfront-chat-form">
@@ -1143,13 +1197,17 @@ function createChatWidget() {
     if (!message) {
       return;
     }
+    if (containsChatLink(message)) {
+      setChatStatus(widget, chatT("Links are not allowed in chat messages."));
+      return;
+    }
     input.value = "";
     try {
       await sendChatMessage(message);
       await refreshChatMessages();
     } catch (error) {
       console.error("Failed to send OpenFront chat message:", error);
-      setChatStatus(widget, chatT("Message could not be sent."));
+      setChatStatus(widget, getChatSendErrorStatus(error));
     }
   });
 
