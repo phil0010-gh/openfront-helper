@@ -23,9 +23,7 @@ const TRACKED_FEATURE_SETTING_NAMES = {
   showEconomyHeatmap: "economy_heatmap",
   showExportPartnerHeatmap: "export_partner_heatmap",
 };
-try {
-  importScripts("analytics-config.js");
-} catch (_error) {}
+importScripts("analytics-config.js");
 importScripts("analytics.js");
 const DEFAULT_ICON = {
   16: "assets/icon-16.png",

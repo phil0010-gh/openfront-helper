@@ -14,7 +14,7 @@ build/
 # Local environment and OS files
 .env
 .env.*
-analytics-config.js
+analytics-config.store.js
 supabase-chat-grants.sql
 supabase-chat-setup.sql
 .DS_Store
