@@ -261,6 +261,18 @@
         ".analytics-opt-in-button-label",
       ).textContent = popup.t("sendAnonymousUsageData");
     }
+    if (refs.analyticsSupportPopup instanceof HTMLElement) {
+      refs.analyticsSupportPopup.hidden =
+        !state.showAnalyticsSupportNotice || state.settings.analyticsEnabled;
+      refs.analyticsSupportPopup.querySelector(".analytics-support-title").textContent =
+        popup.t("analyticsSupportTitle");
+      refs.analyticsSupportPopup.querySelector(".analytics-support-text").textContent =
+        popup.t("analyticsSupportText");
+      refs.analyticsSupportDismissButton.textContent =
+        popup.t("analyticsSupportDismiss");
+      refs.analyticsSupportReviewButton.textContent =
+        popup.t("analyticsSupportReview");
+    }
     refs.settingsPanel.querySelector(".settings-panel-title").textContent =
       popup.t("settings");
     refs.settingsPanel.querySelector(".settings-panel-label").textContent =

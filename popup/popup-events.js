@@ -42,6 +42,14 @@
     }
   }
 
+  async function dismissAnalyticsSupportNotice() {
+    state.showAnalyticsSupportNotice = false;
+    await chrome.storage.local.set({
+      [shared.ANALYTICS_SUPPORT_NOTICE_KEY]: false,
+    });
+    popup.render();
+  }
+
   function openAnalyticsConsentPopup() {
     if (refs.analyticsConsentPopup instanceof HTMLElement) {
       refs.settingsPanel.hidden = true;
@@ -56,7 +64,11 @@
 
   async function setAnalyticsEnabled(enabled) {
     state.settings.analyticsEnabled = enabled;
+    state.showAnalyticsSupportNotice = false;
     await popup.saveSettings();
+    await chrome.storage.local.set({
+      [shared.ANALYTICS_SUPPORT_NOTICE_KEY]: false,
+    });
 
     if (enabled) {
       chrome.runtime
@@ -76,26 +88,35 @@
 
   refs.settingsButton.addEventListener("click", (e) => {
     e.stopPropagation();
+    state.showAnalyticsSupportNotice = false;
     const isOpen = !refs.settingsPanel.hidden;
     refs.settingsPanel.hidden = isOpen;
     refs.settingsButton.setAttribute("aria-expanded", String(!isOpen));
     refs.macrosPanel.hidden = true;
     refs.macrosButton.setAttribute("aria-expanded", "false");
+    popup.render();
   });
 
   refs.macrosButton.addEventListener("click", (e) => {
     e.stopPropagation();
+    state.showAnalyticsSupportNotice = false;
     const isOpen = !refs.macrosPanel.hidden;
     refs.macrosPanel.hidden = isOpen;
     refs.macrosButton.setAttribute("aria-expanded", String(!isOpen));
     refs.settingsPanel.hidden = true;
     refs.settingsButton.setAttribute("aria-expanded", "false");
+    popup.render();
   });
 
   refs.analyticsOptInButton?.addEventListener("click", async (event) => {
     event.stopPropagation();
+    state.showAnalyticsSupportNotice = false;
+    await chrome.storage.local.set({
+      [shared.ANALYTICS_SUPPORT_NOTICE_KEY]: false,
+    });
     if (!state.settings.analyticsEnabled) {
       openAnalyticsConsentPopup();
+      popup.render();
       return;
     }
 
@@ -113,6 +134,17 @@
     if (event.target === refs.analyticsConsentPopup) {
       closeAnalyticsConsentPopup();
     }
+  });
+
+  refs.analyticsSupportDismissButton?.addEventListener("click", async (event) => {
+    event.stopPropagation();
+    await dismissAnalyticsSupportNotice();
+  });
+
+  refs.analyticsSupportReviewButton?.addEventListener("click", async (event) => {
+    event.stopPropagation();
+    await dismissAnalyticsSupportNotice();
+    openAnalyticsConsentPopup();
   });
 
   refs.macrosPanel.addEventListener("change", async (event) => {

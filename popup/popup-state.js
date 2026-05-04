@@ -10,6 +10,13 @@
     languagePanel: document.getElementById("languagePanel"),
     macrosButton: document.getElementById("macrosButton"),
     analyticsOptInButton: document.getElementById("analyticsOptInButton"),
+    analyticsSupportPopup: document.getElementById("analyticsSupportPopup"),
+    analyticsSupportDismissButton: document.getElementById(
+      "analyticsSupportDismissButton",
+    ),
+    analyticsSupportReviewButton: document.getElementById(
+      "analyticsSupportReviewButton",
+    ),
     analyticsConsentPopup: document.getElementById("analyticsConsentPopup"),
     analyticsConsentCloseButton: document.getElementById("analyticsConsentCloseButton"),
     analyticsConsentCancelButton: document.getElementById("analyticsConsentCancelButton"),
@@ -70,6 +77,7 @@
     translations: i18n.DEFAULT_TRANSLATIONS,
     languageOptions: i18n.createLanguageOptions("en"),
     showInstallNotice: false,
+    showAnalyticsSupportNotice: false,
     activeHelperInfoButton: null,
     helperInfoImages: null,
     helperInfoImageIndex: 0,
@@ -158,6 +166,7 @@
     const stored = await chrome.storage.local.get([
       shared.STORAGE_KEY,
       shared.INSTALL_NOTICE_KEY,
+      shared.ANALYTICS_SUPPORT_NOTICE_KEY,
     ]);
     const rawSettings = stored[shared.STORAGE_KEY] || {};
 
@@ -170,6 +179,9 @@
     }
 
     popup.state.showInstallNotice = stored[shared.INSTALL_NOTICE_KEY] === true;
+    popup.state.showAnalyticsSupportNotice =
+      stored[shared.ANALYTICS_SUPPORT_NOTICE_KEY] === true &&
+      !popup.state.settings.analyticsEnabled;
   };
 
   popup.saveSettings = async function saveSettings() {

@@ -201,5 +201,17 @@
   "Cologne, Germany and European Union": "Cologne, Germany and European Union",
   "Cologne Cathedral": "Cologne Cathedral",
   "Germany": "Germany",
-  "European Union": "European Union"
+  "European Union": "European Union",
+  "analyticsSupportTitle": "Support the extension?",
+  "analyticsSupportText": "Anonymous usage data helps prioritize fixes and improve helpers without sending gameplay details.",
+  "analyticsSupportReview": "Review",
+  "analyticsSupportDismiss": "Not now",
+  "github": "GitHub",
+  "openGitHubRepository": "Open GitHub repository",
+  "Support the extension?": "Support the extension?",
+  "Anonymous usage data helps prioritize fixes and improve helpers without sending gameplay details.": "Anonymous usage data helps prioritize fixes and improve helpers without sending gameplay details.",
+  "Review": "Review",
+  "Not now": "Not now",
+  "GitHub": "GitHub",
+  "Open GitHub repository": "Open GitHub repository"
 }

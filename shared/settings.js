@@ -301,6 +301,7 @@
     STORAGE_KEY: "settings",
     INSTALL_NOTICE_KEY: "installReloadNoticePending",
     WHATS_NEW_NOTICE_KEY: "whatsNewNoticePending",
+    ANALYTICS_SUPPORT_NOTICE_KEY: "analyticsSupportNoticePending",
     MAPS,
     MAP_IDS,
     FILTER_KEYS,

@@ -609,6 +609,80 @@ body {
   white-space: nowrap;
 }
 
+.analytics-support-popup {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 100%;
+  width: 260px;
+  transform: translateX(-100%);
+  z-index: 260;
+  padding: 12px;
+  border: 1px solid rgba(34, 197, 94, 0.32);
+  border-radius: 14px;
+  background:
+    linear-gradient(145deg, rgba(34, 197, 94, 0.14), transparent 48%),
+    rgba(7, 17, 32, 0.98);
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.46);
+}
+
+.analytics-support-popup[hidden] {
+  display: none;
+}
+
+.analytics-support-popup::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  right: 32px;
+  width: 12px;
+  height: 12px;
+  border-top: 1px solid rgba(34, 197, 94, 0.32);
+  border-left: 1px solid rgba(34, 197, 94, 0.32);
+  background: rgba(10, 28, 29, 0.98);
+  transform: rotate(45deg);
+}
+
+.analytics-support-title {
+  position: relative;
+  margin: 0 0 5px;
+  color: #bbf7d0;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.analytics-support-text {
+  position: relative;
+  margin: 0;
+  color: rgba(226, 232, 240, 0.82);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.analytics-support-actions {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.analytics-support-button {
+  border: 1px solid rgba(151, 181, 214, 0.22);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(226, 232, 240, 0.84);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 6px 10px;
+}
+
+.analytics-support-button-primary {
+  border-color: rgba(34, 197, 94, 0.48);
+  background: rgba(34, 197, 94, 0.14);
+  color: #bbf7d0;
+}
+
 .analytics-consent-popup {
   position: fixed;
   inset: 0;

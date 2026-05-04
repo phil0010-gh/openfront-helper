@@ -48,6 +48,22 @@
             <span aria-hidden="true">◎</span>
             <span class="analytics-opt-in-button-label">Send anonymous usage data</span>
           </button>
+          <div
+            id="analyticsSupportPopup"
+            class="analytics-support-popup"
+            role="dialog"
+            aria-labelledby="analyticsSupportTitle"
+            hidden
+          >
+            <p id="analyticsSupportTitle" class="analytics-support-title">Support the extension?</p>
+            <p class="analytics-support-text">
+              Anonymous usage data helps prioritize fixes and improve helpers without sending gameplay details.
+            </p>
+            <div class="analytics-support-actions">
+              <button id="analyticsSupportDismissButton" class="analytics-support-button" type="button">Not now</button>
+              <button id="analyticsSupportReviewButton" class="analytics-support-button analytics-support-button-primary" type="button">Review</button>
+            </div>
+          </div>
         </div>
         <div id="settingsPanel" class="settings-panel" hidden>
           <p class="settings-panel-title">Settings</p>

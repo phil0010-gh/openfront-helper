@@ -1,5 +1,6 @@
 const INSTALL_NOTICE_KEY = "installReloadNoticePending";
 const WHATS_NEW_NOTICE_KEY = "whatsNewNoticePending";
+const ANALYTICS_SUPPORT_NOTICE_KEY = "analyticsSupportNoticePending";
 const STORAGE_KEY = "settings";
 importScripts("analytics.js");
 const DEFAULT_ICON = {
@@ -41,8 +42,14 @@ chrome.runtime.onInstalled.addListener((details) => {
     trackAnalyticsEvent("extension_updated").catch((error) => {
       console.error("Failed to track analytics event:", error);
     });
-    chrome.storage.local.set({
-      [WHATS_NEW_NOTICE_KEY]: true,
+    chrome.storage.local.get(STORAGE_KEY).then((stored) => {
+      const analyticsEnabled = stored[STORAGE_KEY]?.analyticsEnabled === true;
+      return chrome.storage.local.set({
+        [WHATS_NEW_NOTICE_KEY]: true,
+        [ANALYTICS_SUPPORT_NOTICE_KEY]: !analyticsEnabled,
+      });
+    }).catch((error) => {
+      console.error("Failed to prepare update notices:", error);
     });
   }
 });
