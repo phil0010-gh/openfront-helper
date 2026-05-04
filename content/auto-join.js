@@ -307,6 +307,7 @@ function injectBridge() {
     "page-bridge/runtime.js",
     "page-bridge/shared-utils.js",
     "page-bridge/selective-trade-policy.js",
+    "page-bridge/chat-context.js",
     "page-bridge/alliances.js",
     "page-bridge/alliance-requests-panel.js",
     "page-bridge/bot-markers.js",
