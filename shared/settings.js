@@ -13,7 +13,13 @@
     "startingGold0M",
     "randomSpawn",
     "alliancesDisabled",
+    "portsDisabled",
+    "nukesDisabled",
+    "samsDisabled",
+    "waterNukes",
+    "peaceTime4m",
     "startingGold5M",
+    "startingGold1M",
     "startingGold25M",
     "goldMultiplier2x",
   ];
@@ -28,6 +34,7 @@
 
   const START_GOLD_FILTER_KEYS = [
     "startingGold0M",
+    "startingGold1M",
     "startingGold5M",
     "startingGold25M",
   ];
@@ -64,7 +71,6 @@
     showEconomyHeatmap: false,
     economyHeatmapIntensity: 1,
     showExportPartnerHeatmap: false,
-    showNukeTargetHeatmap: false,
     applySelectiveTradePolicyRequestAt: null,
     showFloatingHelpersPanel: false,
     lobbyForecast: {
@@ -272,10 +278,9 @@
       mapExcludeFilters: normalizeMapFilters(mapExcludeFilters),
     };
 
-    if (normalized.showNukeTargetHeatmap) {
-      normalized.showEconomyHeatmap = false;
-      normalized.showExportPartnerHeatmap = false;
-    } else if (normalized.showExportPartnerHeatmap) {
+    delete normalized.showNukeTargetHeatmap;
+
+    if (normalized.showExportPartnerHeatmap) {
       normalized.showEconomyHeatmap = false;
     }
 

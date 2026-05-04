@@ -1,6 +1,7 @@
 const INSTALL_NOTICE_KEY = "installReloadNoticePending";
 const WHATS_NEW_NOTICE_KEY = "whatsNewNoticePending";
 const STORAGE_KEY = "settings";
+importScripts("analytics.js");
 const DEFAULT_ICON = {
   16: "assets/icon-16.png",
   32: "assets/icon-32.png",
@@ -27,6 +28,9 @@ async function syncAutoJoinIcon() {
 
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === "install") {
+    trackAnalyticsEvent("extension_installed").catch((error) => {
+      console.error("Failed to track analytics event:", error);
+    });
     chrome.storage.local.set({
       [INSTALL_NOTICE_KEY]: true,
     });
@@ -34,6 +38,9 @@ chrome.runtime.onInstalled.addListener((details) => {
   }
 
   if (details.reason === "update") {
+    trackAnalyticsEvent("extension_updated").catch((error) => {
+      console.error("Failed to track analytics event:", error);
+    });
     chrome.storage.local.set({
       [WHATS_NEW_NOTICE_KEY]: true,
     });
@@ -53,7 +60,17 @@ syncAutoJoinIcon().catch((error) => {
 });
 
 chrome.runtime.onMessage.addListener((message) => {
+  if (message?.type === "ANALYTICS_EVENT") {
+    trackAnalyticsEvent(message.name, message.params).catch((error) => {
+      console.error("Failed to track analytics event:", error);
+    });
+    return;
+  }
+
   if (message?.type === "SHOW_JOIN_NOTIFICATION") {
+    trackAnalyticsEvent("join_notification_shown").catch((error) => {
+      console.error("Failed to track analytics event:", error);
+    });
     chrome.windows.create({
       url: chrome.runtime.getURL("game-found.html"),
       type: "popup",

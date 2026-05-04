@@ -215,13 +215,15 @@
 }
 
 .helper-category-toggle[data-helper-category="economic"] {
-  border-color: rgba(250, 204, 21, 0.3);
+  border-color: rgba(250, 204, 21, 0.24);
+  background: rgba(45, 35, 8, 0.18);
 }
 .helper-category-toggle[data-helper-category="economic"]:hover {
-  border-color: rgba(250, 204, 21, 0.6);
+  border-color: rgba(250, 204, 21, 0.42);
+  background: rgba(69, 53, 10, 0.34);
 }
 .helper-category-toggle[data-helper-category="economic"] .helper-category-title {
-  color: #fde68a;
+  color: #fef3c7;
 }
 
 .helper-category-title {
@@ -285,6 +287,7 @@
 }
 
 .helper-subpanel-heatmaps {
+  border-radius: 18px;
   border-color: rgba(248, 113, 113, 0.22);
   background:
     linear-gradient(135deg, rgba(248, 113, 113, 0.1), transparent 46%),
@@ -630,6 +633,20 @@
   box-shadow: 0 8px 18px rgba(34, 197, 94, 0.1);
 }
 
+.filter-group-helpers .helper-category-content[data-helper-category-content="economic"] .toggle-card,
+.filter-group-helpers .helper-category-content[data-helper-category-content="economic"] .helper-info-button {
+  border-color: rgba(250, 204, 21, 0.22);
+  background: rgba(22, 26, 20, 0.76);
+}
+
+.filter-group-helpers .helper-category-content[data-helper-category-content="economic"] .toggle-card:hover,
+.filter-group-helpers .helper-category-content[data-helper-category-content="economic"] .helper-info-button:hover {
+  border-color: rgba(250, 204, 21, 0.4);
+  background: rgba(39, 37, 24, 0.88);
+  color: #f8fafc;
+  box-shadow: 0 8px 18px rgba(250, 204, 21, 0.06);
+}
+
 .filter-group-helpers .toggle-card.helper-alliance-request-card {
   position: relative;
   isolation: isolate;
@@ -861,6 +878,17 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 
+.filter-group-helpers .helper-category-content[data-helper-category-content="economic"] .toggle-card input:checked + .filter-dot {
+  border-color: rgba(250, 204, 21, 0.78);
+  background:
+    radial-gradient(circle at 35% 28%, rgba(254, 243, 199, 0.44), transparent 34%),
+    linear-gradient(135deg, #facc15, #a16207);
+  box-shadow:
+    0 0 0 3px rgba(250, 204, 21, 0.08),
+    0 0 12px rgba(245, 158, 11, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
 .filter-group-helpers .toggle-card .filter-dot {
   order: initial;
   display: grid;
@@ -925,6 +953,10 @@
   transform: translateY(-1px) rotate(-45deg);
 }
 
+.filter-group-helpers .helper-category-content[data-helper-category-content="economic"] .toggle-card input:checked + .filter-dot::after {
+  border-color: #422006;
+}
+
 .filter-group-helpers .toggle-card:hover .filter-dot {
   transform: scale(1.08);
   border-color: rgba(74, 222, 128, 0.38);
@@ -933,9 +965,21 @@
     0 8px 18px rgba(34, 197, 94, 0.1);
 }
 
+.filter-group-helpers .helper-category-content[data-helper-category-content="economic"] .toggle-card:hover .filter-dot {
+  border-color: rgba(250, 204, 21, 0.36);
+  box-shadow:
+    0 0 0 3px rgba(250, 204, 21, 0.06),
+    0 8px 18px rgba(245, 158, 11, 0.07);
+}
+
 .filter-group-helpers .toggle-card:has(input:checked) {
   border-color: rgba(74, 222, 128, 0.46);
   background: rgba(10, 48, 37, 0.92);
+}
+
+.filter-group-helpers .helper-category-content[data-helper-category-content="economic"] .toggle-card:has(input:checked) {
+  border-color: rgba(250, 204, 21, 0.36);
+  background: rgba(45, 35, 14, 0.86);
 }
 
 

@@ -2,9 +2,16 @@
 
   const BOAT_UNIT_TYPES = ["Transport"];
   const BOAT_LANDING_HOVER_RADIUS_PX = 18;
+  const BOAT_LANDING_HOVER_RADIUS_SQUARED =
+    BOAT_LANDING_HOVER_RADIUS_PX * BOAT_LANDING_HOVER_RADIUS_PX;
+  const BOAT_PREDICTION_SCAN_MS = 1000;
   let boatLandingMouseX = -9999;
   let boatLandingMouseY = -9999;
   let boatMouseListenerInstalled = false;
+  let lastBoatPredictionScanAt = 0;
+  let boatPredictionTransports = [];
+  const boatPredictionDomCache = new Map();
+  let boatPredictionHoverElements = null;
 
   function ensureBoatLandingStyles() {
     if (document.getElementById(BOAT_LANDING_STYLE_ID)) {
@@ -30,7 +37,7 @@
         border: 2px solid var(--boat-color);
         border-radius: 50%;
         background: var(--boat-bg);
-        box-shadow: 0 0 10px var(--boat-color);
+        box-shadow: 0 0 4px var(--boat-color);
         transform: translate(-50%, -50%);
       }
 
@@ -70,8 +77,8 @@
       }
 
       @keyframes openfront-helper-boat-highlight-pulse {
-        0%, 100% { box-shadow: 0 0 10px var(--boat-color), 0 0 20px var(--boat-color); }
-        50% { box-shadow: 0 0 18px var(--boat-color), 0 0 36px var(--boat-color); opacity: 0.7; }
+        0%, 100% { box-shadow: 0 0 6px var(--boat-color), 0 0 12px var(--boat-color); }
+        50% { box-shadow: 0 0 10px var(--boat-color), 0 0 18px var(--boat-color); opacity: 0.78; }
       }
 
       #${BOAT_LANDING_CONTAINER_ID} .openfront-helper-boat-highlight {
@@ -83,7 +90,7 @@
         border: 2.5px solid var(--boat-color);
         border-radius: 50%;
         background: var(--boat-bg);
-        box-shadow: 0 0 12px var(--boat-color);
+        box-shadow: 0 0 6px var(--boat-color);
         transform: translate(-50%, -50%);
         animation: openfront-helper-boat-highlight-pulse 1.1s ease-in-out infinite;
       }
@@ -103,7 +110,7 @@
         stroke-dasharray: 4 3;
         stroke-linecap: round;
         stroke-linejoin: round;
-        opacity: 0.75;
+        opacity: 0.68;
       }
 
     `;
@@ -286,32 +293,15 @@
     );
   }
 
-  function syncBoatPrediction() {
-    if (!boatPredictionEnabled) {
-      document.getElementById(BOAT_LANDING_CONTAINER_ID)?.remove();
-      boatLandingAnimationFrame = null;
-      return;
-    }
+  function collectBoatPredictionTransports(game) {
+    const transports = [];
 
-    const container = ensureBoatLandingContainer();
-    ensureBoatMouseListener();
-    const context = getOpenFrontGameContext();
-    if (!context?.game || !context?.transform) {
-      container.replaceChildren();
-      boatLandingAnimationFrame = requestAnimationFrame(syncBoatPrediction);
-      return;
-    }
-
-    const activeIds = new Set();
-    const now = Date.now();
-    const transportHoverData = [];
-
-    for (const unit of context.game.units(...BOAT_UNIT_TYPES)) {
+    for (const unit of game.units(...BOAT_UNIT_TYPES)) {
       if (!unit?.isActive?.()) {
         continue;
       }
 
-      const relation = getBoatPredictionRelation(context.game, unit);
+      const relation = getBoatPredictionRelation(game, unit);
       if (!relation) {
         continue;
       }
@@ -329,62 +319,179 @@
         continue;
       }
 
-      const screenPos = toScreenPoint(context.game, context.transform, targetTile);
+      const targeting = isBoatTargetingMyPlayer(game, targetTile);
+      const { color, bg } = getBoatPredictionColors(relation, targeting);
+      const labelPrefix = relation === "ally" ? "Ally landing" : targeting ? "Landing!" : "Landing";
+      const labelText = `${labelPrefix} · ${getBoatOwnerLabel(unit)}`;
+      const unitId = String(unit.id?.() ?? `target:${targetTile}`);
+      const motionPlanUnitId = Number(unit.id?.());
+
+      transports.push({
+        domUnitId: unitId,
+        motionPlanUnitId: Number.isFinite(motionPlanUnitId) ? motionPlanUnitId : null,
+        unit,
+        targetTile,
+        color,
+        bg,
+        labelText,
+      });
+    }
+
+    return transports;
+  }
+
+  function clearBoatPredictionDomCache() {
+    boatPredictionDomCache.clear();
+    boatPredictionHoverElements = null;
+  }
+
+  function getBoatPredictionDomEntry(container, transport) {
+    let entry = boatPredictionDomCache.get(transport.domUnitId);
+    if (!entry) {
+      const marker = document.createElement("div");
+      marker.className = "openfront-helper-boat-marker";
+      marker.dataset.boatId = `${transport.domUnitId}-marker`;
+      container.appendChild(marker);
+
+      entry = {
+        marker,
+        signature: "",
+        visible: true,
+        markerX: "",
+        markerY: "",
+      };
+      boatPredictionDomCache.set(transport.domUnitId, entry);
+    }
+
+    const signature = `${transport.color}|${transport.bg}`;
+    if (entry.signature !== signature) {
+      entry.marker.style.setProperty("--boat-color", transport.color);
+      entry.marker.style.setProperty("--boat-bg", transport.bg);
+      entry.signature = signature;
+    }
+
+    return entry;
+  }
+
+  function setBoatPredictionEntryVisible(entry, visible) {
+    if (entry.visible === visible) {
+      return;
+    }
+    entry.marker.hidden = !visible;
+    entry.visible = visible;
+  }
+
+  function updateBoatPredictionEntryPosition(entry, screenPos) {
+    const x = `${screenPos.x}px`;
+    const y = `${screenPos.y}px`;
+
+    if (entry.markerX !== x) {
+      entry.marker.style.setProperty("--boat-x", x);
+      entry.markerX = x;
+    }
+    if (entry.markerY !== y) {
+      entry.marker.style.setProperty("--boat-y", y);
+      entry.markerY = y;
+    }
+  }
+
+  function cleanupBoatPredictionDomCache(activeTransportIds) {
+    for (const [domUnitId, entry] of boatPredictionDomCache) {
+      if (!activeTransportIds.has(domUnitId)) {
+        entry.marker.remove();
+        boatPredictionDomCache.delete(domUnitId);
+      }
+    }
+  }
+
+  function clearBoatPredictionHoverElements() {
+    if (!boatPredictionHoverElements) {
+      return;
+    }
+    boatPredictionHoverElements.highlight?.remove();
+    boatPredictionHoverElements.label?.remove();
+    boatPredictionHoverElements.routeLine?.remove();
+    boatPredictionHoverElements = null;
+  }
+
+  function getBoatPredictionHoverElements(container, routeSvg) {
+    if (!boatPredictionHoverElements) {
+      const highlight = document.createElement("div");
+      highlight.className = "openfront-helper-boat-highlight";
+      container.appendChild(highlight);
+
+      const label = document.createElement("div");
+      label.className = "openfront-helper-boat-label";
+      container.appendChild(label);
+
+      const routeLine = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+      routeLine.classList.add("openfront-helper-boat-route-polyline");
+      routeLine.style.filter = "none";
+      routeSvg.appendChild(routeLine);
+
+      boatPredictionHoverElements = {
+        highlight,
+        label,
+        routeLine,
+      };
+    }
+
+    return boatPredictionHoverElements;
+  }
+
+  function syncBoatPrediction() {
+    if (!boatPredictionEnabled) {
+      document.getElementById(BOAT_LANDING_CONTAINER_ID)?.remove();
+      boatLandingAnimationFrame = null;
+      lastBoatPredictionScanAt = 0;
+      boatPredictionTransports = [];
+      clearBoatPredictionDomCache();
+      return;
+    }
+
+    const container = ensureBoatLandingContainer();
+    ensureBoatMouseListener();
+    const context = getOpenFrontGameContext();
+    if (!context?.game || !context?.transform) {
+      container.replaceChildren();
+      lastBoatPredictionScanAt = 0;
+      boatPredictionTransports = [];
+      clearBoatPredictionDomCache();
+      boatLandingAnimationFrame = requestAnimationFrame(syncBoatPrediction);
+      return;
+    }
+
+    const now = Date.now();
+    if (!lastBoatPredictionScanAt || now - lastBoatPredictionScanAt >= BOAT_PREDICTION_SCAN_MS) {
+      boatPredictionTransports = collectBoatPredictionTransports(context.game);
+      cleanupBoatPredictionDomCache(new Set(boatPredictionTransports.map((transport) => transport.domUnitId)));
+      lastBoatPredictionScanAt = now;
+    }
+
+    const visibleTransportIds = new Set();
+    const transportHoverData = [];
+
+    for (const transport of boatPredictionTransports) {
+      const screenPos = toScreenPoint(context.game, context.transform, transport.targetTile);
       if (!isNearViewport(screenPos, 200)) {
         continue;
       }
 
-      const targeting = isBoatTargetingMyPlayer(context.game, targetTile);
-      const { color, bg } = getBoatPredictionColors(relation, targeting);
-      const labelPrefix = relation === "ally" ? "Ally landing" : targeting ? "Landing!" : "Landing";
-      const labelText = `${labelPrefix} · ${getBoatOwnerLabel(unit)}`;
-
-      const unitId = String(unit.id?.() ?? `${screenPos.worldX}:${screenPos.worldY}`);
-      const motionPlanUnitId = Number(unit.id?.());
-      const boatTile = asFiniteTileRef(unit?.tile?.());
-      const boatScreenPos = toScreenPoint(context.game, context.transform, boatTile);
-
       transportHoverData.push({
-        domUnitId: unitId,
-        motionPlanUnitId: Number.isFinite(motionPlanUnitId) ? motionPlanUnitId : null,
-        unit,
+        ...transport,
         landingScreenPos: screenPos,
-        boatScreenPos,
-        color,
-        bg,
       });
 
-      activeIds.add(`${unitId}-marker`);
-      activeIds.add(`${unitId}-label`);
+      visibleTransportIds.add(transport.domUnitId);
+      const entry = getBoatPredictionDomEntry(container, transport);
+      setBoatPredictionEntryVisible(entry, true);
+      updateBoatPredictionEntryPosition(entry, screenPos);
+    }
 
-      let marker = container.querySelector(
-        `.openfront-helper-boat-marker[data-boat-id="${escapeCssIdentifier(`${unitId}-marker`)}"]`,
-      );
-      if (!marker) {
-        marker = document.createElement("div");
-        marker.className = "openfront-helper-boat-marker";
-        marker.dataset.boatId = `${unitId}-marker`;
-        container.appendChild(marker);
+    for (const [domUnitId, entry] of boatPredictionDomCache) {
+      if (!visibleTransportIds.has(domUnitId)) {
+        setBoatPredictionEntryVisible(entry, false);
       }
-
-      let label = container.querySelector(
-        `.openfront-helper-boat-label[data-boat-id="${escapeCssIdentifier(`${unitId}-label`)}"]`,
-      );
-      if (!label) {
-        label = document.createElement("div");
-        label.className = "openfront-helper-boat-label";
-        label.dataset.boatId = `${unitId}-label`;
-        container.appendChild(label);
-      }
-
-      marker.style.setProperty("--boat-x", `${screenPos.x}px`);
-      marker.style.setProperty("--boat-y", `${screenPos.y}px`);
-      marker.style.setProperty("--boat-color", color);
-      marker.style.setProperty("--boat-bg", bg);
-      label.style.setProperty("--boat-x", `${screenPos.x}px`);
-      label.style.setProperty("--boat-y", `${screenPos.y}px`);
-      label.style.setProperty("--boat-color", color);
-      label.textContent = labelText;
     }
 
     // Hover: highlight the boat and show its route when hovering a landing marker.
@@ -393,14 +500,19 @@
     for (const data of transportHoverData) {
       const dx = data.landingScreenPos.x - boatLandingMouseX;
       const dy = data.landingScreenPos.y - boatLandingMouseY;
-      if (Math.hypot(dx, dy) <= BOAT_LANDING_HOVER_RADIUS_PX) {
+      if (dx * dx + dy * dy <= BOAT_LANDING_HOVER_RADIUS_SQUARED) {
         hoveredTransport = data;
         break;
       }
     }
 
     if (hoveredTransport) {
-      const { domUnitId, motionPlanUnitId, unit, landingScreenPos, boatScreenPos, color, bg } = hoveredTransport;
+      const { motionPlanUnitId, unit, landingScreenPos, color, bg, labelText } = hoveredTransport;
+      const boatScreenPos = toScreenPoint(
+        context.game,
+        context.transform,
+        asFiniteTileRef(unit?.tile?.()),
+      );
       const routePoints = getBoatRouteScreenPoints(
         context.game,
         context.transform,
@@ -410,46 +522,32 @@
         landingScreenPos,
       );
 
+      const hoverElements = getBoatPredictionHoverElements(container, routeSvg);
+      hoverElements.label.hidden = false;
+      hoverElements.label.style.setProperty("--boat-x", `${landingScreenPos.x}px`);
+      hoverElements.label.style.setProperty("--boat-y", `${landingScreenPos.y}px`);
+      hoverElements.label.style.setProperty("--boat-color", color);
+      hoverElements.label.textContent = labelText;
+
       if (boatScreenPos) {
-        const highlightId = `${domUnitId}-highlight`;
-        activeIds.add(highlightId);
-        let highlight = container.querySelector(
-          `.openfront-helper-boat-highlight[data-boat-id="${escapeCssIdentifier(highlightId)}"]`,
-        );
-        if (!highlight) {
-          highlight = document.createElement("div");
-          highlight.className = "openfront-helper-boat-highlight";
-          highlight.dataset.boatId = highlightId;
-          container.appendChild(highlight);
-        }
-        highlight.style.setProperty("--boat-x", `${boatScreenPos.x}px`);
-        highlight.style.setProperty("--boat-y", `${boatScreenPos.y}px`);
-        highlight.style.setProperty("--boat-color", color);
-        highlight.style.setProperty("--boat-bg", bg);
+        hoverElements.highlight.hidden = false;
+        hoverElements.highlight.style.setProperty("--boat-x", `${boatScreenPos.x}px`);
+        hoverElements.highlight.style.setProperty("--boat-y", `${boatScreenPos.y}px`);
+        hoverElements.highlight.style.setProperty("--boat-color", color);
+        hoverElements.highlight.style.setProperty("--boat-bg", bg);
+      } else {
+        hoverElements.highlight.hidden = true;
       }
 
       if (routePoints.length >= 2) {
-        const routeId = `${domUnitId}-route`;
-        activeIds.add(routeId);
-        let routeLine = routeSvg.querySelector(
-          `.openfront-helper-boat-route-polyline[data-boat-id="${escapeCssIdentifier(routeId)}"]`,
-        );
-        if (!routeLine) {
-          routeLine = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-          routeLine.classList.add("openfront-helper-boat-route-polyline");
-          routeLine.dataset.boatId = routeId;
-          routeSvg.appendChild(routeLine);
-        }
-        routeLine.setAttribute("points", routePoints.map((p) => `${p.x},${p.y}`).join(" "));
-        routeLine.style.stroke = color;
-        routeLine.style.filter = `drop-shadow(0 0 4px ${color})`;
+        hoverElements.routeLine.hidden = false;
+        hoverElements.routeLine.setAttribute("points", routePoints.map((p) => `${p.x},${p.y}`).join(" "));
+        hoverElements.routeLine.style.stroke = color;
+      } else {
+        hoverElements.routeLine.hidden = true;
       }
-    }
-
-    for (const el of container.querySelectorAll("[data-boat-id]")) {
-      if (!activeIds.has(el.dataset.boatId || "")) {
-        el.remove();
-      }
+    } else {
+      clearBoatPredictionHoverElements();
     }
 
     boatLandingAnimationFrame = requestAnimationFrame(syncBoatPrediction);
@@ -462,6 +560,9 @@
         cancelAnimationFrame(boatLandingAnimationFrame);
       }
       boatLandingAnimationFrame = null;
+      lastBoatPredictionScanAt = 0;
+      boatPredictionTransports = [];
+      clearBoatPredictionDomCache();
       document.getElementById(BOAT_LANDING_CONTAINER_ID)?.remove();
       return;
     }

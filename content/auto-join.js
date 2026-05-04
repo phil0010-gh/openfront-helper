@@ -73,8 +73,7 @@ const FORECAST_MAP_FREQUENCY = Object.freeze({
   britanniaclassic: 4,
   deglaciatedantarctica: 4,
   eastasia: 5,
-  europe: 3,
-  europeclassic: 3,
+  europe: 7,
   falklandislands: 4,
   faroeislands: 4,
   fourislands: 4,
@@ -106,13 +105,22 @@ const FORECAST_MAP_FREQUENCY = Object.freeze({
   didier: 1,
   amazonriver: 3,
   bosphorusstraits: 3,
-  beringstrait: 4,
+  beringstrait: 2,
   sierpinski: 10,
   thebox: 3,
   yenisei: 6,
   tradersdream: 4,
   hawaii: 4,
   alps: 4,
+  antarctica: 1,
+  archipelagosea: 3,
+  bajacalifornia: 4,
+  beringsea: 5,
+  caucasus: 5,
+  conakry: 3,
+  losangeles: 8,
+  luna: 6,
+  marenostrum: 6,
   niledelta: 4,
   arctic: 6,
   sanfrancisco: 3,
@@ -125,7 +133,15 @@ const FORECAST_MAP_FREQUENCY = Object.freeze({
 });
 
 const FORECAST_ARCADE_MAP_IDS = new Set(["thebox", "didier", "didierfrance", "sierpinski"]);
-const FORECAST_WATER_NUKES_BOOSTED_MAPS = new Set(["fourislands", "baikal", "alps", "thebox"]);
+const FORECAST_SPECIAL_ONLY_MAP_IDS = new Set(["archipelagosea"]);
+const FORECAST_WATER_NUKES_BOOSTED_MAPS = new Set([
+  "fourislands",
+  "baikal",
+  "alps",
+  "thebox",
+  "luna",
+  "archipelagosea",
+]);
 const FORECAST_SPECIAL_COUNT_ROLLS = [1, 1, 1, 2, 2, 2, 2, 2, 3, 3];
 const FORECAST_TEAM_WEIGHTS = Object.freeze([
   { config: 2, weight: 10 },
@@ -481,14 +497,39 @@ function getLobbyMaxPlayers(lobby) {
   return null;
 }
 
+function readBooleanModifier(publicModifiers, config, publicKey, ...configKeys) {
+  const publicValue = publicModifiers?.[publicKey];
+  if (publicValue != null) {
+    return Boolean(publicValue);
+  }
+
+  return configKeys.some((key) => Boolean(config?.[key]));
+}
+
+function readPeaceTimeModifier(publicModifiers, config) {
+  if (publicModifiers?.isPeaceTime != null) {
+    return Boolean(publicModifiers.isPeaceTime);
+  }
+
+  const peaceTimeSeconds = Number(
+    publicModifiers?.peaceTimeSeconds ??
+      publicModifiers?.peaceTime ??
+      config?.peaceTimeSeconds ??
+      config?.peaceTime,
+  );
+  if (Number.isFinite(peaceTimeSeconds) && peaceTimeSeconds > 0) {
+    return peaceTimeSeconds === 240;
+  }
+
+  return Boolean(config?.isPeaceTime || config?.peaceTimeEnabled);
+}
+
 function extractTrackedFilters(lobby, groupKey) {
   const config = lobby?.gameConfig || {};
   const publicModifiers = config.publicGameModifiers || {};
   const startingGoldValue = publicModifiers.startingGold ?? config.startingGold;
-  const startingGold =
-    typeof startingGoldValue === "number" && Number.isFinite(startingGoldValue)
-      ? startingGoldValue
-      : 0;
+  const startingGold = Number(startingGoldValue);
+  const normalizedStartingGold = Number.isFinite(startingGold) ? startingGold : 0;
   const goldMultiplier = Number(
     publicModifiers.goldMultiplier ?? config.goldMultiplier ?? 0,
   );
@@ -500,13 +541,59 @@ function extractTrackedFilters(lobby, groupKey) {
     triosLobby: teamSize === 3 || objectContainsPhrase(lobby, "teams of 3"),
     quadsLobby: teamSize === 4 || objectContainsPhrase(lobby, "teams of 4"),
     teamsLargerThanTriosLobby: teamSize !== null && teamSize > 4,
-    startingGold0M: startingGold === 0,
-    randomSpawn: Boolean(publicModifiers.isRandomSpawn ?? config.randomSpawn),
-    alliancesDisabled: Boolean(
-      publicModifiers.isAlliancesDisabled ?? config.disableAlliances,
+    startingGold0M: normalizedStartingGold === 0,
+    randomSpawn: readBooleanModifier(
+      publicModifiers,
+      config,
+      "isRandomSpawn",
+      "randomSpawn",
+      "isRandomSpawn",
     ),
-    startingGold5M: startingGold === 5_000_000,
-    startingGold25M: startingGold === 25_000_000,
+    alliancesDisabled: readBooleanModifier(
+      publicModifiers,
+      config,
+      "isAlliancesDisabled",
+      "disableAlliances",
+      "alliancesDisabled",
+      "isAlliancesDisabled",
+    ),
+    portsDisabled: readBooleanModifier(
+      publicModifiers,
+      config,
+      "isPortsDisabled",
+      "disablePorts",
+      "portsDisabled",
+      "isPortsDisabled",
+    ),
+    nukesDisabled: readBooleanModifier(
+      publicModifiers,
+      config,
+      "isNukesDisabled",
+      "disableNukes",
+      "nukesDisabled",
+      "isNukesDisabled",
+    ),
+    samsDisabled: readBooleanModifier(
+      publicModifiers,
+      config,
+      "isSAMsDisabled",
+      "disableSAMs",
+      "disableSams",
+      "samsDisabled",
+      "isSAMsDisabled",
+      "isSamsDisabled",
+    ),
+    waterNukes: readBooleanModifier(
+      publicModifiers,
+      config,
+      "isWaterNukes",
+      "waterNukes",
+      "isWaterNukes",
+    ),
+    peaceTime4m: readPeaceTimeModifier(publicModifiers, config),
+    startingGold1M: normalizedStartingGold === 1_000_000,
+    startingGold5M: normalizedStartingGold === 5_000_000,
+    startingGold25M: normalizedStartingGold === 25_000_000,
     goldMultiplier2x: goldMultiplier === 2,
   };
 }
@@ -705,7 +792,11 @@ function getForecastMapsForType(type) {
     if (weight <= 0) {
       continue;
     }
-    if (type !== "special" && FORECAST_ARCADE_MAP_IDS.has(map.id)) {
+    if (
+      type !== "special" &&
+      (FORECAST_ARCADE_MAP_IDS.has(map.id) ||
+        FORECAST_SPECIAL_ONLY_MAP_IDS.has(map.id))
+    ) {
       continue;
     }
     if (type === "team" && (map.id === "baikal" || map.id === "fourislands")) {
@@ -752,6 +843,9 @@ function randomTeamConfigForMap(mapId) {
   }
   if (mapId === "fourislands" && Math.random() < 0.75) {
     return 4;
+  }
+  if (mapId === "luna" && Math.random() < 0.75) {
+    return 2;
   }
 
   const entry = pickWeighted(FORECAST_TEAM_WEIGHTS);
@@ -812,6 +906,11 @@ function getRandomSpecialModifiers(excluded, countReduction = 0) {
           : 0,
     goldMultiplier: selected.has("goldMultiplier") ? 2 : 1,
     isAlliancesDisabled: selected.has("isAlliancesDisabled"),
+    isPortsDisabled: selected.has("isPortsDisabled"),
+    isNukesDisabled: selected.has("isNukesDisabled"),
+    isSAMsDisabled: selected.has("isSAMsDisabled"),
+    isWaterNukes: selected.has("isWaterNukes"),
+    isPeaceTime: selected.has("isPeaceTime"),
   };
 }
 
@@ -832,6 +931,12 @@ function createForecastScenario(type) {
       startingGold0M: true,
       randomSpawn: false,
       alliancesDisabled: false,
+      portsDisabled: false,
+      nukesDisabled: false,
+      samsDisabled: false,
+      waterNukes: false,
+      peaceTime4m: false,
+      startingGold1M: false,
       startingGold5M: false,
       startingGold25M: false,
       goldMultiplier2x: false,
@@ -851,6 +956,12 @@ function createForecastScenario(type) {
       startingGold0M: true,
       randomSpawn: false,
       alliancesDisabled: false,
+      portsDisabled: false,
+      nukesDisabled: false,
+      samsDisabled: false,
+      waterNukes: false,
+      peaceTime4m: false,
+      startingGold1M: false,
       startingGold5M: false,
       startingGold25M: false,
       goldMultiplier2x: false,
@@ -864,7 +975,7 @@ function createForecastScenario(type) {
   if (teamConfig === "duos" || teamConfig === "trios" || teamConfig === "quads") {
     excludedModifiers.push("isRandomSpawn");
   }
-  if (map.id === "fourislands") {
+  if (map.id === "fourislands" && isTeamMode) {
     excludedModifiers.push("goldMultiplier", "startingGold25M");
   }
   if (isTeamMode) {
@@ -897,6 +1008,12 @@ function createForecastScenario(type) {
     startingGold0M: startingGold === 0,
     randomSpawn: specialModifiers.isRandomSpawn,
     alliancesDisabled: specialModifiers.isAlliancesDisabled,
+    portsDisabled: specialModifiers.isPortsDisabled,
+    nukesDisabled: specialModifiers.isNukesDisabled,
+    samsDisabled: specialModifiers.isSAMsDisabled,
+    waterNukes: forcedWaterNukes || specialModifiers.isWaterNukes,
+    peaceTime4m: specialModifiers.isPeaceTime,
+    startingGold1M: startingGold === 1_000_000,
     startingGold5M: startingGold === 5_000_000,
     startingGold25M: startingGold === 25_000_000,
     goldMultiplier2x: specialModifiers.goldMultiplier === 2,

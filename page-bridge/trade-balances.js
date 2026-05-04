@@ -261,11 +261,10 @@
     }
 
     try {
-      const exact = Array.from(game?.units?.(...allowedTypes) || []).find(
-        (unit) => matches(unit) && unit.tile?.() === tile,
-      );
-      if (exact) {
-        return exact;
+      for (const unit of game?.units?.(...allowedTypes) || []) {
+        if (matches(unit) && unit.tile?.() === tile) {
+          return unit;
+        }
       }
     } catch (_error) {
       // Try nearbyUnits below.
@@ -441,11 +440,10 @@
       return null;
     }
 
-    const exact = Array.from(game?.units?.(...allowedTypes) || []).find(
-      (unit) => isTrainStationUnit(unit, allowedTypes, owner) && unit.tile?.() === tile,
-    );
-    if (exact) {
-      return exact;
+    for (const unit of game?.units?.(...allowedTypes) || []) {
+      if (isTrainStationUnit(unit, allowedTypes, owner) && unit.tile?.() === tile) {
+        return unit;
+      }
     }
 
     const nearby = game?.nearbyUnits?.(tile, 2, allowedTypes);
@@ -571,11 +569,12 @@
 
   function processTrainTradeStops(game) {
     const activeEngineIds = new Set();
-    const engines = Array.from(game?.units?.("Train") || []).filter(
-      (unit) => unit?.trainType?.() === "Engine" && unit?.isActive?.(),
-    );
 
-    for (const engine of engines) {
+    for (const engine of game?.units?.("Train") || []) {
+      if (engine?.trainType?.() !== "Engine" || !engine?.isActive?.()) {
+        continue;
+      }
+
       const engineId = engine.id?.();
       if (!Number.isFinite(engineId)) {
         continue;
@@ -1031,6 +1030,13 @@
       return;
     }
 
+    const now = Date.now();
+    if (now - lastTradeBalanceRenderAt < TRADE_BALANCE_RENDER_MS) {
+      tradeBalanceAnimationFrame = requestAnimationFrame(updateTradeBalanceBadge);
+      return;
+    }
+    lastTradeBalanceRenderAt = now;
+
     const totals = getTradeBalanceTotals(overlay.player);
     const factoryPortSpendTotal = getFactoryPortSpendTotal(overlay.player);
     const entries = getTradeBalanceEntries(overlay.player);
@@ -1122,6 +1128,7 @@
       }
       tradeBalanceAnimationFrame = null;
       lastProcessedTradeBalanceTick = null;
+      lastTradeBalanceRenderAt = 0;
       tradeBalanceRenderSignature = "";
       if (!exportPartnerHeatmapEnabled && !economyHeatmapEnabled) {
         tradeBalanceTrackers.clear();
@@ -1140,6 +1147,7 @@
     }
 
     if (tradeBalanceAnimationFrame === null) {
+      lastTradeBalanceRenderAt = 0;
       updateTradeBalanceBadge();
     }
   }

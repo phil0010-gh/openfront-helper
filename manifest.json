@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Auto-Join & Helpers for OpenFront (unofficial)",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "description": "Automatically joins lobbies when they match your selected criteria.",
   "icons": {
     "16": "assets/icon-16.png",
@@ -16,7 +16,8 @@
     "service_worker": "background.js"
   },
   "host_permissions": [
-    "https://openfront.io/*"
+    "https://openfront.io/*",
+    "https://www.google-analytics.com/*"
   ],
   "browser_specific_settings": {
     "gecko": {
