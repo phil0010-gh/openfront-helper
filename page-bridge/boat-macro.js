@@ -171,7 +171,7 @@
     menu = document.createElement("div");
     menu.id = BOAT_MACRO_CONTEXT_MENU_ID;
     menu.hidden = true;
-    menu.innerHTML = `<button type="button">⚓ Send 1% Boat <span style="opacity:0.5;font-weight:400;font-size:10px">[Shift+B]</span></button>`;
+    menu.innerHTML = `<button type="button">⚓ Send 1% Boat <span style="opacity:0.5;font-weight:400;font-size:10px">[N]</span></button>`;
     menu.addEventListener("click", (event) => {
       const btn = event.target?.closest("button");
       if (!btn) {
@@ -258,13 +258,23 @@
     boatMacroLastMouseY = event.clientY;
   }
 
-  // Single keydown handler: blocks the game's B handler AND fires the boat send.
+  function isBoatMacroHotkey(event) {
+    return (
+      event.code === "KeyN" &&
+      !event.shiftKey &&
+      !event.altKey &&
+      !event.ctrlKey &&
+      !event.metaKey
+    );
+  }
+
+  // Single keydown handler: blocks the game's N handler AND fires the boat send.
   function handleBoatMacroKeyDown(event) {
     if (event.key === "Escape") {
       hideBoatMacroContextMenu();
       return;
     }
-    if (event.shiftKey && event.code === "KeyB") {
+    if (isBoatMacroHotkey(event)) {
       event.preventDefault();
       event.stopImmediatePropagation();
       const syntheticEvent = { clientX: boatMacroLastMouseX, clientY: boatMacroLastMouseY };
@@ -276,9 +286,9 @@
     }
   }
 
-  // Keyup blocker: prevents the game's keyup B handler from firing.
+  // Keyup blocker: prevents the game's keyup N handler from firing.
   function handleBoatMacroKeyUp(event) {
-    if (event.shiftKey && event.code === "KeyB") {
+    if (isBoatMacroHotkey(event)) {
       event.preventDefault();
       event.stopImmediatePropagation();
     }

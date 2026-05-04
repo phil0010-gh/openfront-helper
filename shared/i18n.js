@@ -103,6 +103,7 @@
     "Send a transport with 1% troops, then restore the attack ratio.": "Send a transport with 1% troops, then restore the attack ratio.",
     "Hotkey": "Hotkey",
     "Shift + B": "Shift + B",
+    "N": "N",
     "Show button in selection wheel": "Show button in selection wheel",
     "One-time setup": "One-time setup",
     "If openfront.io was already open when you installed this extension, reload that tab once. Otherwise the extension will not work on that tab.": "If openfront.io was already open when you installed this extension, reload that tab once. Otherwise the extension will not work on that tab.",
