@@ -271,11 +271,11 @@
     if (refs.settingsSoundClearButton.hidden) {
       refs.settingsSoundName.textContent = popup.t("defaultSound");
     }
-    refs.languageButton.setAttribute("aria-label", popup.t("openLanguageMenu"));
-    refs.languageButtonLabel.textContent = state.settings.language.toUpperCase();
-    refs.languagePanel.querySelector(".language-search-label").textContent =
-      popup.t("searchLanguages");
+    const languageLabel = refs.languagePanel.querySelector(".language-search-label");
+    languageLabel.__openFrontI18nText = "language";
+    languageLabel.textContent = popup.t("language");
     refs.languageSearchInput.placeholder = popup.t("searchLanguages");
+    refs.languageList.setAttribute("aria-label", popup.t("Languages"));
     refs.powerButton.dataset.enabled = String(enabled);
     refs.powerButton.disabled = !hasOptionsSelected;
     refs.powerButton.setAttribute("aria-pressed", String(enabled));

@@ -66,7 +66,6 @@ body {
 }
 
 .settings-button,
-.language-button,
 .macros-button,
 .analytics-opt-in-button {
   display: inline-flex;
@@ -84,8 +83,6 @@ body {
 
 .settings-button:hover,
 .settings-button[aria-expanded="true"],
-.language-button:hover,
-.language-button[aria-expanded="true"],
 .macros-button:hover,
 .macros-button[aria-expanded="true"],
 .analytics-opt-in-button:hover,
@@ -105,14 +102,6 @@ body {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.language-button {
-  color: rgba(203, 213, 225, 0.65);
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
@@ -143,7 +132,6 @@ body {
 }
 
 .settings-panel,
-.language-panel,
 .macros-panel {
   position: absolute;
   top: calc(100% + 8px);
@@ -158,18 +146,13 @@ body {
 
 .settings-panel {
   left: 0;
+  display: grid;
+  gap: 12px;
+  max-height: calc(100vh - 90px);
+  overflow: auto;
 }
 
 .settings-panel[hidden] {
-  display: none;
-}
-
-.language-panel {
-  left: 0;
-  width: 300px;
-}
-
-.language-panel[hidden] {
   display: none;
 }
 
@@ -358,6 +341,13 @@ body {
   gap: 5px;
 }
 
+.settings-language-panel {
+  display: grid;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(151, 181, 214, 0.12);
+}
+
 .settings-panel-row-header {
   display: flex;
   align-items: center;
@@ -401,8 +391,7 @@ body {
 .language-list {
   display: grid;
   gap: 4px;
-  max-height: 270px;
-  margin-top: 10px;
+  max-height: 220px;
   overflow: auto;
 }
 

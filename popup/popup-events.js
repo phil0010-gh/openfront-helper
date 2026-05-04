@@ -46,8 +46,6 @@
     if (refs.analyticsConsentPopup instanceof HTMLElement) {
       refs.settingsPanel.hidden = true;
       refs.settingsButton.setAttribute("aria-expanded", "false");
-      refs.languagePanel.hidden = true;
-      refs.languageButton.setAttribute("aria-expanded", "false");
       refs.macrosPanel.hidden = true;
       refs.macrosButton.setAttribute("aria-expanded", "false");
       refs.analyticsConsentPopup.hidden = false;
@@ -81,24 +79,8 @@
     const isOpen = !refs.settingsPanel.hidden;
     refs.settingsPanel.hidden = isOpen;
     refs.settingsButton.setAttribute("aria-expanded", String(!isOpen));
-    refs.languagePanel.hidden = true;
-    refs.languageButton.setAttribute("aria-expanded", "false");
     refs.macrosPanel.hidden = true;
     refs.macrosButton.setAttribute("aria-expanded", "false");
-  });
-
-  refs.languageButton.addEventListener("click", (e) => {
-    e.stopPropagation();
-    const isOpen = !refs.languagePanel.hidden;
-    refs.languagePanel.hidden = isOpen;
-    refs.languageButton.setAttribute("aria-expanded", String(!isOpen));
-    refs.settingsPanel.hidden = true;
-    refs.settingsButton.setAttribute("aria-expanded", "false");
-    refs.macrosPanel.hidden = true;
-    refs.macrosButton.setAttribute("aria-expanded", "false");
-    if (!isOpen) {
-      refs.languageSearchInput.focus();
-    }
   });
 
   refs.macrosButton.addEventListener("click", (e) => {
@@ -108,8 +90,6 @@
     refs.macrosButton.setAttribute("aria-expanded", String(!isOpen));
     refs.settingsPanel.hidden = true;
     refs.settingsButton.setAttribute("aria-expanded", "false");
-    refs.languagePanel.hidden = true;
-    refs.languageButton.setAttribute("aria-expanded", "false");
   });
 
   refs.analyticsOptInButton?.addEventListener("click", async (event) => {
@@ -150,15 +130,6 @@
     if (!refs.settingsPanel.hidden && !refs.settingsPanel.contains(e.target) && e.target !== refs.settingsButton) {
       refs.settingsPanel.hidden = true;
       refs.settingsButton.setAttribute("aria-expanded", "false");
-    }
-
-    if (
-      !refs.languagePanel.hidden &&
-      !refs.languagePanel.contains(e.target) &&
-      e.target !== refs.languageButton
-    ) {
-      refs.languagePanel.hidden = true;
-      refs.languageButton.setAttribute("aria-expanded", "false");
     }
 
     if (
@@ -529,16 +500,12 @@
 
     const language = shared.normalizeLanguage(button.dataset.language);
     if (language === state.settings.language) {
-      refs.languagePanel.hidden = true;
-      refs.languageButton.setAttribute("aria-expanded", "false");
       return;
     }
 
     state.settings.language = language;
     await popup.saveSettings();
     await popup.loadTranslations();
-    refs.languagePanel.hidden = true;
-    refs.languageButton.setAttribute("aria-expanded", "false");
     refs.languageSearchInput.value = "";
     popup.render();
   });
@@ -590,8 +557,6 @@
       popup.closeHelperInfo();
       refs.settingsPanel.hidden = true;
       refs.settingsButton.setAttribute("aria-expanded", "false");
-      refs.languagePanel.hidden = true;
-      refs.languageButton.setAttribute("aria-expanded", "false");
       refs.macrosPanel.hidden = true;
       refs.macrosButton.setAttribute("aria-expanded", "false");
     }

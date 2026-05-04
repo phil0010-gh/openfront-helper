@@ -7,8 +7,6 @@
     powerButton: document.getElementById("powerButton"),
     settingsButton: document.getElementById("settingsButton"),
     settingsPanel: document.getElementById("settingsPanel"),
-    languageButton: document.getElementById("languageButton"),
-    languageButtonLabel: document.getElementById("languageButtonLabel"),
     languagePanel: document.getElementById("languagePanel"),
     macrosButton: document.getElementById("macrosButton"),
     analyticsOptInButton: document.getElementById("analyticsOptInButton"),
