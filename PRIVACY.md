@@ -15,6 +15,10 @@ The extension reads OpenFront page and lobby/game information only to provide
 its features, such as auto-join filtering, helper overlays, map filters, and
 in-game helper calculations.
 
+The extension may process personal communications when users send chat messages,
+user activity when optional anonymous analytics are enabled, and OpenFront
+page/lobby/game content only as needed to provide the extension features.
+
 ## Anonymous usage analytics
 
 Anonymous usage analytics are optional and disabled by default.
@@ -99,9 +103,9 @@ storage, or uninstall the extension.
 
 Analytics events are handled according to Google Analytics retention settings.
 
-Chat messages are stored in Supabase so they can be loaded by other users in the
-same chat room. Message retention should be kept as short as practical as the
-feature matures.
+Chat messages are intended to be retained for up to 24 hours and are filtered
+out by the extension after that period. The backend is configured to delete
+expired chat rows.
 
 ## User control
 
