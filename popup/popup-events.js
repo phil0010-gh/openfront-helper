@@ -25,119 +25,6 @@
 
   const SOUND_KEY = "joinNotificationSoundData";
   const SOUND_NAME_KEY = "joinNotificationSoundName";
-  const ANALYTICS_CLIENT_ID_KEY = "analyticsClientId";
-  const TRACKED_FEATURE_SETTING_NAMES = {
-    enabled: "auto_join",
-    joinNotification: "join_notification",
-    showFloatingHelpersPanel: "floating_helpers_panel",
-    showExtensionChat: "extension_chat",
-    markBotNationsRed: "mark_bot_nations_red",
-    showGoldPerMinute: "gold_per_minute",
-    showTeamGoldPerMinute: "team_gold_per_minute",
-    showTopGoldPerMinute: "top_gold_per_minute",
-    markHoveredAlliesGreen: "hovered_allies",
-    showAllianceRequestsPanel: "alliance_requests_panel",
-    showTradeBalances: "trade_balances",
-    selectiveTradePolicyEnabled: "selective_trade_policy",
-    showNukePrediction: "nuke_prediction",
-    showNukeSuggestions: "nuke_suggestions",
-    autoNuke: "auto_nuke",
-    showBoatPrediction: "boat_prediction",
-    send1PercentBoat: "send_1_percent_boat",
-    send1PercentBoatContextMenu: "send_1_percent_boat_context_menu",
-    showEconomyHeatmap: "economy_heatmap",
-    showExportPartnerHeatmap: "export_partner_heatmap",
-  };
-
-  function getSelectedLanguage(settings = state.settings) {
-    return String(settings?.language || "unknown");
-  }
-
-  function getEnabledTrackedFeatureNames(settings = state.settings) {
-    return Object.entries(TRACKED_FEATURE_SETTING_NAMES)
-      .filter(([settingName]) => settings?.[settingName] === true)
-      .map(([, featureName]) => featureName);
-  }
-
-  function sendAnalyticsEvent(name, params = {}, userProperties = {}) {
-    return chrome.runtime.sendMessage({
-      type: "ANALYTICS_EVENT",
-      name,
-      params,
-      userProperties,
-    });
-  }
-
-  async function trackPopupAnalyticsSnapshot() {
-    if (!state.settings.analyticsEnabled) {
-      return;
-    }
-
-    const selectedLanguage = getSelectedLanguage();
-    const enabledFeatureNames = getEnabledTrackedFeatureNames();
-    const userProperties = {
-      selected_language: selectedLanguage,
-      enabled_feature_count: enabledFeatureNames.length,
-    };
-
-    await sendAnalyticsEvent(
-      "popup_opened",
-      {
-        selected_language: selectedLanguage,
-        enabled_feature_count: enabledFeatureNames.length,
-      },
-      userProperties,
-    );
-
-    await Promise.all(
-      enabledFeatureNames.map((featureName) =>
-        sendAnalyticsEvent(
-          "feature_active_snapshot",
-          {
-            feature_name: featureName,
-            selected_language: selectedLanguage,
-          },
-          userProperties,
-        ).catch((error) => {
-          console.error(`Failed to track analytics feature snapshot for ${featureName}:`, error);
-        }),
-      ),
-    );
-  }
-
-  function closeAnalyticsConsentPopup() {
-    if (refs.analyticsConsentPopup instanceof HTMLElement) {
-      refs.analyticsConsentPopup.hidden = true;
-      refs.analyticsConsentPopup.setAttribute("aria-hidden", "true");
-    }
-  }
-
-  async function dismissAnalyticsSupportNotice() {
-    state.showAnalyticsSupportNotice = false;
-    await chrome.storage.local.set({
-      [shared.ANALYTICS_SUPPORT_NOTICE_KEY]: false,
-    });
-    popup.render();
-  }
-
-  function openAnalyticsConsentPopup() {
-    if (refs.analyticsConsentPopup instanceof HTMLElement) {
-      refs.settingsPanel.hidden = true;
-      refs.settingsButton.setAttribute("aria-expanded", "false");
-      closeChatSafetyPopup();
-      closeOpenFrontReloadPopup();
-      refs.analyticsConsentPopup.hidden = false;
-      refs.analyticsConsentPopup.setAttribute("aria-hidden", "false");
-      refs.analyticsConsentEnableButton?.focus();
-    }
-  }
-
-  function closeChatSafetyPopup() {
-    if (refs.chatSafetyPopup instanceof HTMLElement) {
-      refs.chatSafetyPopup.hidden = true;
-      refs.chatSafetyPopup.setAttribute("aria-hidden", "true");
-    }
-  }
 
   function closeOpenFrontReloadPopup() {
     if (refs.openFrontReloadPopup instanceof HTMLElement) {
@@ -147,25 +34,11 @@
     state.openFrontReloadTabId = null;
   }
 
-  function openChatSafetyPopup() {
-    if (refs.chatSafetyPopup instanceof HTMLElement) {
-      refs.settingsPanel.hidden = true;
-      refs.settingsButton.setAttribute("aria-expanded", "false");
-      closeAnalyticsConsentPopup();
-      closeOpenFrontReloadPopup();
-      refs.chatSafetyPopup.hidden = false;
-      refs.chatSafetyPopup.setAttribute("aria-hidden", "false");
-      refs.chatSafetyEnableButton?.focus();
-    }
-  }
-
   function openOpenFrontReloadPopup(tabId) {
     if (refs.openFrontReloadPopup instanceof HTMLElement) {
       state.openFrontReloadTabId = tabId;
       refs.settingsPanel.hidden = true;
       refs.settingsButton.setAttribute("aria-expanded", "false");
-      closeAnalyticsConsentPopup();
-      closeChatSafetyPopup();
       refs.openFrontReloadPopup.hidden = false;
       refs.openFrontReloadPopup.setAttribute("aria-hidden", "false");
       refs.openFrontReloadButton?.focus();
@@ -201,67 +74,12 @@
     }
   }
 
-  async function setExtensionChatEnabled(enabled) {
-    state.settings.showExtensionChat = Boolean(enabled);
-    await popup.saveSettings();
-    popup.render();
-  }
-
-  async function setAnalyticsEnabled(enabled) {
-    state.settings.analyticsEnabled = enabled;
-    state.showAnalyticsSupportNotice = false;
-    await popup.saveSettings();
-    await chrome.storage.local.set({
-      [shared.ANALYTICS_SUPPORT_NOTICE_KEY]: false,
-    });
-
-    if (enabled) {
-      sendAnalyticsEvent(
-        "analytics_enabled",
-        {
-          selected_language: getSelectedLanguage(),
-          enabled_feature_count: getEnabledTrackedFeatureNames().length,
-        },
-        {
-          selected_language: getSelectedLanguage(),
-          enabled_feature_count: getEnabledTrackedFeatureNames().length,
-        },
-      )
-        .catch((error) => {
-          console.error("Failed to track analytics opt-in:", error);
-        });
-    } else {
-      await chrome.storage.local.remove(ANALYTICS_CLIENT_ID_KEY);
-    }
-
-    popup.render();
-  }
-
   refs.settingsButton.addEventListener("click", (e) => {
     e.stopPropagation();
-    state.showAnalyticsSupportNotice = false;
     const isOpen = !refs.settingsPanel.hidden;
     refs.settingsPanel.hidden = isOpen;
     refs.settingsButton.setAttribute("aria-expanded", String(!isOpen));
     popup.render();
-  });
-
-  refs.chatToggleButton.addEventListener("click", async (e) => {
-    e.stopPropagation();
-    state.showAnalyticsSupportNotice = false;
-    const nextShowExtensionChat = !state.settings.showExtensionChat;
-    if (nextShowExtensionChat) {
-      openChatSafetyPopup();
-      return;
-    }
-    await setExtensionChatEnabled(false);
-  });
-
-  refs.chatSafetyCancelButton?.addEventListener("click", closeChatSafetyPopup);
-
-  refs.chatSafetyEnableButton?.addEventListener("click", async () => {
-    closeChatSafetyPopup();
-    await setExtensionChatEnabled(true);
   });
 
   refs.openFrontReloadCancelButton?.addEventListener("click", closeOpenFrontReloadPopup);
@@ -272,45 +90,6 @@
     if (typeof tabId === "number" && chrome.tabs?.reload) {
       await chrome.tabs.reload(tabId);
     }
-  });
-
-  refs.analyticsOptInButton?.addEventListener("click", async (event) => {
-    event.stopPropagation();
-    state.showAnalyticsSupportNotice = false;
-    await chrome.storage.local.set({
-      [shared.ANALYTICS_SUPPORT_NOTICE_KEY]: false,
-    });
-    if (!state.settings.analyticsEnabled) {
-      openAnalyticsConsentPopup();
-      popup.render();
-      return;
-    }
-
-    await setAnalyticsEnabled(false);
-  });
-
-  refs.analyticsConsentEnableButton?.addEventListener("click", async () => {
-    await setAnalyticsEnabled(true);
-    closeAnalyticsConsentPopup();
-  });
-
-  refs.analyticsConsentCancelButton?.addEventListener("click", closeAnalyticsConsentPopup);
-  refs.analyticsConsentCloseButton?.addEventListener("click", closeAnalyticsConsentPopup);
-  refs.analyticsConsentPopup?.addEventListener("click", (event) => {
-    if (event.target === refs.analyticsConsentPopup) {
-      closeAnalyticsConsentPopup();
-    }
-  });
-
-  refs.analyticsSupportDismissButton?.addEventListener("click", async (event) => {
-    event.stopPropagation();
-    await dismissAnalyticsSupportNotice();
-  });
-
-  refs.analyticsSupportReviewButton?.addEventListener("click", async (event) => {
-    event.stopPropagation();
-    await dismissAnalyticsSupportNotice();
-    openAnalyticsConsentPopup();
   });
 
   refs.macrosPanel.addEventListener("change", async (event) => {
@@ -743,8 +522,6 @@
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
-      closeAnalyticsConsentPopup();
-      closeChatSafetyPopup();
       closeOpenFrontReloadPopup();
       popup.closeHelperInfo();
       refs.settingsPanel.hidden = true;
@@ -759,9 +536,6 @@
     popup.renderLanguageOptions();
     chrome.storage.onChanged.addListener(handleStorageChange);
     popup.render();
-    trackPopupAnalyticsSnapshot().catch((error) => {
-      console.error("Failed to track popup analytics snapshot:", error);
-    });
     checkActiveOpenFrontTabNeedsReload().catch((error) => {
       console.error("Failed to check whether OpenFront needs reload:", error);
     });

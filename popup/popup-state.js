@@ -8,22 +8,6 @@
     settingsButton: document.getElementById("settingsButton"),
     settingsPanel: document.getElementById("settingsPanel"),
     languagePanel: document.getElementById("languagePanel"),
-    chatToggleButton: document.getElementById("chatToggleButton"),
-    analyticsOptInButton: document.getElementById("analyticsOptInButton"),
-    analyticsSupportPopup: document.getElementById("analyticsSupportPopup"),
-    analyticsSupportDismissButton: document.getElementById(
-      "analyticsSupportDismissButton",
-    ),
-    analyticsSupportReviewButton: document.getElementById(
-      "analyticsSupportReviewButton",
-    ),
-    analyticsConsentPopup: document.getElementById("analyticsConsentPopup"),
-    analyticsConsentCloseButton: document.getElementById("analyticsConsentCloseButton"),
-    analyticsConsentCancelButton: document.getElementById("analyticsConsentCancelButton"),
-    analyticsConsentEnableButton: document.getElementById("analyticsConsentEnableButton"),
-    chatSafetyPopup: document.getElementById("chatSafetyPopup"),
-    chatSafetyCancelButton: document.getElementById("chatSafetyCancelButton"),
-    chatSafetyEnableButton: document.getElementById("chatSafetyEnableButton"),
     openFrontReloadPopup: document.getElementById("openFrontReloadPopup"),
     openFrontReloadCancelButton: document.getElementById("openFrontReloadCancelButton"),
     openFrontReloadButton: document.getElementById("openFrontReloadButton"),
@@ -78,7 +62,6 @@
     settings: shared.normalizeSettings({}, { ensureActiveSearchTimestamp: true }),
     translations: i18n.DEFAULT_TRANSLATIONS,
     languageOptions: i18n.createLanguageOptions("en"),
-    showAnalyticsSupportNotice: false,
     activeHelperInfoButton: null,
     helperInfoImages: null,
     helperInfoImageIndex: 0,
@@ -165,10 +148,7 @@
   };
 
   popup.loadSettings = async function loadSettings() {
-    const stored = await chrome.storage.local.get([
-      shared.STORAGE_KEY,
-      shared.ANALYTICS_SUPPORT_NOTICE_KEY,
-    ]);
+    const stored = await chrome.storage.local.get(shared.STORAGE_KEY);
     const rawSettings = stored[shared.STORAGE_KEY] || {};
 
     popup.state.settings = shared.normalizeSettings(rawSettings, {
@@ -179,9 +159,6 @@
       await popup.saveSettings();
     }
 
-    popup.state.showAnalyticsSupportNotice =
-      stored[shared.ANALYTICS_SUPPORT_NOTICE_KEY] === true &&
-      !popup.state.settings.analyticsEnabled;
   };
 
   popup.saveSettings = async function saveSettings() {

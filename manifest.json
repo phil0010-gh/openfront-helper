@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Auto-Join & Helpers for OpenFront (unofficial)",
-  "version": "2.4.0",
+  "version": "2.5.1",
   "description": "Automatically joins lobbies when they match your selected criteria.",
   "icons": {
     "16": "assets/icon-16.png",
@@ -17,10 +17,7 @@
     "service_worker": "background.js"
   },
   "host_permissions": [
-    "https://openfront.io/*",
-    "https://www.google-analytics.com/*",
-    "https://region1.google-analytics.com/*",
-    "https://ttzudvqvgykhideubjwo.supabase.co/*"
+    "https://openfront.io/*"
   ],
   "browser_specific_settings": {
     "gecko": {
@@ -50,10 +47,8 @@
         "map-data.js",
         "shared/settings.js",
         "shared/i18n.js",
-        "shared/chat-config.js",
         "content/core.js",
         "content/floating-helpers.js",
-        "content/chat.js",
         "content/auto-join.js"
       ],
       "run_at": "document_start"
@@ -67,7 +62,6 @@
         "page-bridge/runtime.js",
         "page-bridge/shared-utils.js",
         "page-bridge/selective-trade-policy.js",
-        "page-bridge/chat-context.js",
         "page-bridge/alliances.js",
         "page-bridge/alliance-requests-panel.js",
         "page-bridge/bot-markers.js",

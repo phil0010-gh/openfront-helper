@@ -242,61 +242,6 @@
     refs.settingsButton.setAttribute("aria-label", popup.t("openSettings"));
     refs.settingsButton.querySelector(".settings-button-label").textContent =
       popup.t("settings");
-    if (refs.chatToggleButton instanceof HTMLButtonElement) {
-      const chatEnabled = state.settings.showExtensionChat === true;
-      refs.chatToggleButton.dataset.enabled = String(chatEnabled);
-      refs.chatToggleButton.setAttribute("aria-pressed", String(chatEnabled));
-      refs.chatToggleButton.setAttribute(
-        "aria-label",
-        chatEnabled ? popup.t("hideExtensionChat") : popup.t("showExtensionChat"),
-      );
-      refs.chatToggleButton.title = chatEnabled
-        ? popup.t("hideExtensionChat")
-        : popup.t("showExtensionChat");
-      refs.chatToggleButton.querySelector(".chat-toggle-button-label").textContent =
-        popup.t("chat");
-    }
-    if (refs.analyticsOptInButton instanceof HTMLButtonElement) {
-      const analyticsEnabled = Boolean(state.settings.analyticsEnabled);
-      const analyticsTitle = analyticsEnabled
-        ? popup.t("analyticsOptInOn")
-        : popup.t("analyticsOptInOff");
-      refs.analyticsOptInButton.dataset.enabled = String(analyticsEnabled);
-      refs.analyticsOptInButton.setAttribute("aria-pressed", String(analyticsEnabled));
-      refs.analyticsOptInButton.setAttribute("aria-label", analyticsTitle);
-      refs.analyticsOptInButton.title = popup.t("analyticsOptInDescription");
-      refs.analyticsOptInButton.querySelector(
-        ".analytics-opt-in-button-label",
-      ).textContent = popup.t("sendAnonymousUsageData");
-    }
-    if (refs.analyticsSupportPopup instanceof HTMLElement) {
-      refs.analyticsSupportPopup.hidden =
-        !state.showAnalyticsSupportNotice || state.settings.analyticsEnabled;
-      refs.analyticsSupportPopup.querySelector(".analytics-support-title").textContent =
-        popup.t("analyticsSupportTitle");
-      refs.analyticsSupportPopup.querySelector(".analytics-support-text").textContent =
-        popup.t("analyticsSupportText");
-      refs.analyticsSupportDismissButton.textContent =
-        popup.t("analyticsSupportDismiss");
-      refs.analyticsSupportReviewButton.textContent =
-        popup.t("analyticsSupportReview");
-    }
-    if (refs.chatSafetyPopup instanceof HTMLElement) {
-      refs.chatSafetyPopup.querySelector(".chat-safety-title").textContent =
-        popup.t("chatSafetyTitle");
-      refs.chatSafetyPopup.querySelector(".chat-safety-text").textContent =
-        popup.t("chatSafetyNotice");
-      refs.chatSafetyPopup.querySelector('[data-chat-safety-item="public"]').textContent =
-        popup.t("chatSafetyPublic");
-      refs.chatSafetyPopup.querySelector('[data-chat-safety-item="backend"]').textContent =
-        popup.t("chatSafetyBackend");
-      refs.chatSafetyPopup.querySelector('[data-chat-safety-item="private"]').textContent =
-        popup.t("chatSafetyNoPrivate");
-      refs.chatSafetyPopup.querySelector('[data-chat-safety-item="sensitive"]').textContent =
-        popup.t("chatSafetyNoSensitive");
-      refs.chatSafetyCancelButton.textContent = popup.t("cancel");
-      refs.chatSafetyEnableButton.textContent = popup.t("chatSafetyEnable");
-    }
     if (refs.openFrontReloadPopup instanceof HTMLElement) {
       refs.openFrontReloadPopup.querySelector(".openfront-reload-title").textContent =
         popup.t("openFrontReloadTitle");

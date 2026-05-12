@@ -97,10 +97,8 @@
   window.setInterval(() => {
     refreshSelectiveTradePolicyAvailability();
     refreshCheatsAvailability();
-    reportOpenFrontChatContext();
   }, 1000);
   refreshSelectiveTradePolicyAvailability();
   refreshCheatsAvailability();
-  reportOpenFrontChatContext();
 
   window.__openfrontAutoJoinBridgeReady = true;

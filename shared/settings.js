@@ -51,7 +51,6 @@
     language: "en",
     enabled: false,
     searchStartedAt: null,
-    analyticsEnabled: false,
     joinNotification: false,
     minLobbySize: null,
     markBotNationsRed: false,
@@ -74,11 +73,6 @@
     showExportPartnerHeatmap: false,
     applySelectiveTradePolicyRequestAt: null,
     showFloatingHelpersPanel: false,
-    showExtensionChat: false,
-    chatWidgetPosition: {
-      left: null,
-      top: null,
-    },
     lobbyForecast: {
       available: false,
       sampleSize: 0,
@@ -251,7 +245,6 @@
     const mapFilters = source.mapFilters || source.maps || {};
     const mapExcludeFilters = source.mapExcludeFilters || source.mapExcludes || {};
     const floatingHelpersPanelPosition = source.floatingHelpersPanelPosition || {};
-    const chatWidgetPosition = source.chatWidgetPosition || {};
     const collapsedHelperCategories = source.collapsedHelperCategories || {};
 
     const normalized = {
@@ -265,7 +258,6 @@
       floatingHelpersPanelPosition: normalizeFloatingHelpersPanelPosition(
         floatingHelpersPanelPosition,
       ),
-      chatWidgetPosition: normalizeFloatingHelpersPanelPosition(chatWidgetPosition),
       floatingHelpersPanelHeight: normalizeFloatingHelpersPanelHeight(
         source.floatingHelpersPanelHeight,
       ),
@@ -295,8 +287,6 @@
     normalized.economyHeatmapIntensity = normalizeEconomyHeatmapIntensity(
       normalized.economyHeatmapIntensity,
     );
-    normalized.analyticsEnabled = source.analyticsEnabled === true;
-    normalized.showExtensionChat = source.showExtensionChat === true;
     normalized.language = normalizeLanguage(normalized.language);
     normalized.applySelectiveTradePolicyRequestAt = normalizeActionRequestTimestamp(
       normalized.applySelectiveTradePolicyRequestAt,
@@ -308,7 +298,6 @@
   globalScope.OpenFrontHelperSettings = {
     STORAGE_KEY: "settings",
     WHATS_NEW_NOTICE_KEY: "whatsNewNoticePending",
-    ANALYTICS_SUPPORT_NOTICE_KEY: "analyticsSupportNoticePending",
     MAPS,
     MAP_IDS,
     FILTER_KEYS,

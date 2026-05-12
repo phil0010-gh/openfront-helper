@@ -26,46 +26,6 @@
             </svg>
             <span class="settings-button-label">Settings</span>
           </button>
-          <button
-            id="chatToggleButton"
-            class="chat-toggle-button"
-            type="button"
-            aria-label="Ingame Chat"
-            aria-pressed="false"
-          >
-            <svg class="chat-toggle-button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <path d="M4.6 5.5A6.4 6.4 0 0 1 9.2 3.7h5.6a6.2 6.2 0 0 1 4.4 1.75A5.7 5.7 0 0 1 21 9.7c0 3.18-2.7 5.74-6.05 5.74H11.2l-4.78 3.13a.72.72 0 0 1-1.11-.6v-3.3A5.5 5.5 0 0 1 3 10.1a6.3 6.3 0 0 1 1.6-4.6Zm4.9 3.3a1.05 1.05 0 1 0 0 2.1 1.05 1.05 0 0 0 0-2.1Zm4.95 1.05a1.05 1.05 0 1 0-2.1 0 1.05 1.05 0 0 0 2.1 0Zm3.85-1.05a1.05 1.05 0 1 0 0 2.1 1.05 1.05 0 0 0 0-2.1Z"/>
-            </svg>
-            <span class="chat-toggle-button-label">Ingame Chat</span>
-          </button>
-          <button
-            id="analyticsOptInButton"
-            class="analytics-opt-in-button"
-            type="button"
-            aria-label="Anonymous usage analytics are off"
-            aria-pressed="false"
-            data-enabled="false"
-            title="Share anonymous usage analytics. Reports coarse feature usage to help improve the extension. No OpenFront account, player names, lobby IDs, game IDs, or chat data."
-          >
-            <span aria-hidden="true">◎</span>
-            <span class="analytics-opt-in-button-label">Send anonymous usage data</span>
-          </button>
-          <div
-            id="analyticsSupportPopup"
-            class="analytics-support-popup"
-            role="dialog"
-            aria-labelledby="analyticsSupportTitle"
-            hidden
-          >
-            <p id="analyticsSupportTitle" class="analytics-support-title">Share anonymous usage data?</p>
-            <p class="analytics-support-text">
-              Anonymous usage data helps prioritize fixes and improve helpers without sending gameplay details.
-            </p>
-            <div class="analytics-support-actions">
-              <button id="analyticsSupportDismissButton" class="analytics-support-button" type="button">Not now</button>
-              <button id="analyticsSupportReviewButton" class="analytics-support-button analytics-support-button-primary" type="button">Review</button>
-            </div>
-          </div>
         </div>
         <div id="settingsPanel" class="settings-panel" hidden>
           <p class="settings-panel-title">Settings</p>
@@ -112,63 +72,15 @@
             <div id="languageList" class="language-list" role="listbox" aria-label="Languages"></div>
           </div>
         </div>
-        <div id="analyticsConsentPopup" class="analytics-consent-popup" aria-hidden="true" hidden>
-          <div class="analytics-consent-card" role="dialog" aria-modal="true" aria-labelledby="analyticsConsentTitle">
-            <div class="analytics-consent-head">
-              <p id="analyticsConsentTitle" class="analytics-consent-title">Send anonymous usage data?</p>
-              <button id="analyticsConsentCloseButton" class="analytics-consent-close" type="button" aria-label="Close analytics details">Close</button>
+        <div id="openFrontReloadPopup" class="popup-modal openfront-reload-popup" aria-hidden="true" hidden>
+          <div class="popup-modal-card openfront-reload-card" role="dialog" aria-modal="true" aria-labelledby="openFrontReloadTitle">
+            <div class="popup-modal-head">
+              <p id="openFrontReloadTitle" class="popup-modal-title openfront-reload-title"></p>
             </div>
-            <p class="analytics-consent-text">
-              This helps improve the extension by showing which helper features are used and where performance work matters most.
-            </p>
-            <div class="analytics-consent-section">
-              <p class="analytics-consent-section-title">What is tracked</p>
-              <ul class="analytics-consent-list">
-                <li>Feature toggles, such as which helper was enabled or disabled.</li>
-                <li>Coarse usage summaries, such as how many helpers are enabled.</li>
-                <li>Extension version and language, so issues can be compared across releases.</li>
-              </ul>
-            </div>
-            <div class="analytics-consent-section">
-              <p class="analytics-consent-section-title">Why it is anonymous</p>
-              <ul class="analytics-consent-list">
-                <li>No OpenFront account, player names, lobby IDs, game IDs, chat, or free-form gameplay data is sent.</li>
-                <li>A random local analytics ID is created only after you enable this, and it is deleted when you turn it off.</li>
-              </ul>
-            </div>
-            <div class="analytics-consent-actions">
-              <button id="analyticsConsentCancelButton" class="analytics-consent-button" type="button">Cancel</button>
-              <button id="analyticsConsentEnableButton" class="analytics-consent-button analytics-consent-button-primary" type="button">Enable anonymous usage data</button>
-            </div>
-          </div>
-        </div>
-        <div id="chatSafetyPopup" class="analytics-consent-popup chat-safety-popup" aria-hidden="true" hidden>
-          <div class="analytics-consent-card chat-safety-card" role="dialog" aria-modal="true" aria-labelledby="chatSafetyTitle">
-            <div class="analytics-consent-head">
-              <p id="chatSafetyTitle" class="analytics-consent-title chat-safety-title"></p>
-            </div>
-            <p class="analytics-consent-text chat-safety-text"></p>
-            <ul class="analytics-consent-list chat-safety-list">
-              <li data-chat-safety-item="public"></li>
-              <li data-chat-safety-item="backend"></li>
-              <li data-chat-safety-item="private"></li>
-              <li data-chat-safety-item="sensitive"></li>
-            </ul>
-            <div class="analytics-consent-actions">
-              <button id="chatSafetyCancelButton" class="analytics-consent-button" type="button"></button>
-              <button id="chatSafetyEnableButton" class="analytics-consent-button analytics-consent-button-primary" type="button"></button>
-            </div>
-          </div>
-        </div>
-        <div id="openFrontReloadPopup" class="analytics-consent-popup openfront-reload-popup" aria-hidden="true" hidden>
-          <div class="analytics-consent-card openfront-reload-card" role="dialog" aria-modal="true" aria-labelledby="openFrontReloadTitle">
-            <div class="analytics-consent-head">
-              <p id="openFrontReloadTitle" class="analytics-consent-title openfront-reload-title"></p>
-            </div>
-            <p class="analytics-consent-text openfront-reload-text"></p>
-            <div class="analytics-consent-actions">
-              <button id="openFrontReloadCancelButton" class="analytics-consent-button" type="button"></button>
-              <button id="openFrontReloadButton" class="analytics-consent-button analytics-consent-button-primary" type="button"></button>
+            <p class="popup-modal-text openfront-reload-text"></p>
+            <div class="popup-modal-actions">
+              <button id="openFrontReloadCancelButton" class="popup-modal-button" type="button"></button>
+              <button id="openFrontReloadButton" class="popup-modal-button popup-modal-button-primary" type="button"></button>
             </div>
           </div>
         </div>
