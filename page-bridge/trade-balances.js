@@ -125,32 +125,11 @@
     if (!badge) {
       badge = document.createElement("div");
       badge.id = TRADE_BALANCE_BADGE_ID;
-      badge.innerHTML = `
-        <span class="openfront-helper-trade-title">Trade balance</span>
-        <span class="openfront-helper-trade-summary">
-          <span class="openfront-helper-trade-total">
-            <span class="openfront-helper-trade-total-label">Total imports</span>
-            <span class="openfront-helper-trade-total-value openfront-helper-trade-imports">+0</span>
-          </span>
-          <span class="openfront-helper-trade-total">
-            <span class="openfront-helper-trade-total-label">Total exports</span>
-            <span class="openfront-helper-trade-total-value openfront-helper-trade-exports">+0</span>
-          </span>
-          <span class="openfront-helper-trade-total">
-            <span class="openfront-helper-trade-total-label">Factory/port spent</span>
-            <span class="openfront-helper-trade-total-value openfront-helper-trade-factory-port-spend">0</span>
-          </span>
-          <span class="openfront-helper-trade-total">
-            <span class="openfront-helper-trade-total-label">Return on investment</span>
-            <span class="openfront-helper-trade-total-value openfront-helper-trade-roi">n/a</span>
-          </span>
-          <span class="openfront-helper-trade-total">
-            <span class="openfront-helper-trade-total-label">Break even</span>
-            <span class="openfront-helper-trade-total-value openfront-helper-trade-break-even">tracking</span>
-          </span>
-        </span>
-        <span class="openfront-helper-trade-rows"></span>
-      `;
+      badge.replaceChildren();
+      badge.dataset.ofhReactRoot = "1";
+    } else if (!badge.dataset.ofhReactRoot) {
+      badge.replaceChildren();
+      badge.dataset.ofhReactRoot = "1";
     }
     const container = ensureHelperStatsContainer();
     if (badge.parentElement !== container) {
@@ -1055,62 +1034,88 @@
     }
     tradeBalanceRenderSignature = nextRenderSignature;
 
-    const imports = badge.querySelector(".openfront-helper-trade-imports");
-    const exports = badge.querySelector(".openfront-helper-trade-exports");
-    const factoryPortSpend = badge.querySelector(
-      ".openfront-helper-trade-factory-port-spend",
-    );
-    const roi = badge.querySelector(".openfront-helper-trade-roi");
-    const breakEven = badge.querySelector(".openfront-helper-trade-break-even");
     const exportWindowMs = Number.isFinite(totals.firstExportAt)
       ? Date.now() - totals.firstExportAt
       : NaN;
-    if (imports) {
-      imports.textContent = formatTradeBalanceAmount(totals.imports);
-    }
-    if (exports) {
-      exports.textContent = formatTradeBalanceAmount(totals.exports);
-    }
-    if (factoryPortSpend) {
-      factoryPortSpend.textContent = formatTradeSpendAmount(factoryPortSpendTotal);
-    }
-    if (roi) {
-      roi.textContent = formatTradeRoi(totals.exports, factoryPortSpendTotal);
-      roi.dataset.status = getTradeRoiStatus(totals.exports, factoryPortSpendTotal);
-    }
-    if (breakEven) {
-      breakEven.textContent = formatBreakEvenEstimate(
+
+    const tradeView = {
+      imports: formatTradeBalanceAmount(totals.imports),
+      exports: formatTradeBalanceAmount(totals.exports),
+      factoryPortSpend: formatTradeSpendAmount(factoryPortSpendTotal),
+      roi: formatTradeRoi(totals.exports, factoryPortSpendTotal),
+      roiStatus: getTradeRoiStatus(totals.exports, factoryPortSpendTotal),
+      breakEven: formatBreakEvenEstimate(
         totals.exports,
         factoryPortSpendTotal,
         exportWindowMs,
-      );
-    }
+      ),
+      rows:
+        entries.length === 0
+          ? null
+          : entries.map((entry) => ({
+              partnerName: entry.partnerName,
+              total: formatTradeBalanceAmount(entry.total),
+              direction: getTradeBalanceDirection(entry),
+            })),
+    };
 
-    const rows = badge.querySelector(".openfront-helper-trade-rows");
-    if (rows) {
-      if (entries.length === 0) {
-        rows.innerHTML = `<span class="openfront-helper-trade-empty">No observed trade yet</span>`;
-      } else {
-        rows.replaceChildren(
-          ...entries.map((entry) => {
-            const row = document.createElement("span");
-            row.className = "openfront-helper-trade-row";
-            const name = document.createElement("span");
-            name.className = "openfront-helper-trade-name";
-            name.textContent = entry.partnerName;
-            const valueWrap = document.createElement("span");
-            valueWrap.className = "openfront-helper-trade-value-wrap";
-            const value = document.createElement("span");
-            value.className = "openfront-helper-trade-value";
-            value.textContent = formatTradeBalanceAmount(entry.total);
-            const direction = document.createElement("span");
-            direction.className = "openfront-helper-trade-direction";
-            direction.textContent = getTradeBalanceDirection(entry);
-            valueWrap.append(value, direction);
-            row.append(name, valueWrap);
-            return row;
-          }),
+    if (globalThis.OpenFrontHelperOverlays?.renderTradeBalance) {
+      globalThis.OpenFrontHelperOverlays.renderTradeBalance(badge, tradeView);
+    } else {
+      const imports = badge.querySelector(".openfront-helper-trade-imports");
+      const exports = badge.querySelector(".openfront-helper-trade-exports");
+      const factoryPortSpend = badge.querySelector(
+        ".openfront-helper-trade-factory-port-spend",
+      );
+      const roi = badge.querySelector(".openfront-helper-trade-roi");
+      const breakEven = badge.querySelector(".openfront-helper-trade-break-even");
+      if (imports) {
+        imports.textContent = formatTradeBalanceAmount(totals.imports);
+      }
+      if (exports) {
+        exports.textContent = formatTradeBalanceAmount(totals.exports);
+      }
+      if (factoryPortSpend) {
+        factoryPortSpend.textContent = formatTradeSpendAmount(factoryPortSpendTotal);
+      }
+      if (roi) {
+        roi.textContent = formatTradeRoi(totals.exports, factoryPortSpendTotal);
+        roi.dataset.status = getTradeRoiStatus(totals.exports, factoryPortSpendTotal);
+      }
+      if (breakEven) {
+        breakEven.textContent = formatBreakEvenEstimate(
+          totals.exports,
+          factoryPortSpendTotal,
+          exportWindowMs,
         );
+      }
+
+      const rows = badge.querySelector(".openfront-helper-trade-rows");
+      if (rows) {
+        if (entries.length === 0) {
+          rows.innerHTML = `<span class="openfront-helper-trade-empty">No observed trade yet</span>`;
+        } else {
+          rows.replaceChildren(
+            ...entries.map((entry) => {
+              const row = document.createElement("span");
+              row.className = "openfront-helper-trade-row";
+              const name = document.createElement("span");
+              name.className = "openfront-helper-trade-name";
+              name.textContent = entry.partnerName;
+              const valueWrap = document.createElement("span");
+              valueWrap.className = "openfront-helper-trade-value-wrap";
+              const value = document.createElement("span");
+              value.className = "openfront-helper-trade-value";
+              value.textContent = formatTradeBalanceAmount(entry.total);
+              const direction = document.createElement("span");
+              direction.className = "openfront-helper-trade-direction";
+              direction.textContent = getTradeBalanceDirection(entry);
+              valueWrap.append(value, direction);
+              row.append(name, valueWrap);
+              return row;
+            }),
+          );
+        }
       }
     }
 
