@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Auto-Join & Helpers for OpenFront (unofficial)",
-  "version": "2.5.1",
+  "version": "2.6.0",
   "description": "Automatically joins lobbies when they match your selected criteria.",
   "icons": {
     "16": "assets/icon-16.png",
@@ -32,7 +32,7 @@
   },
   "action": {
     "default_title": "OpenFront Auto-Join & Helpers",
-    "default_popup": "popup.html",
+    "default_popup": "dist/popup.html",
     "default_icon": {
       "16": "assets/icon-16.png",
       "32": "assets/icon-32.png"
@@ -48,6 +48,7 @@
         "shared/settings.js",
         "shared/i18n.js",
         "content/core.js",
+        "dist/content/floating-helpers-react.js",
         "content/floating-helpers.js",
         "content/auto-join.js"
       ],
@@ -65,6 +66,7 @@
         "page-bridge/alliances.js",
         "page-bridge/alliance-requests-panel.js",
         "page-bridge/bot-markers.js",
+        "dist/page-bridge/helper-overlays.js",
         "page-bridge/gold-per-minute.js",
         "page-bridge/trade-balances.js",
         "page-bridge/nuke-prediction.js",

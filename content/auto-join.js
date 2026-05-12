@@ -310,6 +310,7 @@ function injectBridge() {
     "page-bridge/alliances.js",
     "page-bridge/alliance-requests-panel.js",
     "page-bridge/bot-markers.js",
+    "dist/page-bridge/helper-overlays.js",
     "page-bridge/gold-per-minute.js",
     "page-bridge/trade-balances.js",
     "page-bridge/nuke-prediction.js",

@@ -328,6 +328,18 @@ async function saveSettings(nextSettings) {
   });
 }
 
+globalThis.OpenFrontHelperContentApi = {
+  getSettings() {
+    return settings;
+  },
+  saveSettings,
+  t,
+  normalizeEconomyHeatmapIntensity,
+  getEconomyHeatmapIntensityLabel,
+  FLOATING_HELPERS_PANEL_ID,
+  FLOATING_HELPERS_STYLE_ID,
+};
+
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type === "OPENFRONT_HELPER_PING") {
     sendResponse({
